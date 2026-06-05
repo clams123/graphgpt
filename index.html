@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GraphiquesGPT — Générateur de graphiques</title>
+  <title>GraphiquesGPT - G&eacute;n&eacute;rateur de graphiques</title>
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -11,21 +11,21 @@
     <div class="brand">
       <div class="brand__mark">GRAPH</div>
       <div>
-        <h1>Générateur de graphiques</h1>
-        <p>Crée, sauvegarde et exporte des graphiques statiques</p>
+        <h1>G&eacute;n&eacute;rateur de graphiques</h1>
+        <p>Cr&eacute;e, sauvegarde et exporte des graphiques statiques</p>
       </div>
     </div>
     <div class="topActions">
       <button class="btn btn--soft" id="saveBtn" type="button">Sauvegarder</button>
-      <button class="btn btn--ghost" id="undoBtn" type="button">↶ Annuler</button>
-      <button class="btn btn--ghost" id="redoBtn" type="button">↷ Rétablir</button>
-      <button class="btn btn--danger" id="resetBtn" type="button">Réinitialiser</button>
+      <button class="btn btn--ghost" id="undoBtn" type="button">&larr; Annuler</button>
+      <button class="btn btn--ghost" id="redoBtn" type="button">&rarr; R&eacute;tablir</button>
+      <button class="btn btn--danger" id="resetBtn" type="button">R&eacute;initialiser</button>
       <button class="btn btn--primary" id="exportPngBtn" type="button">Exporter PNG</button>
     </div>
   </header>
 
   <main class="layout">
-    <aside class="editor" aria-label="Éditeur du graphique">
+    <aside class="editor" aria-label="Editeur du graphique">
       <details class="panel accordionMenu" open>
         <summary>
           <div class="sectionTitle">
@@ -49,9 +49,8 @@
             <span>Note / source</span>
             <input id="sourceInput" type="text" autocomplete="off">
           </label>
-		  <p class="fileHint">Tout est optionnel</p>
+          <p class="fileHint">Tout est optionnel</p>
         </div>
-		
       </details>
 
       <details class="panel accordionMenu" open>
@@ -59,14 +58,14 @@
           <div class="sectionTitle">
             <span>2</span>
             <div>
-              <h2>Données</h2>
+              <h2>Donn&eacute;es</h2>
               <p>Une ligne par valeur. Les couleurs sont optionnelles.</p>
             </div>
           </div>
         </summary>
         <div class="panelBody">
           <div class="tableHeader">
-            <span>Libellé</span>
+            <span>Libell&eacute;</span>
             <span>Valeur</span>
             <span>Couleur</span>
           </div>
@@ -82,7 +81,7 @@
           <div class="sectionTitle">
             <span>3</span>
             <div>
-              <h2>Type & affichage</h2>
+              <h2>Type &amp; affichage</h2>
               <p>Graphique statique, sans animation.</p>
             </div>
           </div>
@@ -98,9 +97,13 @@
               <option value="glitterBar2NoShadow">Barres arrondies glitter 2 sans ombre</option>
               <option value="horizontalBar">Barres horizontales</option>
               <option value="line">Courbe</option>
+              <option value="linearGraph">Graphique lineaire</option>
               <option value="area">Aire</option>
               <option value="pie">Camembert</option>
               <option value="donut">Donut</option>
+              <option value="donutTable">Tableau des beignets</option>
+              <option value="bubble">Graphique a bulles</option>
+              <option value="funnel">Diagramme en entonnoir</option>
               <option value="radar">Radar</option>
             </select>
           </label>
@@ -110,20 +113,28 @@
               <select id="themeInput">
                 <option value="midnight">Midnight</option>
                 <option value="clean">Minimal clair</option>
-                <option value="neon">Néon violet</option>
+                <option value="executive">Executive clair</option>
+                <option value="editorial">Editorial premium</option>
+                <option value="graphite">Graphite studio</option>
+                <option value="sage">Sage analytics</option>
+                <option value="haute">Haute couture</option>
+                <option value="bloom">Bloom moderne</option>
+                <option value="cyberclear">Cyber clair</option>
+                <option value="noir">Noir luxe</option>
+                <option value="neon">Neon violet</option>
                 <option value="ocean">Ocean bleu</option>
-                <option value="forest">Forêt</option>
+                <option value="forest">Foret</option>
                 <option value="sunset">Sunset</option>
                 <option value="astral">Astral RPG</option>
-                <option value="crystal">Cristal éthéré</option>
+                <option value="crystal">Cristal ethere</option>
                 <option value="lifestream">Lifestream bleu</option>
-                <option value="phoenix">Phénix rubis</option>
-                <option value="voidstar">Néant stellaire</option>
+                <option value="phoenix">Phenix rubis</option>
+                <option value="voidstar">Neant stellaire</option>
                 <option value="twitch">Twitch Pulse</option>
                 <option value="streamdeck">Stream Overlay</option>
-                <option value="resonance">Onde résonante</option>
+                <option value="resonance">Onde resonante</option>
                 <option value="royal">Nocturne royal</option>
-                <option value="arcade">Arcade néon</option>
+                <option value="arcade">Arcade neon</option>
                 <option value="glitter1soft">Glitter 1 sans ombre</option>
                 <option value="glitter2soft">Glitter 2 sans ombre</option>
               </select>
@@ -132,7 +143,7 @@
               <span>Format export</span>
               <select id="formatInput">
                 <option value="wide">16:9</option>
-                <option value="square">Carré</option>
+                <option value="square">Carre</option>
                 <option value="story">Vertical</option>
               </select>
             </label>
@@ -152,13 +163,13 @@
             </label>
             <label class="switchBox">
               <input id="showLegendInput" type="checkbox">
-              <span><strong>Légende</strong><small>Utile pour donut/camembert.</small></span>
+              <span><strong>Legende</strong><small>Utile pour donut/camembert.</small></span>
             </label>
           </div>
           <div class="grid2">
             <label class="switchBox">
               <input id="showGridInput" type="checkbox">
-              <span><strong>Grille</strong><small>Repères visuels.</small></span>
+              <span><strong>Grille</strong><small>Reperes visuels.</small></span>
             </label>
             <label class="switchBox">
               <input id="transparentInput" type="checkbox">
@@ -173,8 +184,8 @@
           <div class="sectionTitle">
             <span>4</span>
             <div>
-              <h2>Réglages rapides</h2>
-              <p>Taille, tri et précision des valeurs.</p>
+              <h2>Reglages rapides</h2>
+              <p>Taille, tri et precision des valeurs.</p>
             </div>
           </div>
         </summary>
@@ -189,7 +200,7 @@
               </select>
             </label>
             <label class="field">
-              <span>Décimales</span>
+              <span>Decimales</span>
               <select id="decimalsInput">
                 <option value="0">0</option>
                 <option value="1">1</option>
@@ -199,18 +210,18 @@
           </div>
           <label class="switchBox">
             <input id="compareModeInput" type="checkbox">
-            <span><strong>Mode comparaison A/B</strong><small>Compare les lignes par duos : A/B, C/D, E/F…</small></span>
+            <span><strong>Mode comparaison A/B</strong><small>Compare les lignes par duos : A/B, C/D, E/F...</small></span>
           </label>
           <label class="field">
             <span>Calcul comparaison</span>
             <select id="compareMethodInput">
-              <option value="ratio">Ratio A/B × 100</option>
-              <option value="difference">Écart A - B</option>
-              <option value="evolution">Évolution % depuis B</option>
+              <option value="ratio">Ratio A/B x 100</option>
+              <option value="difference">Ecart A - B</option>
+              <option value="evolution">Evolution % depuis B</option>
             </select>
           </label>
           <label class="field">
-            <span>Épaisseur / taille visuelle</span>
+            <span>Epaisseur / taille visuelle</span>
             <input id="weightInput" type="range" min="0.7" max="1.5" step="0.05">
           </label>
           <div class="quickActions quickActions--two">
@@ -221,42 +232,42 @@
       </details>
     </aside>
 
-    <section class="preview" aria-label="Aperçu du graphique">
+    <section class="preview" aria-label="Apercu du graphique">
       <div class="previewHeader">
         <div>
-          <strong>Aperçu du graphique</strong>
-          <p>Rendu statique fidèle à l’export PNG.</p>
+          <strong>Apercu du graphique</strong>
+          <p>Rendu statique fidele a l'export PNG.</p>
         </div>
         <div class="statusLine">
-          <span id="saveStatus">Non sauvegardé</span>
+          <span id="saveStatus">Non sauvegarde</span>
           <span id="chartStatus">Barres verticales</span>
           <span id="dataStatus">0 valeur</span>
         </div>
       </div>
       <div class="previewFrame" id="previewFrame">
-        <div class="chartCanvas theme-midnight format-wide" id="chartCanvas" role="img" aria-label="Graphique généré">
+        <div class="chartCanvas theme-midnight format-wide" id="chartCanvas" role="img" aria-label="Graphique genere">
           <svg id="chartSvg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900" preserveAspectRatio="xMidYMid meet"></svg>
         </div>
       </div>
     </section>
   </main>
 
-    <div class="modalOverlay" id="resetModal" aria-hidden="true">
+  <div class="modalOverlay" id="resetModal" aria-hidden="true">
     <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle">
       <div class="dialog__head">
         <div>
-          <strong id="resetModalTitle">Réinitialiser le graphique</strong>
-          <p>Cette action remettra les données et réglages par défaut.</p>
+          <strong id="resetModalTitle">Reinitialiser le graphique</strong>
+          <p>Cette action remettra les donnees et reglages par defaut.</p>
         </div>
-        <button class="modalClose" id="resetCancelBtn" type="button" aria-label="Fermer">×</button>
+        <button class="modalClose" id="resetCancelBtn" type="button" aria-label="Fermer">&times;</button>
       </div>
       <div class="resetWarning">
         <strong>Attention</strong>
-        <span>La sauvegarde locale actuelle sera remplacée.</span>
+        <span>La sauvegarde locale actuelle sera remplacee.</span>
       </div>
       <div class="dialogActions">
         <button class="btn btn--ghost" id="resetKeepBtn" type="button">Annuler</button>
-        <button class="btn btn--danger" id="resetConfirmBtn" type="button">Oui, réinitialiser</button>
+        <button class="btn btn--danger" id="resetConfirmBtn" type="button">Oui, reinitialiser</button>
       </div>
     </div>
   </div>

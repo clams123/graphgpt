@@ -1,9 +1,9 @@
 const STORAGE_KEY = 'graphiquesgpt_v9_1_5_glitter_sans_ombre_types';
-const THEMES = ['midnight','clean','neon','ocean','forest','sunset','astral','crystal','lifestream','phoenix','voidstar','twitch','streamdeck','resonance','royal','arcade','glitter1soft','glitter2soft'];
-const CHART_TYPES = ['bar','glitterBar','glitterBarNoShadow','glitterBar2','glitterBar2NoShadow','horizontalBar','line','area','pie','donut','radar'];
+const THEMES = ['midnight','clean','executive','editorial','graphite','sage','haute','bloom','cyberclear','noir','neon','ocean','forest','sunset','astral','crystal','lifestream','phoenix','voidstar','twitch','streamdeck','resonance','royal','arcade','glitter1soft','glitter2soft'];
+const CHART_TYPES = ['bar','glitterBar','glitterBarNoShadow','glitterBar2','glitterBar2NoShadow','horizontalBar','line','linearGraph','area','pie','donut','donutTable','bubble','funnel','radar'];
 const FORMATS = {
   wide:{w:1600,h:900,label:'16:9'},
-  square:{w:1200,h:1200,label:'Carré'},
+  square:{w:1200,h:1200,label:'Carre'},
   story:{w:1080,h:1350,label:'Vertical'}
 };
 const TYPE_LABELS = {
@@ -14,18 +14,30 @@ const TYPE_LABELS = {
   glitterBar2NoShadow:'Barres arrondies glitter 2 sans ombre',
   horizontalBar:'Barres horizontales',
   line:'Courbe',
+  linearGraph:'Graphique lineaire',
   area:'Aire',
   pie:'Camembert',
   donut:'Donut',
+  donutTable:'Tableau des beignets',
+  bubble:'Graphique a bulles',
+  funnel:'Diagramme en entonnoir',
   radar:'Radar'
 };
 const AUTO_COLORS = ['#38bdf8','#a78bfa','#f472b6','#fbbf24','#34d399','#fb7185','#60a5fa','#c084fc','#f97316','#22d3ee'];
 const THEME_PALETTES = {
-  midnight:['#38bdf8','#a78bfa','#f472b6','#fbbf24','#34d399','#60a5fa','#c084fc','#22d3ee'],
-  clean:['#2563eb','#7c3aed','#db2777','#ea580c','#059669','#0891b2','#4f46e5','#be123c'],
-  neon:['#d946ef','#22d3ee','#a3e635','#f97316','#f472b6','#8b5cf6','#06b6d4','#facc15'],
-  ocean:['#0ea5e9','#22d3ee','#38bdf8','#14b8a6','#818cf8','#67e8f9','#2563eb','#2dd4bf'],
-  forest:['#10b981','#a3e635','#84cc16','#22c55e','#facc15','#2dd4bf','#65a30d','#4ade80'],
+  midnight:['#38bdf8','#d8b4fe','#f472b6','#fbbf24','#34d399','#60a5fa','#fb7185','#22d3ee'],
+  clean:['#1d4ed8','#be123c','#0891b2','#b45309','#047857','#6d28d9','#475569','#db2777'],
+  executive:['#1e40af','#b45309','#0f766e','#be123c','#4f46e5','#475569','#ca8a04','#0369a1'],
+  editorial:['#c2410c','#111827','#0f766e','#b91c1c','#64748b','#a16207','#be123c','#2563eb'],
+  graphite:['#f59e0b','#38bdf8','#e11d48','#94a3b8','#22c55e','#a78bfa','#f97316','#14b8a6'],
+  sage:['#3f7d58','#d97706','#2563eb','#9f1239','#64748b','#0f766e','#ca8a04','#7c3aed'],
+  haute:['#9f1239','#2563eb','#a16207','#7e22ce','#0f766e','#db2777','#475569','#ea580c'],
+  bloom:['#e11d48','#059669','#2563eb','#f59e0b','#7c3aed','#0891b2','#be123c','#65a30d'],
+  cyberclear:['#0891b2','#7c3aed','#16a34a','#e11d48','#2563eb','#f59e0b','#0f766e','#9333ea'],
+  noir:['#d6b76a','#ef4444','#38bdf8','#a3a3a3','#22c55e','#f97316','#a78bfa','#facc15'],
+  neon:['#d946ef','#00d4ff','#a3e635','#f97316','#f472b6','#8b5cf6','#06b6d4','#facc15'],
+  ocean:['#0ea5e9','#34d399','#38bdf8','#14b8a6','#818cf8','#67e8f9','#2563eb','#fbbf24'],
+  forest:['#10b981','#eab308','#84cc16','#22c55e','#38bdf8','#f59e0b','#65a30d','#4ade80'],
   sunset:['#fb7185','#fbbf24','#f97316','#f43f5e','#fdba74','#e879f9','#ef4444','#fde047'],
   astral:['#7dd3fc','#c084fc','#f0abfc','#facc15','#38bdf8','#818cf8','#e879f9','#a5b4fc'],
   crystal:['#67e8f9','#a5f3fc','#93c5fd','#c4b5fd','#f0abfc','#bae6fd','#60a5fa','#e9d5ff'],
@@ -164,16 +176,16 @@ function load(){
     if (raw) state = normalizeState(JSON.parse(raw));
   }catch{
     state = clone(DEFAULT_STATE);
-    toast('Sauvegarde locale illisible : base par défaut chargée.');
+    toast('Sauvegarde locale illisible : base par defaut chargee.');
   }
 }
 function save(silent=true){
   try{
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-    els.saveStatus.textContent = 'Sauvegardé';
-    if (!silent) toast('Sauvegarde locale effectuée.');
+    els.saveStatus.textContent = 'Sauvegarde';
+    if (!silent) toast('Sauvegarde locale effectuee.');
   }catch{
-    els.saveStatus.textContent = 'Non sauvegardé';
+    els.saveStatus.textContent = 'Non sauvegarde';
     toast('Sauvegarde locale impossible.');
   }
 }
@@ -220,7 +232,7 @@ function restoreSnapshot(snap){
     renderAll();
     save(true);
   }catch{
-    toast('Historique illisible : action annulée.');
+    toast('Historique illisible : action annulee.');
   }finally{
     restoring = false;
     updateHistoryButtons();
@@ -290,7 +302,9 @@ function getThemeColors(){
     axis:get('--axis','#7dd3fc'),
     grid:get('--grid','rgba(255,255,255,.14)'),
     accent:get('--accent','#38bdf8'),
-    accent2:get('--accent2','#a78bfa')
+    accent2:get('--accent2','#a78bfa'),
+    surface:get('--surface','rgba(255,255,255,.055)'),
+    surfaceStroke:get('--surfaceStroke','rgba(255,255,255,.14)')
   };
 }
 function getAutoThemeColor(index, colors){
@@ -318,28 +332,87 @@ function donutPath(cx, cy, r, inner, start, end){
   const large = end - start > Math.PI ? 1 : 0;
   return `M ${a.x} ${a.y} A ${r} ${r} 0 ${large} 1 ${b.x} ${b.y} L ${c.x} ${c.y} A ${inner} ${inner} 0 ${large} 0 ${d.x} ${d.y} Z`;
 }
+function ringArcPath(cx, cy, r, start, end){
+  const a = polar(cx, cy, r, start);
+  const b = polar(cx, cy, r, end);
+  const large = end - start > Math.PI ? 1 : 0;
+  return `M ${a.x} ${a.y} A ${r} ${r} 0 ${large} 1 ${b.x} ${b.y}`;
+}
 function line(points, attrs=''){
   return `<polyline points="${points.map(p => `${p.x},${p.y}`).join(' ')}" ${attrs}/>`;
 }
 function polygon(points, attrs=''){
   return `<polygon points="${points.map(p => `${p.x},${p.y}`).join(' ')}" ${attrs}/>`;
 }
+function smoothPath(points){
+  if (!points.length) return '';
+  if (points.length === 1) return `M ${points[0].x} ${points[0].y}`;
+  let d = `M ${points[0].x} ${points[0].y}`;
+  for (let i = 0; i < points.length - 1; i++) {
+    const current = points[i];
+    const next = points[i + 1];
+    const midX = (current.x + next.x) / 2;
+    d += ` C ${midX} ${current.y}, ${midX} ${next.y}, ${next.x} ${next.y}`;
+  }
+  return d;
+}
 function text(x, y, content, attrs=''){
   return `<text x="${x}" y="${y}" ${attrs}>${esc(content)}</text>`;
+}
+function seriesGradientId(index){ return `series-${state.chartType}-${index}`; }
+function seriesFill(index){ return `url(#${seriesGradientId(index)})`; }
+function seriesDefs(palette, colors){
+  const areaTop = brightenColor(colors.accent, 0.34);
+  return `<defs>
+    ${palette.map((color, index) => `<linearGradient id="${seriesGradientId(index)}" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${brightenColor(color, 0.18)}"/>
+      <stop offset=".58" stop-color="${color}"/>
+      <stop offset="1" stop-color="${deepenColor(color, 0.2)}"/>
+    </linearGradient>`).join('')}
+    <linearGradient id="line-area-fill" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${areaTop}" stop-opacity=".42"/>
+      <stop offset=".78" stop-color="${colors.accent}" stop-opacity=".08"/>
+      <stop offset="1" stop-color="${colors.accent}" stop-opacity="0"/>
+    </linearGradient>
+  </defs>`;
+}
+function plotSurface(x, y, w, h, colors, opacity=1){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="24" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2" opacity="${opacity}"/>`;
 }
 function backgroundMarkup(size, transparent){
   if (transparent) return '';
   const id = `bg-${state.theme}`;
   const bg = {
-    midnight:['#121a2b','#081123'], clean:['#f5f7fb','#f5f7fb'], neon:['#170026','#2b0b63'],
-    ocean:['#082f49','#0f172a'], forest:['#052e2b','#063b2e'], sunset:['#3b0764','#ea580c'],
-    astral:['#070b2c','#211052'], crystal:['#ecfeff','#dbeafe'], lifestream:['#042f3f','#062e2f'],
-    phoenix:['#2b0711','#7c2d12'], voidstar:['#050816','#1e1b4b'], twitch:['#12091f','#2d0b59'],
-    streamdeck:['#020617','#111827'], resonance:['#001b2e','#1e1b4b'], royal:['#120b2f','#3b0764'],
-    arcade:['#070019','#18002e']
-  }[state.theme] || ['#121a2b','#081123'];
-  if (bg[0] === bg[1]) return `<rect width="${size.w}" height="${size.h}" rx="0" fill="${bg[0]}"/>`;
-  return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg[0]}"/><stop offset="1" stop-color="${bg[1]}"/></linearGradient></defs><rect width="${size.w}" height="${size.h}" rx="0" fill="url(#${id})"/>`;
+    midnight:{from:'#101827', to:'#050914', wash:[['18%','14%','52%','#38bdf8','.10'],['82%','22%','46%','#d8b4fe','.10']]},
+    clean:{from:'#f8fafc', to:'#eef2f7', wash:[['84%','12%','42%','#bfdbfe','.28']]},
+    executive:{from:'#f9fafb', to:'#e9eef5', wash:[['82%','14%','44%','#bfdbfe','.28'],['16%','82%','48%','#fde68a','.20']]},
+    editorial:{from:'#fbfaf7', to:'#eee9df', wash:[['84%','14%','42%','#fed7aa','.26'],['12%','78%','44%','#ccfbf1','.18']]},
+    graphite:{from:'#1d2228', to:'#0c0f13', wash:[['82%','18%','45%','#f59e0b','.13'],['15%','78%','42%','#38bdf8','.10']]},
+    sage:{from:'#f6f8f1', to:'#e4ecdf', wash:[['18%','14%','42%','#bbf7d0','.25'],['82%','78%','44%','#fed7aa','.18']]},
+    haute:{from:'#fbf7f6', to:'#d9e7ea', wash:[['18%','18%','46%','#fbcfe8','.30'],['84%','72%','44%','#bfdbfe','.24']]},
+    bloom:{from:'#fff7fb', to:'#eef4ff', wash:[['18%','15%','44%','#fecdd3','.28'],['82%','74%','46%','#bbf7d0','.22']]},
+    cyberclear:{from:'#f7fbff', to:'#eef2ff', wash:[['18%','20%','44%','#a5f3fc','.24'],['82%','72%','46%','#ddd6fe','.22']]},
+    noir:{from:'#121212', to:'#030303', wash:[['82%','16%','44%','#d6b76a','.14'],['16%','78%','42%','#ef4444','.08']]},
+    neon:{from:'#15051f', to:'#061c26', wash:[['18%','18%','50%','#d946ef','.20'],['82%','76%','44%','#00d4ff','.16']]},
+    ocean:{from:'#07384c', to:'#071827', wash:[['82%','16%','48%','#67e8f9','.16']]},
+    forest:{from:'#052b2a', to:'#12351f', wash:[['16%','16%','45%','#86efac','.13'],['82%','78%','42%','#facc15','.08']]},
+    sunset:{from:'#321238', to:'#c2601d', wash:[['16%','18%','46%','#fb7185','.18'],['82%','22%','44%','#fbbf24','.16']]},
+    astral:{from:'#070b2c', to:'#211052', wash:[['18%','12%','50%','#7dd3fc','.20'],['78%','22%','48%','#c084fc','.17']]},
+    crystal:{from:'#f8fbff', to:'#e8f7ff', wash:[['82%','16%','48%','#f0abfc','.22'],['16%','76%','46%','#67e8f9','.22']]},
+    lifestream:{from:'#042f3f', to:'#062e2f', wash:[['50%','20%','48%','#22d3ee','.18']]},
+    phoenix:{from:'#2b0711', to:'#7c2d12', wash:[['78%','18%','45%','#facc15','.18']]},
+    voidstar:{from:'#050816', to:'#1e1b4b', wash:[['18%','20%','48%','#8b5cf6','.18']]},
+    twitch:{from:'#12091f', to:'#2d0b59', wash:[['20%','18%','48%','#9146ff','.20'],['82%','76%','43%','#00f5d4','.12']]},
+    streamdeck:{from:'#020617', to:'#111827', wash:[['80%','12%','43%','#00f5d4','.15']]},
+    resonance:{from:'#001b2e', to:'#1e1b4b', wash:[['22%','18%','48%','#00e5ff','.16']]},
+    royal:{from:'#15111f', to:'#34204c', wash:[['80%','18%','46%','#facc15','.14']]},
+    arcade:{from:'#070019', to:'#18002e', wash:[['15%','15%','46%','#ff2bd6','.17'],['82%','76%','44%','#00f5ff','.16']]},
+    glitter1soft:{from:'#0b1730', to:'#081126', wash:[['50%','18%','52%','#dff3fb','.10']]},
+    glitter2soft:{from:'#101a36', to:'#0a1227', wash:[['50%','18%','52%','#f6dce8','.10']]}
+  }[state.theme] || {from:'#121a2b', to:'#081123', wash:[]};
+  const washDefs = (bg.wash || []).map((item, index) => `<radialGradient id="${id}-wash-${index}" cx="${item[0]}" cy="${item[1]}" r="${item[2]}"><stop offset="0" stop-color="${item[3]}" stop-opacity="${item[4]}"/><stop offset="1" stop-color="${item[3]}" stop-opacity="0"/></radialGradient>`).join('');
+  const washRects = (bg.wash || []).map((_, index) => `<rect width="${size.w}" height="${size.h}" fill="url(#${id}-wash-${index})"/>`).join('');
+  return `<defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${bg.from}"/><stop offset="1" stop-color="${bg.to}"/></linearGradient>${washDefs}</defs><rect width="${size.w}" height="${size.h}" rx="0" fill="url(#${id})"/>${washRects}`;
 }
 function headerMarkup(size, colors){
   const left = Math.round(size.w * 0.07);
@@ -349,8 +422,8 @@ function headerMarkup(size, colors){
   const fontSub = Math.max(18, Math.round(size.w * 0.016));
   const sourceY = size.h - Math.round(size.h * 0.045);
   return [
-    state.title ? text(left, titleY, state.title, `fill="${colors.text}" font-size="${fontTitle}" font-weight="900" font-family="Impact, Arial Black, Arial, sans-serif"`) : '',
-    state.subtitle ? text(left, subY, state.subtitle, `fill="${colors.muted}" font-size="${fontSub}" font-weight="800" font-family="system-ui, Arial, sans-serif"`) : '',
+    state.title ? text(left, titleY, state.title, `fill="${colors.text}" font-size="${fontTitle}" font-weight="850" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`) : '',
+    state.subtitle ? text(left, subY, state.subtitle, `fill="${colors.muted}" font-size="${fontSub}" font-weight="700" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`) : '',
     state.source ? text(left, sourceY, state.source, `fill="${colors.muted}" font-size="${Math.max(14, Math.round(size.w * 0.012))}" font-weight="750" font-family="system-ui, Arial, sans-serif"`) : ''
   ].join('');
 }
@@ -360,10 +433,10 @@ function legendMarkup(rows, size, colors, palette){
   let y = Math.round(size.h * 0.23);
   const itemH = Math.max(24, Math.round(size.h * 0.035));
   const font = Math.max(14, Math.round(size.w * 0.012));
-  return `<g aria-label="Légende">${rows.slice(0, 12).map((row, index) => {
+  return `<g aria-label="Legende">${rows.slice(0, 12).map((row, index) => {
     const yy = y + index * itemH;
-    const label = row.label.length > 22 ? row.label.slice(0, 21) + '…' : row.label;
-    return `<rect x="${x}" y="${yy - font + 2}" width="${font}" height="${font}" rx="4" fill="${palette[index]}"/><text x="${x + font + 10}" y="${yy}" fill="${colors.text}" font-size="${font}" font-weight="750" font-family="system-ui, Arial, sans-serif">${esc(label)} · ${formatValue(row.value)}</text>`;
+    const label = row.label.length > 22 ? row.label.slice(0, 21) + '...' : row.label;
+    return `<rect x="${x}" y="${yy - font + 2}" width="${font}" height="${font}" rx="4" fill="${palette[index]}"/><text x="${x + font + 10}" y="${yy}" fill="${colors.text}" font-size="${font}" font-weight="750" font-family="system-ui, Arial, sans-serif">${esc(label)} - ${formatValue(row.value)}</text>`;
   }).join('')}</g>`;
 }
 function scaleInfo(values){
@@ -382,13 +455,13 @@ function axisAndGrid(x, y, w, h, scale, colors){
     for (let i = 0; i <= ticks; i++) {
       const yy = y + h - (i / ticks) * h;
       const value = scale.min + (i / ticks) * scale.span;
-      out += `<line x1="${x}" y1="${yy}" x2="${x + w}" y2="${yy}" stroke="${colors.grid}" stroke-width="1"/>`;
+      out += `<line x1="${x}" y1="${yy}" x2="${x + w}" y2="${yy}" stroke="${colors.grid}" stroke-width="1" stroke-dasharray="5 9" stroke-linecap="round"/>`;
       out += text(x - 12, yy + 5, formatValue(value), `fill="${colors.muted}" font-size="14" font-weight="700" text-anchor="end" font-family="system-ui, Arial, sans-serif"`);
     }
   }
   const baseY = y + h - ((0 - scale.min) / scale.span) * h;
-  out += `<line x1="${x}" y1="${baseY}" x2="${x + w}" y2="${baseY}" stroke="${colors.axis}" stroke-width="2" opacity=".85"/>`;
-  out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".60"/>`;
+  out += `<line x1="${x}" y1="${baseY}" x2="${x + w}" y2="${baseY}" stroke="${colors.axis}" stroke-width="2" opacity=".82" stroke-linecap="round"/>`;
+  out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".52" stroke-linecap="round"/>`;
   return out;
 }
 function glitterDefs(){
@@ -411,9 +484,9 @@ function glitterDefs(){
 }
 function roundedReferenceBarPath(x, y, w, h, variant='glitterBar'){
   if (variant === 'glitterBar2') {
-    // Glitter 2 : forme inversée demandée.
-    // - grand arrondi en haut à gauche ;
-    // - grand arrondi en bas à droite ;
+    // Glitter 2: forme inversee demandee.
+    // - grand arrondi en haut a gauche ;
+    // - grand arrondi en bas a droite ;
     // - les deux autres coins restent presque droits.
     const topLeft = Math.min(h * 0.21, w * 1.08);
     const topRight = Math.min(h * 0.04, w * 0.12, 12);
@@ -512,7 +585,7 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
   const wide = size.w >= size.h;
   const hasInfo = !!String(`${state.title}${state.subtitle}${state.source}`).trim();
   const left = Math.round(size.w * (wide ? 0.03 : 0.07));
-  const right = Math.round(size.w * (wide ? 0.03 : 0.07));
+  const right = Math.round(size.w * (state.showLegend ? (wide ? 0.25 : 0.18) : (wide ? 0.03 : 0.07)));
   const top = Math.round(size.h * (wide ? (hasInfo ? 0.22 : 0.09) : (hasInfo ? 0.20 : 0.11)));
   const bottom = Math.round(size.h * (wide ? 0.16 : 0.15));
   const chartW = size.w - left - right;
@@ -547,7 +620,7 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
     const shadowH = Math.max(12, shadowBottomY - shadowTopY);
     const shadowPath = roundedReferenceBarPath(x + shadowDx, shadowTopY, barW, shadowH, variant);
     const disableShadow = forceNoShadow || ['glitter1soft','glitter2soft'].includes(state.theme);
-    const label = row.label.length > 12 ? row.label.slice(0, 11) + '…' : row.label;
+    const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
 
     out += `${glitterBarGradientDef(gradId, color)}
     <g class="glitterBarItem">
@@ -582,15 +655,18 @@ function renderBar(rows, size, colors, palette){
   const barW = Math.max(14, (w - gap * (rows.length - 1)) / Math.max(1, rows.length) * state.weight);
   const step = w / Math.max(1, rows.length);
   const baseY = y + h - ((0 - scale.min) / scale.span) * h;
-  let out = axisAndGrid(x, y, w, h, scale, colors);
+  let out = plotSurface(x - 18, y - 18, w + 36, h + 36, colors);
+  out += axisAndGrid(x, y, w, h, scale, colors);
   rows.forEach((row, index) => {
     const cx = x + step * index + step / 2;
     const targetY = y + h - ((row.value - scale.min) / scale.span) * h;
     const top = Math.min(baseY, targetY);
     const bh = Math.abs(baseY - targetY);
-    out += `<rect x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${Math.min(14, barW / 2)}" fill="${palette[index]}"/>`;
+    const rx = Math.min(18, barW / 2);
+    out += `<rect x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
+    out += `<rect x="${cx - barW / 2 + Math.max(3, barW * 0.08)}" y="${top + 4}" width="${Math.max(2, barW * 0.18)}" height="${Math.max(0, bh - 8)}" rx="${Math.max(1, rx * .55)}" fill="#ffffff" opacity=".13"/>`;
     if (state.showValues) out += text(cx, top - 10, formatValue(row.value), `fill="${colors.text}" font-size="16" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    const label = row.label.length > 12 ? row.label.slice(0, 11) + '…' : row.label;
+    const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
     out += text(cx, y + h + 34, label, `fill="${colors.muted}" font-size="15" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
   return out;
@@ -603,20 +679,21 @@ function renderHorizontalBar(rows, size, colors, palette){
   const max = Math.max(...rows.map(r => Math.abs(r.value)), 1);
   const rowH = h / Math.max(1, rows.length);
   const barH = Math.max(14, rowH * 0.55 * state.weight);
-  let out = '';
+  let out = plotSurface(x - 20, y - 18, w + 40, h + 36, colors);
   if (state.showGrid) {
     for (let i = 0; i <= 5; i++) {
       const xx = x + (i / 5) * w;
-      out += `<line x1="${xx}" y1="${y}" x2="${xx}" y2="${y + h}" stroke="${colors.grid}" stroke-width="1"/>`;
+      out += `<line x1="${xx}" y1="${y}" x2="${xx}" y2="${y + h}" stroke="${colors.grid}" stroke-width="1" stroke-dasharray="5 9" stroke-linecap="round"/>`;
     }
   }
-  out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".70"/>`;
+  out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".64" stroke-linecap="round"/>`;
   rows.forEach((row, index) => {
     const yy = y + index * rowH + rowH / 2;
     const bw = Math.abs(row.value) / max * w;
-    const label = row.label.length > 18 ? row.label.slice(0, 17) + '…' : row.label;
+    const label = row.label.length > 18 ? row.label.slice(0, 17) + '...' : row.label;
     out += text(x - 16, yy + 5, label, `fill="${colors.muted}" font-size="16" font-weight="800" text-anchor="end" font-family="system-ui, Arial, sans-serif"`);
-    out += `<rect x="${x}" y="${yy - barH / 2}" width="${bw}" height="${barH}" rx="${barH / 2}" fill="${palette[index]}"/>`;
+    out += `<rect x="${x}" y="${yy - barH / 2}" width="${bw}" height="${barH}" rx="${barH / 2}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.35)}" stroke-width="1"/>`;
+    out += `<rect x="${x + 5}" y="${yy - barH / 2 + Math.max(3, barH * .12)}" width="${Math.max(0, bw - 10)}" height="${Math.max(2, barH * .18)}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>`;
     if (state.showValues) out += text(x + bw + 12, yy + 5, formatValue(row.value), `fill="${colors.text}" font-size="16" font-weight="900" font-family="system-ui, Arial, sans-serif"`);
   });
   return out;
@@ -633,19 +710,84 @@ function renderLineOrArea(rows, size, colors, palette, area=false){
     y:y + h - ((row.value - scale.min) / scale.span) * h,
     row
   }));
-  let out = axisAndGrid(x, y, w, h, scale, colors);
+  let out = plotSurface(x - 18, y - 18, w + 36, h + 36, colors);
+  out += axisAndGrid(x, y, w, h, scale, colors);
   if (area && points.length) {
     const baseY = y + h - ((0 - scale.min) / scale.span) * h;
     const areaPoints = [{x:points[0].x,y:baseY}, ...points, {x:points[points.length - 1].x,y:baseY}];
-    out += polygon(areaPoints, `fill="${colors.accent}" opacity=".24"`);
+    out += polygon(areaPoints, `fill="url(#line-area-fill)"`);
   }
+  out += line(points, `fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".28" transform="translate(0 5)"`);
   out += line(points, `fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"`);
   points.forEach((point, index) => {
-    out += `<circle cx="${point.x}" cy="${point.y}" r="${Math.max(6, 8 * state.weight)}" fill="${palette[index]}" stroke="${colors.text}" stroke-width="2"/>`;
+    out += `<circle cx="${point.x}" cy="${point.y}" r="${Math.max(6, 8 * state.weight)}" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
     if (state.showValues) out += text(point.x, point.y - 16, formatValue(point.row.value), `fill="${colors.text}" font-size="15" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    const label = point.row.label.length > 12 ? point.row.label.slice(0, 11) + '…' : point.row.label;
+    const label = point.row.label.length > 12 ? point.row.label.slice(0, 11) + '...' : point.row.label;
     out += text(point.x, y + h + 34, label, `fill="${colors.muted}" font-size="14" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
+  return out;
+}
+function renderLinearGraph(rows, size, colors, palette){
+  const x = Math.round(size.w * 0.08);
+  const y = Math.round(size.h * 0.19);
+  const w = Math.round(size.w * (state.showLegend ? 0.70 : 0.84));
+  const h = Math.round(size.h * 0.62);
+  const values = rows.map(r => Number(r.value));
+  const scale = scaleInfo(values);
+  const toPoint = (value, index, row) => ({
+    x:x + (rows.length === 1 ? w / 2 : index / (rows.length - 1) * w),
+    y:y + h - ((value - scale.min) / scale.span) * h,
+    value,
+    row
+  });
+  const main = rows.map((row, index) => toPoint(Number(row.value), index, row));
+  const average = values.reduce((sum, value) => sum + value, 0) / Math.max(1, values.length);
+  const soft = rows.map((row, index) => {
+    const previous = values[Math.max(0, index - 1)];
+    const next = values[Math.min(values.length - 1, index + 1)];
+    return toPoint((previous + Number(row.value) + next) / 3, index, row);
+  });
+  const baseline = rows.map((row, index) => toPoint(average * 0.55 + Number(row.value) * 0.35 + scale.max * 0.10, index, row));
+  const baseY = y + h - ((0 - scale.min) / scale.span) * h;
+  const mainPath = smoothPath(main);
+  const softPath = smoothPath(soft);
+  const basePath = smoothPath(baseline);
+  let out = `<rect x="${x - 34}" y="${y - 78}" width="${w + (state.showLegend ? Math.round(size.w * 0.18) : 68)}" height="${h + 128}" rx="16" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
+  if (state.title) out += text(x - 18, y - 46, state.title, `fill="${colors.text}" font-size="${Math.max(16, Math.round(size.w * 0.013))}" font-weight="850" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+  if (state.subtitle) out += text(x - 18, y - 22, state.subtitle, `fill="${colors.muted}" font-size="${Math.max(12, Math.round(size.w * 0.0095))}" font-weight="650" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+  for (let i = 0; i <= 5; i++) {
+    const yy = y + h - (i / 5) * h;
+    const value = scale.min + (i / 5) * scale.span;
+    out += `<line x1="${x}" y1="${yy}" x2="${x + w}" y2="${yy}" stroke="${colors.grid}" stroke-width="1"/>`;
+    out += text(x - 16, yy + 5, formatValue(value), `fill="${colors.muted}" font-size="12" font-weight="650" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+  }
+  out += `<line x1="${x}" y1="${baseY}" x2="${x + w}" y2="${baseY}" stroke="${colors.axis}" stroke-width="1.2" opacity=".42"/>`;
+  if (main.length) {
+    const areaD = `${mainPath} L ${main[main.length - 1].x} ${baseY} L ${main[0].x} ${baseY} Z`;
+    out += `<path d="${areaD}" fill="${colors.accent}" opacity=".16"/>`;
+    out += `<path d="${basePath}" fill="none" stroke="${palette[2] || colors.accent2}" stroke-width="${Math.max(2.5, 3.5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".20"/>`;
+    out += `<path d="${softPath}" fill="none" stroke="${palette[1] || colors.accent2}" stroke-width="${Math.max(3, 4.5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".42"/>`;
+    out += `<path d="${mainPath}" fill="none" stroke="${palette[0] || colors.accent}" stroke-width="${Math.max(3.5, 5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+  }
+  main.forEach((point, index) => {
+    const label = point.row.label.length > 9 ? point.row.label.slice(0, 8) + '...' : point.row.label;
+    out += text(point.x, y + h + 30, label || String(index + 1), `fill="${colors.muted}" font-size="12" font-weight="700" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    if (state.showValues) {
+      out += `<circle cx="${point.x}" cy="${point.y}" r="4.5" fill="${palette[0] || colors.accent}" stroke="${colors.panel}" stroke-width="2"/>`;
+      out += text(point.x, point.y - 14, formatValue(point.value), `fill="${colors.text}" font-size="12" font-weight="850" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    }
+  });
+  if (state.showLegend) {
+    const legendX = x + w + Math.round(size.w * 0.04);
+    const legendY = y + Math.round(h * 0.30);
+    const labels = ['Serie principale','Tendance lissee','Reference'];
+    const legendColors = [palette[0] || colors.accent, palette[1] || colors.accent2, palette[2] || brightenColor(colors.accent, .4)];
+    labels.forEach((label, index) => {
+      const yy = legendY + index * 36;
+      out += `<circle cx="${legendX}" cy="${yy}" r="9" fill="${legendColors[index]}" opacity="${index === 2 ? '.35' : '1'}"/>`;
+      out += text(legendX + 22, yy + 5, label, `fill="${colors.text}" font-size="14" font-weight="700" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    });
+  }
   return out;
 }
 function renderPieOrDonut(rows, size, colors, palette, donut=false){
@@ -655,12 +797,12 @@ function renderPieOrDonut(rows, size, colors, palette, donut=false){
   const r = Math.round(Math.min(size.w, size.h) * 0.24 * state.weight);
   const inner = donut ? r * 0.56 : 0;
   let start = -Math.PI / 2;
-  let out = '';
+  let out = `<circle cx="${cx}" cy="${cy}" r="${r + 22}" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
   rows.forEach((row, index) => {
     const value = Math.max(0, Math.abs(row.value));
     const end = start + (value / total) * Math.PI * 2;
     const path = donut ? donutPath(cx, cy, r, inner, start, end) : arcPath(cx, cy, r, start, end);
-    out += `<path d="${path}" fill="${palette[index]}" stroke="${state.transparent ? 'rgba(0,0,0,.25)' : colors.panel}" stroke-width="4"/>`;
+    out += `<path d="${path}" fill="${seriesFill(index)}" stroke="${state.transparent ? 'rgba(0,0,0,.25)' : colors.panel}" stroke-width="4"/>`;
     if (state.showValues && value > 0) {
       const mid = (start + end) / 2;
       const labelPos = polar(cx, cy, donut ? (r + inner) / 2 : r * 0.66, mid);
@@ -671,8 +813,118 @@ function renderPieOrDonut(rows, size, colors, palette, donut=false){
   });
   if (donut) {
     out += text(cx, cy - 6, 'Total', `fill="${colors.muted}" font-size="18" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    out += text(cx, cy + 28, formatValue(total), `fill="${colors.text}" font-size="34" font-weight="950" text-anchor="middle" font-family="Impact, Arial Black, Arial, sans-serif"`);
+    out += text(cx, cy + 28, formatValue(total), `fill="${colors.text}" font-size="34" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
   }
+  return out;
+}
+function renderDonutTable(rows, size, colors, palette){
+  const cleanRows = rows.filter(row => Math.abs(row.value) > 0).slice(0, 5);
+  if (!cleanRows.length) return emptyMarkup(size, colors);
+  const total = cleanRows.reduce((sum, row) => sum + Math.abs(row.value), 0) || 1;
+  const wide = size.w >= size.h;
+  const cx = Math.round(size.w * (wide ? 0.31 : 0.50));
+  const cy = Math.round(size.h * (wide ? 0.53 : 0.45));
+  const r = Math.round(Math.min(size.w, size.h) * (wide ? 0.265 : 0.25) * state.weight);
+  const stroke = Math.max(42, Math.round(r * 0.34));
+  const gap = Math.max(0.035, Math.min(0.07, 0.30 / cleanRows.length));
+  const infoX = Math.round(size.w * 0.07);
+  const titleY = Math.round(size.h * 0.12);
+  const subY = titleY + Math.round(size.h * 0.045);
+  const sourceY = size.h - Math.round(size.h * 0.045);
+  const titleSize = Math.max(34, Math.round(size.w * 0.032));
+  const subSize = Math.max(17, Math.round(size.w * 0.015));
+  const sourceSize = Math.max(13, Math.round(size.w * 0.011));
+  let start = -Math.PI / 2;
+  let out = [
+    state.title ? text(infoX, titleY, state.title, `fill="${colors.text}" font-size="${titleSize}" font-weight="850" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`) : '',
+    state.subtitle ? text(infoX, subY, state.subtitle, `fill="${colors.muted}" font-size="${subSize}" font-weight="700" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`) : '',
+    state.source ? text(infoX, sourceY, state.source, `fill="${colors.muted}" font-size="${sourceSize}" font-weight="750" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`) : ''
+  ].join('');
+  cleanRows.forEach((row, index) => {
+    const value = Math.abs(row.value);
+    const end = start + (value / total) * Math.PI * 2;
+    const segStart = start + gap;
+    const segEnd = Math.max(segStart + 0.01, end - gap);
+    out += `<path d="${ringArcPath(cx, cy, r, segStart, segEnd)}" fill="none" stroke="${seriesFill(index)}" stroke-width="${stroke}" stroke-linecap="round"/>`;
+    if (state.showValues && !state.showLegend) {
+      const mid = (segStart + segEnd) / 2;
+      const labelPos = polar(cx, cy, r + stroke * 0.62, mid);
+      const pct = Math.round(value / total * 100);
+      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, `fill="${colors.text}" font-size="${Math.max(13, Math.round(size.w * 0.011))}" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    }
+    start = end;
+  });
+
+  if (!state.showLegend) return out;
+  const legendX = Math.round(size.w * (wide ? 0.64 : 0.18));
+  const legendY = Math.round(size.h * (wide ? 0.38 : 0.74));
+  const itemH = Math.max(34, Math.round(size.h * 0.045));
+  const dot = Math.max(14, Math.round(size.w * 0.012));
+  cleanRows.forEach((row, index) => {
+    const yy = legendY + index * itemH;
+    const pct = Math.round(Math.abs(row.value) / total * 100);
+    const label = row.label.length > 28 ? row.label.slice(0, 27) + '...' : row.label;
+    out += `<circle cx="${legendX}" cy="${yy}" r="${dot / 2}" fill="${seriesFill(index)}"/>`;
+    out += text(legendX + dot + 16, yy + dot * 0.32, label || `Element ${index + 1}`, `fill="${colors.text}" font-size="${Math.max(15, Math.round(size.w * 0.014))}" font-weight="650" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(legendX + Math.round(size.w * 0.27), yy + dot * 0.32, `${pct}%`, `fill="${colors.muted}" font-size="${Math.max(14, Math.round(size.w * 0.012))}" font-weight="850" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+  });
+  return out;
+}
+function renderBubble(rows, size, colors, palette){
+  const cleanRows = rows.filter(row => Number.isFinite(row.value)).slice(0, 14);
+  if (!cleanRows.length) return emptyMarkup(size, colors);
+  const x = Math.round(size.w * 0.10);
+  const y = Math.round(size.h * 0.24);
+  const w = Math.round(size.w * (state.showLegend ? 0.58 : 0.80));
+  const h = Math.round(size.h * 0.58);
+  const max = Math.max(...cleanRows.map(row => Math.abs(row.value)), 1);
+  const slots = [
+    [0.50,0.48,1.00],[0.27,0.42,.74],[0.73,0.42,.70],[0.38,0.72,.58],[0.63,0.72,.54],
+    [0.16,0.66,.46],[0.84,0.66,.44],[0.18,0.24,.40],[0.82,0.24,.38],[0.50,0.18,.34],
+    [0.31,0.18,.32],[0.69,0.18,.30],[0.08,0.45,.28],[0.92,0.45,.26]
+  ];
+  let out = plotSurface(x - 18, y - 18, w + 36, h + 36, colors);
+  cleanRows.forEach((row, index) => {
+    const slot = slots[index % slots.length];
+    const radius = Math.max(34, Math.min(132, Math.sqrt(Math.abs(row.value) / max) * 112 * slot[2] * state.weight));
+    const cx = x + slot[0] * w;
+    const cy = y + slot[1] * h;
+    const label = row.label.length > 14 ? row.label.slice(0, 13) + '...' : row.label;
+    out += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="${seriesFill(index)}" opacity=".88" stroke="${brightenColor(palette[index], .38)}" stroke-width="2"/>`;
+    out += `<circle cx="${cx - radius * .28}" cy="${cy - radius * .28}" r="${radius * .28}" fill="#ffffff" opacity=".14"/>`;
+    out += text(cx, cy - 4, label || `Element ${index + 1}`, `fill="#ffffff" font-size="${Math.max(13, Math.min(22, radius * .22))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(cx, cy + Math.max(16, radius * .24), formatValue(row.value), `fill="#ffffff" font-size="${Math.max(12, Math.min(20, radius * .20))}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+  });
+  return out;
+}
+function renderFunnel(rows, size, colors, palette){
+  const cleanRows = rows.filter(row => Number.isFinite(row.value)).slice(0, 8);
+  if (!cleanRows.length) return emptyMarkup(size, colors);
+  const max = Math.max(...cleanRows.map(row => Math.max(0, Math.abs(row.value))), 1);
+  const cx = Math.round(size.w * (state.showLegend ? 0.38 : 0.50));
+  const top = Math.round(size.h * 0.24);
+  const h = Math.round(size.h * 0.58);
+  const maxW = Math.round(size.w * (state.showLegend ? 0.50 : 0.66));
+  const stepH = h / cleanRows.length;
+  let out = `<rect x="${cx - maxW / 2 - 26}" y="${top - 22}" width="${maxW + 52}" height="${h + 44}" rx="24" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
+  cleanRows.forEach((row, index) => {
+    const value = Math.max(0, Math.abs(row.value));
+    const nextValue = index < cleanRows.length - 1 ? Math.max(0, Math.abs(cleanRows[index + 1].value)) : value * 0.72;
+    const topW = Math.max(maxW * 0.18, maxW * (value / max));
+    const bottomW = Math.max(maxW * 0.14, maxW * (nextValue / max));
+    const y1 = top + index * stepH;
+    const y2 = y1 + stepH - 7;
+    const points = [
+      {x:cx - topW / 2, y:y1},
+      {x:cx + topW / 2, y:y1},
+      {x:cx + bottomW / 2, y:y2},
+      {x:cx - bottomW / 2, y:y2}
+    ];
+    const label = row.label.length > 24 ? row.label.slice(0, 23) + '...' : row.label;
+    out += polygon(points, `fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], .34)}" stroke-width="1.2" opacity=".96"`);
+    out += text(cx, y1 + stepH * .45, label || `Etape ${index + 1}`, `fill="#ffffff" font-size="${Math.max(15, Math.round(size.w * 0.012))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(cx, y1 + stepH * .68, formatValue(row.value), `fill="#ffffff" font-size="${Math.max(13, Math.round(size.w * 0.010))}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif" opacity=".88"`);
+  });
   return out;
 }
 function renderRadar(rows, size, colors, palette){
@@ -682,11 +934,11 @@ function renderRadar(rows, size, colors, palette){
   const cy = Math.round(size.h * 0.54);
   const r = Math.round(Math.min(size.w, size.h) * 0.25 * state.weight);
   const count = rows.length;
-  let out = '';
+  let out = `<circle cx="${cx}" cy="${cy}" r="${r + 52}" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
   for (let ring = 1; ring <= 5; ring++) {
     const rr = r * ring / 5;
     const pts = rows.map((row, index) => polar(cx, cy, rr, -Math.PI / 2 + index / count * Math.PI * 2));
-    out += polygon(pts, `fill="none" stroke="${colors.grid}" stroke-width="1"`);
+    out += polygon(pts, `fill="none" stroke="${colors.grid}" stroke-width="1"${ring === 5 ? '' : ' stroke-dasharray="4 8"'} `);
   }
   const dataPoints = rows.map((row, index) => polar(cx, cy, r * Math.max(0, row.value) / max, -Math.PI / 2 + index / count * Math.PI * 2));
   rows.forEach((row, index) => {
@@ -694,16 +946,16 @@ function renderRadar(rows, size, colors, palette){
     const end = polar(cx, cy, r, angle);
     const label = polar(cx, cy, r + 36, angle);
     out += `<line x1="${cx}" y1="${cy}" x2="${end.x}" y2="${end.y}" stroke="${colors.grid}" stroke-width="1"/>`;
-    out += text(label.x, label.y + 5, row.label.length > 12 ? row.label.slice(0, 11) + '…' : row.label, `fill="${colors.muted}" font-size="15" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    out += text(label.x, label.y + 5, row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label, `fill="${colors.muted}" font-size="15" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
   out += polygon(dataPoints, `fill="${colors.accent}" opacity=".25" stroke="${colors.accent}" stroke-width="${Math.max(4, 5 * state.weight)}"`);
   dataPoints.forEach((point, index) => {
-    out += `<circle cx="${point.x}" cy="${point.y}" r="6" fill="${palette[index]}" stroke="${colors.text}" stroke-width="2"/>`;
+    out += `<circle cx="${point.x}" cy="${point.y}" r="6" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
   });
   return out;
 }
 function emptyMarkup(size, colors){
-  return `<text x="${size.w / 2}" y="${size.h / 2}" fill="${colors.text}" font-size="34" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif">Ajoute au moins une donnée</text>`;
+  return `<text x="${size.w / 2}" y="${size.h / 2}" fill="${colors.text}" font-size="34" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif">Ajoute au moins une donnee</text>`;
 }
 function buildSvgMarkup(){
   const size = chartSize();
@@ -719,15 +971,23 @@ function buildSvgMarkup(){
   else if (state.chartType === 'glitterBar2NoShadow') body = renderGlitterBar(rows, size, colors, palette, 'glitterBar2', true);
   else if (state.chartType === 'horizontalBar') body = renderHorizontalBar(rows, size, colors, palette);
   else if (state.chartType === 'line') body = renderLineOrArea(rows, size, colors, palette, false);
+  else if (state.chartType === 'linearGraph') body = renderLinearGraph(rows, size, colors, palette);
   else if (state.chartType === 'area') body = renderLineOrArea(rows, size, colors, palette, true);
   else if (state.chartType === 'pie') body = renderPieOrDonut(rows, size, colors, palette, false);
   else if (state.chartType === 'donut') body = renderPieOrDonut(rows, size, colors, palette, true);
+  else if (state.chartType === 'donutTable') body = renderDonutTable(rows, size, colors, palette);
+  else if (state.chartType === 'bubble') body = renderBubble(rows, size, colors, palette);
+  else if (state.chartType === 'funnel') body = renderFunnel(rows, size, colors, palette);
   else if (state.chartType === 'radar') body = renderRadar(rows, size, colors, palette);
 
-  const chrome = ['glitterBar','glitterBarNoShadow','glitterBar2','glitterBar2NoShadow'].includes(state.chartType) ? '' : `${headerMarkup(size, colors)}${legendMarkup(rows, size, colors, palette)}`;
+  const isGlitter = ['glitterBar','glitterBarNoShadow','glitterBar2','glitterBar2NoShadow'].includes(state.chartType);
+  const hasCustomChrome = ['donutTable','linearGraph'].includes(state.chartType);
+  const chrome = isGlitter ? legendMarkup(rows, size, colors, palette) : `${hasCustomChrome ? '' : headerMarkup(size, colors)}${hasCustomChrome ? '' : legendMarkup(rows, size, colors, palette)}`;
+  const defs = isGlitter ? '' : seriesDefs(palette, colors);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${size.w}" height="${size.h}" viewBox="0 0 ${size.w} ${size.h}" role="img" aria-label="${attr(state.title || 'Graphique')}">
   ${backgroundMarkup(size, state.transparent)}
+  ${defs}
   ${chrome}
   <g>${body}</g>
 </svg>`;
@@ -741,10 +1001,10 @@ function renderSvg(){
 function renderRowsEditor(){
   els.rows.innerHTML = state.rows.map((row, index) => `
     <div class="dataRow" data-row="${index}">
-      <input data-field="label" type="text" value="${attr(row.label)}" aria-label="Libellé ligne ${index + 1}">
+      <input data-field="label" type="text" value="${attr(row.label)}" aria-label="Libelle ligne ${index + 1}">
       <input data-field="value" type="number" step="0.01" value="${attr(row.value)}" aria-label="Valeur ligne ${index + 1}">
       <input data-field="color" type="color" value="${attr(normalizeColor(row.color, AUTO_COLORS[index % AUTO_COLORS.length]))}" aria-label="Couleur ligne ${index + 1}">
-      <button class="rowRemove" type="button" data-remove-row="${index}" aria-label="Supprimer la ligne ${index + 1}">×</button>
+      <button class="rowRemove" type="button" data-remove-row="${index}" aria-label="Supprimer la ligne ${index + 1}">&times;</button>
     </div>`).join('');
 }
 function renderControls(){
@@ -838,12 +1098,12 @@ function updateRowFromInput(input){
   scheduleSave();
 }
 function addRow(){
-  state.rows.push({label:`Donnée ${state.rows.length + 1}`, value:10, color:AUTO_COLORS[state.rows.length % AUTO_COLORS.length]});
+  state.rows.push({label:`Donnee ${state.rows.length + 1}`, value:10, color:AUTO_COLORS[state.rows.length % AUTO_COLORS.length]});
   renderAll();
   scheduleSave();
 }
 function removeRow(index){
-  if (state.rows.length <= 1) return toast('Garde au moins une ligne de données.');
+  if (state.rows.length <= 1) return toast('Garde au moins une ligne de donnees.');
   state.rows.splice(index, 1);
   renderAll();
   scheduleSave();
@@ -865,7 +1125,7 @@ function confirmReset(){
   renderAll();
   save(true);
   pushHistory();
-  toast('Graphique réinitialisé.');
+  toast('Graphique reinitialise.');
 }
 function getSvgForDownload(){ return buildSvgMarkup(); }
 function downloadBlob(content, filename, type){
@@ -890,10 +1150,10 @@ async function copySvg(){
   const svg = getSvgForDownload();
   try{
     await navigator.clipboard.writeText(svg);
-    toast('SVG copié dans le presse-papiers.');
+    toast('SVG copie dans le presse-papiers.');
   }catch{
     downloadBlob(svg, filename('svg'), 'image/svg+xml;charset=utf-8');
-    toast('Copie impossible : SVG téléchargé à la place.');
+    toast('Copie impossible : SVG telecharge a la place.');
   }
 }
 function exportPng(){
@@ -915,7 +1175,7 @@ function exportPng(){
       URL.revokeObjectURL(url);
       if (!pngBlob) return toast('Export PNG impossible.');
       downloadBlob(pngBlob, filename('png'), 'image/png');
-      toast('PNG exporté.');
+      toast('PNG exporte.');
     }, 'image/png');
   };
   img.onerror = () => {

@@ -8,7 +8,7 @@
   --primary:#6d6cff;
   --primary2:#38bdf8;
   --danger:#7f1d1d;
-  --radius:14px;
+  --radius:10px;
   --uiScrollTrack:rgba(15,23,42,.62);
   --uiScrollThumb:rgba(96,165,250,.62);
   --uiScrollThumbHover:rgba(147,197,253,.92);
@@ -20,7 +20,9 @@ body{
   min-height:100%;
   display:flex;
   flex-direction:column;
-  background:var(--appBg);
+  background:
+    linear-gradient(180deg, rgba(255,255,255,.025), transparent 180px),
+    var(--appBg);
   color:var(--text);
   font-family:system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
   font-synthesis:none;
@@ -38,14 +40,15 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
   align-items:center;
   justify-content:space-between;
   gap:12px;
-  background:#080e1a;
+  background:rgba(8,14,26,.96);
+  backdrop-filter:blur(12px);
 }
 .brand{display:flex;align-items:center;gap:12px;min-width:280px}
 .brand__mark{
   display:inline-flex;align-items:center;justify-content:center;
-  min-height:32px;padding:0 12px;border-radius:999px;
-  background:#202348;border:1px solid #454b82;color:#fff;
-  font-size:12px;font-weight:950;letter-spacing:.08em;
+  min-height:32px;padding:0 12px;border-radius:8px;
+  background:linear-gradient(135deg,#28304f,#151f35);border:1px solid #465070;color:#fff;
+  font-size:12px;font-weight:950;letter-spacing:0;
 }
 .brand h1{margin:0;font-size:18px;line-height:1.1;font-weight:950}
 .brand p{margin:3px 0 0;color:var(--muted);font-size:12px}
@@ -54,7 +57,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
 .btn{
   min-height:32px;
   border:1px solid var(--line);
-  border-radius:10px;
+  border-radius:8px;
   padding:6px 11px;
   color:#fff;
   background:#162033;
@@ -93,8 +96,9 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
 .panel{
   flex:0 0 auto;
   border:1px solid var(--line);
-  border-radius:16px;
-  background:#0e1626;
+  border-radius:10px;
+  background:linear-gradient(180deg,#101a2b,#0d1523);
+  box-shadow:0 10px 28px rgba(0,0,0,.18);
   overflow:hidden;
 }
 .accordionMenu>summary{
@@ -116,13 +120,13 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
   border:1px solid rgba(255,255,255,.14);
   background:#172133;color:#fff;font-size:15px;font-weight:950;line-height:1;
 }
-.accordionMenu[open]>summary::after{content:"−"}
+.accordionMenu[open]>summary::after{content:"-"}
 .accordionMenu[open]>summary{border-bottom:1px solid rgba(255,255,255,.08)}
 .panelBody{padding:0 10px 10px}
 .panelBody>:first-child{margin-top:8px}
 .sectionTitle{display:flex;align-items:flex-start;gap:9px;margin:0;min-width:0;flex:1}
 .sectionTitle>span{
-  flex:0 0 auto;width:28px;height:28px;border-radius:10px;
+  flex:0 0 auto;width:28px;height:28px;border-radius:8px;
   display:grid;place-items:center;
   background:linear-gradient(135deg,var(--primary),var(--primary2));
   font-weight:950;font-size:13px;
@@ -134,7 +138,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
 .field span,.choiceGroup>span{font-size:11px;color:#dbeafe;font-weight:950}
 input,select,textarea{
   width:100%;min-height:34px;border:1px solid var(--line);
-  border-radius:11px;background:#202938;color:#fff;
+  border-radius:8px;background:#202938;color:#fff;
   padding:7px 10px;outline:none;font-size:13px;
 }
 textarea{resize:vertical;min-height:70px;line-height:1.35}
@@ -152,7 +156,7 @@ input[type="range"]{padding:0;background:transparent;border:0}
 
 .switchBox{
   display:flex;flex-direction:row;align-items:center;gap:9px;
-  margin-top:9px;padding:8px;border-radius:12px;border:1px solid var(--line);
+  margin-top:9px;padding:8px;border-radius:8px;border:1px solid var(--line);
   background:#121c2e;
 }
 .switchBox input{
@@ -193,8 +197,8 @@ input[type="range"]{padding:0;background:transparent;border:0}
   min-width:0;
   min-height:0;
   border:1px solid var(--line);
-  border-radius:18px;
-  background:#080f1d;
+  border-radius:12px;
+  background:linear-gradient(180deg,#08111f,#070d18);
   overflow:hidden;
   display:flex;
   flex-direction:column;
@@ -230,10 +234,12 @@ input[type="range"]{padding:0;background:transparent;border:0}
   width:100%;
   max-width:1600px;
   aspect-ratio:16/9;
-  border-radius:24px;
+  border-radius:18px;
   overflow:hidden;
   background:var(--canvasBg);
   color:var(--canvasText);
+  --surface:rgba(255,255,255,.055);
+  --surfaceStroke:rgba(255,255,255,.14);
   border:1px solid rgba(255,255,255,.12);
   box-shadow:0 18px 70px rgba(0,0,0,.28);
 }
@@ -260,6 +266,24 @@ input[type="range"]{padding:0;background:transparent;border:0}
 .theme-arcade{--canvasBg:radial-gradient(circle at 15% 15%,rgba(255,43,214,.20),transparent 26%),linear-gradient(135deg,#070019,#18002e 55%,#00111f);--canvasText:#ffffff;--canvasMuted:#e9d5ff;--panelCard:#160023;--axis:#00f5ff;--grid:rgba(255,255,255,.15);--accent:#ff2bd6;--accent2:#00f5ff}
 .theme-glitter1soft{--canvasBg:linear-gradient(180deg,#0b1730,#081126);--canvasText:#ffffff;--canvasMuted:#dfe7fb;--panelCard:#12203d;--axis:#dff3fb;--grid:rgba(223,243,251,.14);--accent:#dff3fb;--accent2:#eadcf6}
 .theme-glitter2soft{--canvasBg:linear-gradient(180deg,#101a36,#0a1227);--canvasText:#ffffff;--canvasMuted:#f3ddea;--panelCard:#162544;--axis:#f6dce8;--grid:rgba(246,220,232,.14);--accent:#f6dce8;--accent2:#eee0fb}
+
+/* Professional theme tuning: preview variables used by the SVG export too. */
+.theme-midnight{--canvasBg:linear-gradient(180deg,#101827,#050914);--canvasText:#f8fafc;--canvasMuted:#a9b7cc;--panelCard:#121d2e;--axis:#8ab4f8;--grid:rgba(148,163,184,.18);--accent:#38bdf8;--accent2:#d8b4fe;--surface:rgba(255,255,255,.045);--surfaceStroke:rgba(255,255,255,.12)}
+.theme-clean{--canvasBg:linear-gradient(180deg,#f8fafc,#eef2f7);--canvasText:#0f172a;--canvasMuted:#566579;--panelCard:#ffffff;--axis:#334155;--grid:rgba(15,23,42,.12);--accent:#1d4ed8;--accent2:#be123c;--surface:rgba(255,255,255,.72);--surfaceStroke:rgba(15,23,42,.12)}
+.theme-neon{--canvasBg:linear-gradient(135deg,#15051f,#2a0c45 58%,#061c26);--canvasText:#ffffff;--canvasMuted:#e5d9ff;--panelCard:#261238;--axis:#f0abfc;--grid:rgba(255,255,255,.16);--accent:#d946ef;--accent2:#00d4ff;--surface:rgba(255,255,255,.055);--surfaceStroke:rgba(255,255,255,.14)}
+.theme-ocean{--canvasBg:linear-gradient(180deg,#07384c,#071827);--canvasText:#f8fdff;--canvasMuted:#b8e6f6;--panelCard:#0d3242;--axis:#67e8f9;--grid:rgba(186,230,253,.16);--accent:#0ea5e9;--accent2:#34d399;--surface:rgba(255,255,255,.05);--surfaceStroke:rgba(186,230,253,.14)}
+.theme-forest{--canvasBg:linear-gradient(180deg,#052b2a,#12351f);--canvasText:#f8fff8;--canvasMuted:#b8d8c0;--panelCard:#0e3327;--axis:#8bd9aa;--grid:rgba(187,247,208,.14);--accent:#10b981;--accent2:#eab308;--surface:rgba(255,255,255,.05);--surfaceStroke:rgba(187,247,208,.12)}
+.theme-sunset{--canvasBg:linear-gradient(135deg,#321238,#7c241b 58%,#c2601d);--canvasText:#fffaf5;--canvasMuted:#f7d8c4;--panelCard:#3c1d2b;--axis:#fdba74;--grid:rgba(255,237,213,.16);--accent:#fb7185;--accent2:#fbbf24;--surface:rgba(255,255,255,.06);--surfaceStroke:rgba(255,237,213,.14)}
+.theme-crystal{--canvasBg:linear-gradient(135deg,#f8fbff,#e8f7ff 58%,#f7eef8);--canvasText:#0f172a;--canvasMuted:#526070;--panelCard:#ffffff;--axis:#0f7490;--grid:rgba(15,23,42,.12);--accent:#0891b2;--accent2:#7c3aed;--surface:rgba(255,255,255,.7);--surfaceStroke:rgba(15,23,42,.12)}
+.theme-royal{--canvasBg:linear-gradient(135deg,#15111f,#34204c 60%,#171b34);--canvasText:#fffaf0;--canvasMuted:#d8d2ef;--panelCard:#231937;--axis:#facc15;--grid:rgba(221,214,254,.16);--accent:#facc15;--accent2:#7dd3fc;--surface:rgba(255,255,255,.05);--surfaceStroke:rgba(250,204,21,.16)}
+.theme-executive{--canvasBg:linear-gradient(180deg,#f9fafb,#e9eef5);--canvasText:#111827;--canvasMuted:#526070;--panelCard:#ffffff;--axis:#1f2937;--grid:rgba(31,41,55,.13);--accent:#1e40af;--accent2:#b45309;--surface:rgba(255,255,255,.76);--surfaceStroke:rgba(31,41,55,.12)}
+.theme-editorial{--canvasBg:linear-gradient(180deg,#fbfaf7,#eee9df);--canvasText:#161616;--canvasMuted:#666056;--panelCard:#fffdf8;--axis:#292524;--grid:rgba(41,37,36,.14);--accent:#c2410c;--accent2:#0f766e;--surface:rgba(255,253,248,.78);--surfaceStroke:rgba(41,37,36,.14)}
+.theme-graphite{--canvasBg:linear-gradient(180deg,#1d2228,#0c0f13);--canvasText:#f6f7f9;--canvasMuted:#aab2bd;--panelCard:#20262d;--axis:#cbd5e1;--grid:rgba(203,213,225,.15);--accent:#f59e0b;--accent2:#38bdf8;--surface:rgba(255,255,255,.055);--surfaceStroke:rgba(255,255,255,.12)}
+.theme-sage{--canvasBg:linear-gradient(180deg,#f6f8f1,#e4ecdf);--canvasText:#1f2a22;--canvasMuted:#607066;--panelCard:#fbfdf8;--axis:#4b604f;--grid:rgba(31,42,34,.13);--accent:#3f7d58;--accent2:#d97706;--surface:rgba(255,255,255,.72);--surfaceStroke:rgba(31,42,34,.12)}
+.theme-haute{--canvasBg:linear-gradient(135deg,#fbf7f6,#ebe4ec 58%,#d9e7ea);--canvasText:#171217;--canvasMuted:#6f626d;--panelCard:#fffafa;--axis:#5d435b;--grid:rgba(23,18,23,.12);--accent:#9f1239;--accent2:#2563eb;--surface:rgba(255,255,255,.70);--surfaceStroke:rgba(23,18,23,.12)}
+.theme-bloom{--canvasBg:linear-gradient(135deg,#fff7fb,#edfdf8 56%,#eef4ff);--canvasText:#172033;--canvasMuted:#607083;--panelCard:#ffffff;--axis:#2f5f75;--grid:rgba(23,32,51,.12);--accent:#e11d48;--accent2:#059669;--surface:rgba(255,255,255,.72);--surfaceStroke:rgba(23,32,51,.12)}
+.theme-cyberclear{--canvasBg:linear-gradient(135deg,#f7fbff,#e6fffb 56%,#eef2ff);--canvasText:#082f49;--canvasMuted:#486475;--panelCard:#ffffff;--axis:#0e7490;--grid:rgba(8,47,73,.13);--accent:#0891b2;--accent2:#7c3aed;--surface:rgba(255,255,255,.70);--surfaceStroke:rgba(8,47,73,.12)}
+.theme-noir{--canvasBg:linear-gradient(180deg,#121212,#030303);--canvasText:#f7f2e8;--canvasMuted:#c1b9aa;--panelCard:#1a1713;--axis:#d6b76a;--grid:rgba(247,242,232,.13);--accent:#d6b76a;--accent2:#ef4444;--surface:rgba(255,255,255,.045);--surfaceStroke:rgba(214,183,106,.18)}
 
 
 .modalOverlay{
@@ -312,7 +336,7 @@ body::-webkit-scrollbar-thumb:hover,.editor::-webkit-scrollbar-thumb:hover{backg
   .preview{min-height:460px}
 }
 
-/* Styles des graphiques glitter : le thème actif reste prioritaire */
+/* Styles des graphiques glitter : le theme actif reste prioritaire */
 .chartCanvas.chart-glitterBar,
 .chartCanvas.chart-glitterBarNoShadow,
 .chartCanvas.chart-glitterBar2,
