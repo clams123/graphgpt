@@ -167,6 +167,26 @@
             </label>
           </div>
           <div class="grid2">
+            <label class="field">
+              <span>Position valeurs</span>
+              <select id="valuePlacementInput">
+                <option value="outside">A l'exterieur</option>
+                <option value="inside">Dans la barre</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Barres horizontales</span>
+              <select id="horizontalShapeInput">
+                <option value="rounded">Arrondies simples</option>
+                <option value="glitter2">Forme glitter 2</option>
+              </select>
+            </label>
+          </div>
+          <label class="field">
+            <span>Arrondi glitter</span>
+            <input id="glitterRoundnessInput" type="range" min="0.5" max="3" step="0.05">
+          </label>
+          <div class="grid2">
             <label class="switchBox">
               <input id="showGridInput" type="checkbox">
               <span><strong>Grille</strong><small>Reperes visuels.</small></span>
@@ -176,6 +196,28 @@
               <span><strong>PNG transparent</strong><small>Retire le fond global.</small></span>
             </label>
           </div>
+          <label class="switchBox">
+            <input id="showAxisInput" type="checkbox">
+            <span><strong>Axe bleu</strong><small>Affiche le repere de depart du graphique.</small></span>
+          </label>
+          <label class="switchBox">
+            <input id="enableAnimationsInput" type="checkbox">
+            <span><strong>Animations</strong><small>Anime le SVG dans l'apercu.</small></span>
+          </label>
+          <div class="grid2">
+            <label class="field">
+              <span>Duree animation</span>
+              <input id="animationDurationInput" type="range" min="0.6" max="3" step="0.1">
+            </label>
+            <label class="field">
+              <span>Depart animation</span>
+              <input id="animationDelayInput" type="range" min="0" max="3" step="0.1">
+            </label>
+          </div>
+          <label class="field">
+            <span>Progression</span>
+            <input id="animationStaggerInput" type="range" min="0" max="0.35" step="0.01">
+          </label>
         </div>
       </details>
 
@@ -224,10 +266,59 @@
             <span>Epaisseur / taille visuelle</span>
             <input id="weightInput" type="range" min="0.7" max="1.5" step="0.05">
           </label>
+          <div class="grid2">
+            <label class="field">
+              <span>Taille titre</span>
+              <input id="titleScaleInput" type="range" min="0.7" max="1.25" step="0.05">
+            </label>
+            <label class="field">
+              <span>Taille valeurs</span>
+              <input id="valueScaleInput" type="range" min="0.7" max="1.35" step="0.05">
+            </label>
+          </div>
+          <label class="field">
+            <span>Police</span>
+            <select id="fontFamilyInput">
+              <option value="system">Systeme</option>
+              <option value="display">Display epaisse</option>
+              <option value="wuwa">WuWa inspire</option>
+              <option value="neo">Neo futuriste</option>
+              <option value="condensed">Condensee esport</option>
+              <option value="techno">Techno carree</option>
+              <option value="elegant">Elegant luxe</option>
+              <option value="editorial">Editorial</option>
+              <option value="serif">Serif classique</option>
+              <option value="arcade">Arcade</option>
+              <option value="mono">Monospace</option>
+            </select>
+          </label>
           <div class="quickActions quickActions--two">
             <button class="btn btn--ghost" id="copySvgBtn" type="button">Copier SVG</button>
             <button class="btn btn--ghost" id="downloadSvgBtn" type="button">Exporter SVG</button>
           </div>
+        </div>
+      </details>
+
+      <details class="panel accordionMenu">
+        <summary>
+          <div class="sectionTitle">
+            <span>5</span>
+            <div>
+              <h2>Bibliotheque</h2>
+              <p>Graphs complets et modeles de style.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="panelBody">
+          <label class="field">
+            <span>Nom</span>
+            <input id="libraryNameInput" type="text" autocomplete="off" placeholder="Nom du graph ou modele">
+          </label>
+          <div class="quickActions quickActions--two">
+            <button class="btn btn--soft" id="saveGraphBtn" type="button">Sauver graph</button>
+            <button class="btn btn--ghost" id="saveTemplateBtn" type="button">Sauver modele</button>
+          </div>
+          <div class="libraryList" id="libraryList" aria-live="polite"></div>
         </div>
       </details>
     </aside>

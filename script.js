@@ -1,4 +1,5 @@
 const STORAGE_KEY = 'graphiquesgpt_v9_1_5_glitter_sans_ombre_types';
+const LIBRARY_KEY = `${STORAGE_KEY}_library`;
 const THEMES = ['midnight','clean','executive','editorial','graphite','sage','haute','bloom','cyberclear','noir','neon','ocean','forest','sunset','astral','crystal','lifestream','phoenix','voidstar','twitch','streamdeck','resonance','royal','arcade','glitter1soft','glitter2soft'];
 const CHART_TYPES = ['bar','glitterBar','glitterBarNoShadow','glitterBar2','glitterBar2NoShadow','horizontalBar','line','linearGraph','area','pie','donut','donutTable','bubble','funnel','radar'];
 const FORMATS = {
@@ -6,6 +7,7 @@ const FORMATS = {
   square:{w:1200,h:1200,label:'Carre'},
   story:{w:1080,h:1350,label:'Vertical'}
 };
+const FONT_FAMILIES = ['system','display','wuwa','neo','condensed','techno','elegant','editorial','serif','arcade','mono'];
 const TYPE_LABELS = {
   bar:'Barres verticales',
   glitterBar:'Barres arrondies glitter 1',
@@ -58,8 +60,13 @@ const els = {
   title:$('titleInput'), subtitle:$('subtitleInput'), source:$('sourceInput'),
   rows:$('rowsEditor'), addRow:$('addRowBtn'),
   chartType:$('chartTypeInput'), theme:$('themeInput'), format:$('formatInput'), palette:$('paletteInput'),
-  showValues:$('showValuesInput'), showLegend:$('showLegendInput'), showGrid:$('showGridInput'), transparent:$('transparentInput'),
+  showValues:$('showValuesInput'), showLegend:$('showLegendInput'), showGrid:$('showGridInput'), showAxis:$('showAxisInput'), transparent:$('transparentInput'),
+  enableAnimations:$('enableAnimationsInput'),
+  animationDuration:$('animationDurationInput'), animationDelay:$('animationDelayInput'), animationStagger:$('animationStaggerInput'),
+  valuePlacement:$('valuePlacementInput'), horizontalShape:$('horizontalShapeInput'), glitterRoundness:$('glitterRoundnessInput'),
   sort:$('sortInput'), decimals:$('decimalsInput'), weight:$('weightInput'),
+  titleScale:$('titleScaleInput'), valueScale:$('valueScaleInput'), fontFamily:$('fontFamilyInput'),
+  libraryName:$('libraryNameInput'), libraryList:$('libraryList'), saveGraph:$('saveGraphBtn'), saveTemplate:$('saveTemplateBtn'),
   compareMode:$('compareModeInput'), compareMethod:$('compareMethodInput'),
   previewFrame:$('previewFrame'), canvas:$('chartCanvas'), svg:$('chartSvg'),
   saveStatus:$('saveStatus'), chartStatus:$('chartStatus'), dataStatus:$('dataStatus'),
@@ -80,7 +87,19 @@ const DEFAULT_STATE = {
   showValues:false,
   showLegend:false,
   showGrid:false,
+  showAxis:true,
   transparent:false,
+  enableAnimations:false,
+  animationDuration:1,
+  animationDelay:1,
+  animationStagger:0.12,
+  valuePlacement:'outside',
+  horizontalShape:'rounded',
+  glitterRoundness:1,
+  titleScale:1,
+  valueScale:1,
+  fontFamily:'wuwa',
+  fontDefaultUpgraded:true,
   sort:'none',
   compareMode:false,
   compareMethod:'ratio',
@@ -98,7 +117,9 @@ let historyTimer = null;
 let undoStack = [];
 let redoStack = [];
 let restoring = false;
+let library = [];
 const MAX_HISTORY = 60;
+const MAX_LIBRARY_ITEMS = 60;
 
 function clone(value){ return JSON.parse(JSON.stringify(value)); }
 function esc(value){ return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
@@ -160,7 +181,24 @@ function normalizeState(raw){
   base.showValues = !!input.showValues;
   base.showLegend = !!input.showLegend;
   base.showGrid = input.showGrid !== false;
+  base.showAxis = input.showAxis !== false;
   base.transparent = !!input.transparent;
+  base.enableAnimations = !!input.enableAnimations;
+  base.animationDuration = clamp(input.animationDuration, 0.6, 3, 1);
+  base.animationDelay = clamp(input.animationDelay, 0, 3, 1);
+  base.animationStagger = clamp(input.animationStagger, 0, 0.35, 0.12);
+  base.valuePlacement = oneOf(input.valuePlacement, ['outside','inside'], base.valuePlacement);
+  const horizontalShape = ['glitter3','glitter4'].includes(input.horizontalShape) ? 'glitter2' : input.horizontalShape;
+  base.horizontalShape = oneOf(horizontalShape, ['rounded','glitter2'], base.horizontalShape);
+  base.glitterRoundness = clamp(input.glitterRoundness, 0.5, 3, 1);
+  base.titleScale = clamp(input.titleScale, 0.7, 1.25, 1);
+  base.valueScale = clamp(input.valueScale, 0.7, 1.35, 1);
+  base.fontDefaultUpgraded = true;
+  if ((input.fontFamily === 'system' || input.fontFamily == null) && input.fontDefaultUpgraded !== true) {
+    base.fontFamily = 'wuwa';
+  } else {
+    base.fontFamily = oneOf(input.fontFamily, FONT_FAMILIES, base.fontFamily);
+  }
   base.sort = oneOf(input.sort, ['none','asc','desc'], base.sort);
   base.compareMode = !!input.compareMode;
   base.compareMethod = oneOf(input.compareMethod, ['ratio','difference','evolution'], base.compareMethod);
@@ -251,6 +289,131 @@ function redo(){
   restoreSnapshot(snap);
 }
 
+function libraryId(){
+  return `item-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+}
+function defaultLibraryName(kind){
+  const base = String(state.title || '').trim() || (kind === 'template' ? 'Modele' : 'Graph');
+  return base.length > 48 ? `${base.slice(0, 45).trimEnd()}...` : base;
+}
+function normalizeLibraryItem(item){
+  const input = item && typeof item === 'object' ? item : {};
+  const savedState = normalizeState(input.state || {});
+  const kind = oneOf(input.kind, ['graph','template'], 'graph');
+  return {
+    id:String(input.id || libraryId()),
+    kind,
+    name:String(input.name || defaultLibraryName(kind)).trim() || defaultLibraryName(kind),
+    updatedAt:Number(input.updatedAt) || Date.now(),
+    state:savedState
+  };
+}
+function loadLibrary(){
+  try{
+    const raw = localStorage.getItem(LIBRARY_KEY);
+    library = raw ? JSON.parse(raw).map(normalizeLibraryItem).slice(0, MAX_LIBRARY_ITEMS) : [];
+  }catch{
+    library = [];
+    toast('Bibliotheque locale illisible.');
+  }
+}
+function saveLibrary(){
+  try{
+    localStorage.setItem(LIBRARY_KEY, JSON.stringify(library));
+  }catch{
+    toast('Bibliotheque locale impossible a sauvegarder.');
+  }
+}
+function libraryMeta(item){
+  const kind = item.kind === 'template' ? 'Modele' : 'Graph';
+  const rows = item.state.rows.length;
+  const type = TYPE_LABELS[item.state.chartType] || 'Graphique';
+  const date = new Date(item.updatedAt).toLocaleDateString('fr-FR', {day:'2-digit', month:'2-digit', year:'2-digit'});
+  return `${kind} - ${type} - ${rows} valeur${rows > 1 ? 's' : ''} - ${date}`;
+}
+function renderLibrary(){
+  if (!els.libraryList) return;
+  if (!library.length) {
+    els.libraryList.innerHTML = '<div class="libraryEmpty">Aucun graph sauvegarde pour le moment.</div>';
+    return;
+  }
+  els.libraryList.innerHTML = library.map(item => {
+    const isTemplate = item.kind === 'template';
+    const mainAction = isTemplate ? 'Appliquer' : 'Charger';
+    return `<div class="libraryItem" data-library-id="${attr(item.id)}">
+      <div class="libraryMeta">
+        <strong><span class="libraryType">${isTemplate ? 'MODELE' : 'GRAPH'}</span>${esc(item.name)}</strong>
+        <span>${esc(libraryMeta(item))}</span>
+      </div>
+      <div class="libraryActions">
+        <button class="btn btn--soft" type="button" data-library-action="${isTemplate ? 'apply' : 'load'}">${mainAction}</button>
+        ${isTemplate ? '' : '<button class="btn btn--ghost" type="button" data-library-action="apply">Style</button>'}
+        <button class="btn btn--danger" type="button" data-library-action="delete">Suppr.</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+function upsertLibraryItem(kind){
+  const name = String(els.libraryName.value || '').trim() || defaultLibraryName(kind);
+  const now = Date.now();
+  const item = {
+    id:libraryId(),
+    kind,
+    name,
+    updatedAt:now,
+    state:normalizeState(state)
+  };
+  library = [item, ...library].slice(0, MAX_LIBRARY_ITEMS);
+  saveLibrary();
+  renderLibrary();
+  els.libraryName.value = '';
+  toast(kind === 'template' ? 'Modele sauvegarde.' : 'Graph sauvegarde.');
+}
+function applyTemplate(savedState){
+  const keep = {
+    title:state.title,
+    subtitle:state.subtitle,
+    source:state.source,
+    rows:clone(state.rows)
+  };
+  state = normalizeState({
+    ...savedState,
+    title:keep.title,
+    subtitle:keep.subtitle,
+    source:keep.source,
+    rows:keep.rows
+  });
+  renderAll();
+  save(true);
+  pushHistory();
+}
+function loadLibraryGraph(item){
+  state = normalizeState(item.state);
+  renderAll();
+  save(true);
+  pushHistory();
+  toast('Graph charge.');
+}
+function handleLibraryClick(event){
+  const button = event.target.closest('[data-library-action]');
+  if (!button) return;
+  const itemNode = button.closest('[data-library-id]');
+  const item = library.find(entry => entry.id === itemNode?.dataset.libraryId);
+  if (!item) return;
+  const action = button.dataset.libraryAction;
+  if (action === 'load') loadLibraryGraph(item);
+  if (action === 'apply') {
+    applyTemplate(item.state);
+    toast('Style applique.');
+  }
+  if (action === 'delete') {
+    library = library.filter(entry => entry.id !== item.id);
+    saveLibrary();
+    renderLibrary();
+    toast('Element supprime.');
+  }
+}
+
 function comparisonLabel(a, b){
   const left = String(a?.label ?? '').trim();
   const right = String(b?.label ?? '').trim();
@@ -317,6 +480,59 @@ function getRowColor(row, index, colors){
   return getAutoThemeColor(index, colors);
 }
 function chartSize(){ return FORMATS[state.format] || FORMATS.wide; }
+function fontStack(kind='system'){
+  const fonts = {
+    system:'Inter, Segoe UI, system-ui, Arial, sans-serif',
+    display:'Arial Black, Impact, Inter, system-ui, sans-serif',
+    wuwa:'Eurostile, Bank Gothic, Orbitron, Oxanium, Rajdhani, Bahnschrift, Agency FB, Trebuchet MS, system-ui, sans-serif',
+    neo:'Rajdhani, Oxanium, Exo, Bahnschrift, Segoe UI, system-ui, sans-serif',
+    condensed:'Bahnschrift Condensed, Aptos Narrow, Arial Narrow, Agency FB, Impact, sans-serif',
+    techno:'Orbitron, Oxanium, Michroma, Copperplate, Bahnschrift, system-ui, sans-serif',
+    elegant:'Cinzel, Trajan Pro, Didot, Bodoni 72, Georgia, serif',
+    editorial:'Playfair Display, Georgia, Cambria, Times New Roman, serif',
+    serif:'Georgia, Cambria, Times New Roman, serif',
+    arcade:'Press Start 2P, Aldrich, Impact, Arial Black, system-ui, sans-serif',
+    mono:'Consolas, ui-monospace, SFMono-Regular, monospace'
+  };
+  return fonts[kind] || fonts.system;
+}
+function estimateTextWidth(content, fontSize, weight=700){
+  const textValue = String(content ?? '');
+  let units = 0;
+  for (const char of textValue) {
+    if (char === ' ') units += 0.34;
+    else if ("'.,:;!|".includes(char)) units += 0.24;
+    else if ('ilIjtfr'.includes(char)) units += 0.36;
+    else if ('MW@#%&'.includes(char)) units += 0.94;
+    else if (/[A-Z0-9]/.test(char)) units += 0.68;
+    else units += 0.58;
+  }
+  return units * fontSize * (Number(weight) >= 850 ? 1.08 : 1);
+}
+function fitFontSize(content, maxFont, minFont, maxWidth, weight=700){
+  const width = Math.max(1, Number(maxWidth) || 1);
+  const natural = estimateTextWidth(content, maxFont, weight);
+  if (natural <= width) return Math.round(maxFont);
+  return Math.max(minFont, Math.floor(maxFont * width / natural));
+}
+function truncateText(content, fontSize, maxWidth, weight=700){
+  const textValue = String(content ?? '');
+  if (estimateTextWidth(textValue, fontSize, weight) <= maxWidth) return textValue;
+  const ellipsis = '...';
+  let low = 0;
+  let high = textValue.length;
+  while (low < high) {
+    const mid = Math.ceil((low + high) / 2);
+    if (estimateTextWidth(textValue.slice(0, mid) + ellipsis, fontSize, weight) <= maxWidth) low = mid;
+    else high = mid - 1;
+  }
+  return `${textValue.slice(0, Math.max(0, low)).trimEnd()}${ellipsis}`;
+}
+function fittedText(x, y, content, maxWidth, maxFont, minFont, attrs='', weight=700){
+  const fontSize = fitFontSize(content, maxFont, minFont, maxWidth, weight);
+  const value = fontSize <= minFont ? truncateText(content, fontSize, maxWidth, weight) : content;
+  return text(x, y, value, `${attrs} font-size="${fontSize}"`);
+}
 function polar(cx, cy, r, angle){ return {x:cx + Math.cos(angle) * r, y:cy + Math.sin(angle) * r}; }
 function arcPath(cx, cy, r, start, end){
   const a = polar(cx, cy, r, start);
@@ -379,6 +595,42 @@ function seriesDefs(palette, colors){
 function plotSurface(x, y, w, h, colors, opacity=1){
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="24" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2" opacity="${opacity}"/>`;
 }
+function motionMarkup(){
+  if (!state.enableAnimations) return '';
+  const duration = clamp(state.animationDuration, 0.6, 3, 1);
+  const start = clamp(state.animationDelay, 0, 3, 1);
+  return `<style><![CDATA[
+    :root{--motion-start:${start.toFixed(2)}s}
+    .barAnim{transform-box:fill-box;transform-origin:left center;animation:barGrow ${duration.toFixed(2)}s cubic-bezier(.16,.82,.24,1) both;animation-delay:calc(var(--motion-start) + var(--delay,0s))}
+    .vBarAnim{transform-box:fill-box;transform-origin:center bottom;animation:vBarGrow ${duration.toFixed(2)}s cubic-bezier(.16,.82,.24,1) both;animation-delay:calc(var(--motion-start) + var(--delay,0s))}
+    .lineAnim{stroke-dasharray:1800;stroke-dashoffset:1800;animation:lineDraw ${(duration * 1.38).toFixed(2)}s ease-out both;animation-delay:calc(var(--motion-start) + var(--delay,0s))}
+    .pointAnim{transform-box:fill-box;transform-origin:center;animation:pointPop ${(duration * 0.46).toFixed(2)}s ease-out both;animation-delay:calc(var(--motion-start) + var(--delay,0s))}
+    @keyframes barGrow{0%{transform:scaleX(.01);opacity:.18}62%{opacity:1}100%{transform:scaleX(1);opacity:1}}
+    @keyframes vBarGrow{0%{transform:scaleY(.01);opacity:.18}62%{opacity:1}100%{transform:scaleY(1);opacity:1}}
+    @keyframes lineDraw{to{stroke-dashoffset:0}}
+    @keyframes pointPop{from{transform:scale(.25);opacity:0}to{transform:scale(1);opacity:1}}
+    @media (prefers-reduced-motion: reduce){.barAnim,.vBarAnim,.lineAnim,.pointAnim{animation:none!important}}
+  ]]></style>`;
+}
+function legendLayout(size){
+  const reserve = Math.round(size.w * 0.24);
+  const pad = Math.round(size.w * 0.035);
+  const font = Math.max(12, Math.round(size.w * 0.011));
+  const swatch = Math.max(12, Math.round(font * 0.9));
+  const x = size.w - reserve + pad;
+  const textX = x + swatch + Math.round(font * 0.7);
+  const maxTextW = Math.max(90, size.w - textX - pad);
+  return {
+    x,
+    textX,
+    swatch,
+    y:Math.round(size.h * 0.23),
+    itemH:Math.max(24, Math.round(size.h * 0.035)),
+    font,
+    maxTextW,
+    leftEdge:x - Math.round(size.w * 0.03)
+  };
+}
 function backgroundMarkup(size, transparent){
   if (transparent) return '';
   const id = `bg-${state.theme}`;
@@ -416,27 +668,27 @@ function backgroundMarkup(size, transparent){
 }
 function headerMarkup(size, colors){
   const left = Math.round(size.w * 0.07);
+  const maxTextW = size.w - left - Math.round(size.w * 0.07);
   const titleY = Math.round(size.h * 0.12);
   const subY = titleY + Math.round(size.h * 0.045);
-  const fontTitle = Math.max(38, Math.round(size.w * 0.042));
+  const fontTitle = Math.max(28, Math.round(size.w * 0.042 * state.titleScale));
   const fontSub = Math.max(18, Math.round(size.w * 0.016));
   const sourceY = size.h - Math.round(size.h * 0.045);
+  const family = fontStack(state.fontFamily);
   return [
-    state.title ? text(left, titleY, state.title, `fill="${colors.text}" font-size="${fontTitle}" font-weight="850" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`) : '',
-    state.subtitle ? text(left, subY, state.subtitle, `fill="${colors.muted}" font-size="${fontSub}" font-weight="700" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`) : '',
-    state.source ? text(left, sourceY, state.source, `fill="${colors.muted}" font-size="${Math.max(14, Math.round(size.w * 0.012))}" font-weight="750" font-family="system-ui, Arial, sans-serif"`) : ''
+    state.title ? fittedText(left, titleY, state.title, maxTextW, fontTitle, 20, `fill="${colors.text}" font-weight="850" font-family="${family}"`, 850) : '',
+    state.subtitle ? fittedText(left, subY, state.subtitle, maxTextW, fontSub, 13, `fill="${colors.muted}" font-weight="700" font-family="${family}"`, 700) : '',
+    state.source ? fittedText(left, sourceY, state.source, maxTextW, Math.max(14, Math.round(size.w * 0.012)), 11, `fill="${colors.muted}" font-weight="750" font-family="${fontStack('system')}"`, 750) : ''
   ].join('');
 }
 function legendMarkup(rows, size, colors, palette){
   if (!state.showLegend && !['pie','donut'].includes(state.chartType)) return '';
-  const x = size.w - Math.round(size.w * 0.24);
-  let y = Math.round(size.h * 0.23);
-  const itemH = Math.max(24, Math.round(size.h * 0.035));
-  const font = Math.max(14, Math.round(size.w * 0.012));
+  const layout = legendLayout(size);
+  const family = fontStack(state.fontFamily);
   return `<g aria-label="Legende">${rows.slice(0, 12).map((row, index) => {
-    const yy = y + index * itemH;
-    const label = row.label.length > 22 ? row.label.slice(0, 21) + '...' : row.label;
-    return `<rect x="${x}" y="${yy - font + 2}" width="${font}" height="${font}" rx="4" fill="${palette[index]}"/><text x="${x + font + 10}" y="${yy}" fill="${colors.text}" font-size="${font}" font-weight="750" font-family="system-ui, Arial, sans-serif">${esc(label)} - ${formatValue(row.value)}</text>`;
+    const yy = layout.y + index * layout.itemH;
+    const label = truncateText(`${row.label} - ${formatValue(row.value)}`, layout.font, layout.maxTextW, 750);
+    return `<rect x="${layout.x}" y="${yy - layout.swatch + 2}" width="${layout.swatch}" height="${layout.swatch}" rx="4" fill="${palette[index]}"/><text x="${layout.textX}" y="${yy}" fill="${colors.text}" font-size="${layout.font}" font-weight="750" font-family="${family}">${esc(label)}</text>`;
   }).join('')}</g>`;
 }
 function scaleInfo(values){
@@ -460,8 +712,10 @@ function axisAndGrid(x, y, w, h, scale, colors){
     }
   }
   const baseY = y + h - ((0 - scale.min) / scale.span) * h;
-  out += `<line x1="${x}" y1="${baseY}" x2="${x + w}" y2="${baseY}" stroke="${colors.axis}" stroke-width="2" opacity=".82" stroke-linecap="round"/>`;
-  out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".52" stroke-linecap="round"/>`;
+  if (state.showAxis) {
+    out += `<line x1="${x}" y1="${baseY}" x2="${x + w}" y2="${baseY}" stroke="${colors.axis}" stroke-width="2" opacity=".82" stroke-linecap="round"/>`;
+    out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".52" stroke-linecap="round"/>`;
+  }
   return out;
 }
 function glitterDefs(){
@@ -483,15 +737,16 @@ function glitterDefs(){
   </defs>`;
 }
 function roundedReferenceBarPath(x, y, w, h, variant='glitterBar'){
+  const roundness = clamp(state.glitterRoundness, 0.5, 3, 1);
   if (variant === 'glitterBar2') {
     // Glitter 2: forme inversee demandee.
     // - grand arrondi en haut a gauche ;
     // - grand arrondi en bas a droite ;
     // - les deux autres coins restent presque droits.
-    const topLeft = Math.min(h * 0.21, w * 1.08);
-    const topRight = Math.min(h * 0.04, w * 0.12, 12);
-    const bottomRight = Math.min(h * 0.21, w * 1.08);
-    const bottomLeft = Math.min(h * 0.04, w * 0.12, 12);
+    const topLeft = Math.min(h * 0.21 * roundness, w * 1.08);
+    const topRight = Math.min(h * 0.04 * roundness, w * 0.12, 18);
+    const bottomRight = Math.min(h * 0.21 * roundness, w * 1.08);
+    const bottomLeft = Math.min(h * 0.04 * roundness, w * 0.12, 18);
     return `M ${x + topLeft} ${y}
       L ${x + w - topRight} ${y}
       Q ${x + w} ${y} ${x + w} ${y + topRight}
@@ -505,9 +760,9 @@ function roundedReferenceBarPath(x, y, w, h, variant='glitterBar'){
   }
 
   // Glitter 1 : forme historique, grand arrondi haut gauche + bas gauche.
-  const leftTop = Math.min(h * 0.19, w * 0.98);
-  const leftBottom = Math.min(h * 0.19, w * 0.98);
-  const rightRadius = Math.min(h * 0.04, w * 0.15, 12);
+  const leftTop = Math.min(h * 0.19 * roundness, w * 0.98);
+  const leftBottom = Math.min(h * 0.19 * roundness, w * 0.98);
+  const rightRadius = Math.min(h * 0.04 * roundness, w * 0.15, 18);
   return `M ${x + leftTop} ${y}
     L ${x + w - rightRadius} ${y}
     Q ${x + w} ${y} ${x + w} ${y + rightRadius}
@@ -519,6 +774,24 @@ function roundedReferenceBarPath(x, y, w, h, variant='glitterBar'){
     Q ${x} ${y} ${x + leftTop} ${y}
     Z`;
 }
+function horizontalGlitterBarPath(x, y, w, h, shape='glitter2'){
+  const roundness = clamp(state.glitterRoundness, 0.5, 3, 1);
+  const profile = {
+    glitter2:{big:0.58, small:0.075}
+  }[shape] || {big:0.52, small:0.08};
+  const small = Math.min(h * profile.small * Math.sqrt(roundness), h * 0.09, 10);
+  const big = Math.min(h * profile.big * roundness, w * 0.34, h * 0.98);
+  return `M ${x + big} ${y}
+    L ${x + w - small} ${y}
+    Q ${x + w} ${y} ${x + w} ${y + small}
+    L ${x + w} ${y + h - big}
+    Q ${x + w} ${y + h} ${x + w - big} ${y + h}
+    L ${x + small} ${y + h}
+    Q ${x} ${y + h} ${x} ${y + h - small}
+    L ${x} ${y + big}
+    Q ${x} ${y} ${x + big} ${y}
+    Z`;
+}
 function glitterInfoMarkup(size, colors){
   const title = String(state.title || '').trim();
   const subtitle = String(state.subtitle || '').trim();
@@ -526,17 +799,19 @@ function glitterInfoMarkup(size, colors){
   if (!title && !subtitle && !source) return '';
 
   const left = Math.round(size.w * 0.035);
+  const maxTextW = size.w - left - Math.round(size.w * 0.04);
   const titleY = Math.round(size.h * 0.075);
   const subY = titleY + Math.round(size.h * 0.045);
   const sourceY = subY + Math.round(size.h * 0.038);
-  const titleSize = Math.max(28, Math.round(size.w * 0.028));
+  const titleSize = Math.max(24, Math.round(size.w * 0.028 * state.titleScale));
   const subSize = Math.max(16, Math.round(size.w * 0.014));
   const sourceSize = Math.max(13, Math.round(size.w * 0.011));
+  const family = state.fontFamily === 'system' ? fontStack('display') : fontStack(state.fontFamily);
 
   return `<g class="glitterInfo">
-    ${title ? text(left, titleY, title, `fill="${colors.text}" font-size="${titleSize}" font-weight="950" font-family="Arial Black, Impact, system-ui, Arial, sans-serif"`) : ''}
-    ${subtitle ? text(left, subY, subtitle, `fill="${colors.muted}" font-size="${subSize}" font-weight="850" font-family="system-ui, Arial, sans-serif"`) : ''}
-    ${source ? text(left, sourceY, source, `fill="${colors.muted}" font-size="${sourceSize}" font-weight="750" font-family="system-ui, Arial, sans-serif"`) : ''}
+    ${title ? fittedText(left, titleY, title, maxTextW, titleSize, 18, `fill="${colors.text}" font-weight="950" font-family="${family}"`, 950) : ''}
+    ${subtitle ? fittedText(left, subY, subtitle, maxTextW, subSize, 12, `fill="${colors.muted}" font-weight="850" font-family="${fontStack('system')}"`, 850) : ''}
+    ${source ? fittedText(left, sourceY, source, maxTextW, sourceSize, 10, `fill="${colors.muted}" font-weight="750" font-family="${fontStack('system')}"`, 750) : ''}
   </g>`;
 }
 function deterministicSparkles(index, x, y, w, h, tone='default'){
@@ -574,6 +849,9 @@ function glitterBarGradientDef(id, color){
       <stop offset="1" stop-color="#ffffff" stop-opacity="0"/>
     </radialGradient>
   </defs>`;
+}
+function itemDelay(index, base=0){
+  return (base + index * clamp(state.animationStagger, 0, 0.35, 0.12)).toFixed(2);
 }
 function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', forceNoShadow=false){
   const cleanRows = rows.filter(row => Number.isFinite(row.value)).slice(0, 14);
@@ -623,7 +901,7 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
     const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
 
     out += `${glitterBarGradientDef(gradId, color)}
-    <g class="glitterBarItem">
+    <g class="glitterBarItem vBarAnim" style="--delay:${itemDelay(index)}s">
       ${disableShadow ? '' : `<path d="${shadowPath}" fill="#020407" opacity=".78"/>`}
       <clipPath id="${clipId}"><path d="${path}"/></clipPath>
       <g clip-path="url(#${clipId})">
@@ -663,7 +941,7 @@ function renderBar(rows, size, colors, palette){
     const top = Math.min(baseY, targetY);
     const bh = Math.abs(baseY - targetY);
     const rx = Math.min(18, barW / 2);
-    out += `<rect x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
+    out += `<rect class="vBarAnim" style="--delay:${itemDelay(index)}s" x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
     out += `<rect x="${cx - barW / 2 + Math.max(3, barW * 0.08)}" y="${top + 4}" width="${Math.max(2, barW * 0.18)}" height="${Math.max(0, bh - 8)}" rx="${Math.max(1, rx * .55)}" fill="#ffffff" opacity=".13"/>`;
     if (state.showValues) out += text(cx, top - 10, formatValue(row.value), `fill="${colors.text}" font-size="16" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
@@ -672,29 +950,64 @@ function renderBar(rows, size, colors, palette){
   return out;
 }
 function renderHorizontalBar(rows, size, colors, palette){
-  const x = Math.round(size.w * 0.20);
+  const family = fontStack(state.fontFamily);
+  const legend = legendLayout(size);
+  const labelFont = Math.max(11, Math.round(size.w * 0.0105));
+  const valueFont = Math.max(11, Math.round(size.w * 0.0105 * state.valueScale));
+  const sidePad = Math.round(size.w * 0.045);
+  const maxLabelTextW = Math.round(size.w * 0.24);
+  const labelW = Math.min(
+    maxLabelTextW,
+    Math.max(Math.round(size.w * 0.10), ...rows.map(row => estimateTextWidth(row.label, labelFont, 800) + 10))
+  );
+  const maxValueW = state.showValues && state.valuePlacement === 'outside'
+    ? Math.max(...rows.map(row => estimateTextWidth(formatValue(row.value), valueFont, 900))) + Math.round(size.w * 0.025)
+    : 0;
+  const surfaceRightPad = state.showValues && state.valuePlacement === 'outside' ? Math.round(maxValueW) : 20;
+  const x = sidePad + Math.round(labelW);
   const y = Math.round(size.h * 0.23);
-  const w = Math.round(size.w * (state.showLegend ? 0.52 : 0.68));
+  const rightLimit = state.showLegend
+    ? legend.leftEdge - Math.round(size.w * 0.025)
+    : size.w - Math.round(size.w * 0.055);
+  const w = Math.max(Math.round(size.w * 0.20), rightLimit - x - surfaceRightPad - 24);
   const h = Math.round(size.h * 0.58);
   const max = Math.max(...rows.map(r => Math.abs(r.value)), 1);
   const rowH = h / Math.max(1, rows.length);
   const barH = Math.max(14, rowH * 0.55 * state.weight);
-  let out = plotSurface(x - 20, y - 18, w + 40, h + 36, colors);
+  let out = plotSurface(x - 4, y - 18, w + surfaceRightPad + 24, h + 36, colors);
   if (state.showGrid) {
     for (let i = 0; i <= 5; i++) {
       const xx = x + (i / 5) * w;
       out += `<line x1="${xx}" y1="${y}" x2="${xx}" y2="${y + h}" stroke="${colors.grid}" stroke-width="1" stroke-dasharray="5 9" stroke-linecap="round"/>`;
     }
   }
-  out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".64" stroke-linecap="round"/>`;
+  if (state.showAxis) out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".64" stroke-linecap="round"/>`;
   rows.forEach((row, index) => {
     const yy = y + index * rowH + rowH / 2;
     const bw = Math.abs(row.value) / max * w;
-    const label = row.label.length > 18 ? row.label.slice(0, 17) + '...' : row.label;
-    out += text(x - 16, yy + 5, label, `fill="${colors.muted}" font-size="16" font-weight="800" text-anchor="end" font-family="system-ui, Arial, sans-serif"`);
-    out += `<rect x="${x}" y="${yy - barH / 2}" width="${bw}" height="${barH}" rx="${barH / 2}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.35)}" stroke-width="1"/>`;
-    out += `<rect x="${x + 5}" y="${yy - barH / 2 + Math.max(3, barH * .12)}" width="${Math.max(0, bw - 10)}" height="${Math.max(2, barH * .18)}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>`;
-    if (state.showValues) out += text(x + bw + 12, yy + 5, formatValue(row.value), `fill="${colors.text}" font-size="16" font-weight="900" font-family="system-ui, Arial, sans-serif"`);
+    const label = truncateText(row.label, labelFont, labelW, 800);
+    const barY = yy - barH / 2;
+    out += text(x - 14, yy + labelFont * 0.34, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="800" text-anchor="end" font-family="${family}"`);
+    if (state.horizontalShape === 'glitter2') {
+      const path = horizontalGlitterBarPath(x, barY, bw, barH, state.horizontalShape);
+      const clipId = `horizontal-${state.horizontalShape}-${index}`;
+      out += `<clipPath id="${clipId}"><path d="${path}"/></clipPath>
+      <path class="barAnim" style="--delay:${itemDelay(index)}s" d="${path}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.35)}" stroke-width="1"/>
+      <g clip-path="url(#${clipId})">
+        <rect x="${x + 5}" y="${yy - barH / 2 + Math.max(3, barH * .12)}" width="${Math.max(0, bw - 10)}" height="${Math.max(2, barH * .18)}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>
+      </g>`;
+    } else {
+      out += `<rect class="barAnim" style="--delay:${itemDelay(index)}s" x="${x}" y="${barY}" width="${bw}" height="${barH}" rx="${barH / 2}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.35)}" stroke-width="1"/>`;
+      out += `<rect x="${x + 5}" y="${yy - barH / 2 + Math.max(3, barH * .12)}" width="${Math.max(0, bw - 10)}" height="${Math.max(2, barH * .18)}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>`;
+    }
+    if (state.showValues) {
+      const valueText = formatValue(row.value);
+      if (state.valuePlacement === 'inside' && bw > estimateTextWidth(valueText, valueFont, 900) + 22) {
+        out += text(x + bw - 12, yy + valueFont * 0.34, valueText, `fill="#ffffff" font-size="${valueFont}" font-weight="900" text-anchor="end" font-family="${family}"`);
+      } else {
+        out += text(x + bw + 12, yy + valueFont * 0.34, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" font-family="${family}"`);
+      }
+    }
   });
   return out;
 }
@@ -717,10 +1030,10 @@ function renderLineOrArea(rows, size, colors, palette, area=false){
     const areaPoints = [{x:points[0].x,y:baseY}, ...points, {x:points[points.length - 1].x,y:baseY}];
     out += polygon(areaPoints, `fill="url(#line-area-fill)"`);
   }
-  out += line(points, `fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".28" transform="translate(0 5)"`);
-  out += line(points, `fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"`);
+  out += line(points, `class="lineAnim" fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".28" transform="translate(0 5)"`);
+  out += line(points, `class="lineAnim" fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"`);
   points.forEach((point, index) => {
-    out += `<circle cx="${point.x}" cy="${point.y}" r="${Math.max(6, 8 * state.weight)}" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
+    out += `<circle class="pointAnim" style="--delay:${itemDelay(index, 0.65)}s" cx="${point.x}" cy="${point.y}" r="${Math.max(6, 8 * state.weight)}" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
     if (state.showValues) out += text(point.x, point.y - 16, formatValue(point.row.value), `fill="${colors.text}" font-size="15" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     const label = point.row.label.length > 12 ? point.row.label.slice(0, 11) + '...' : point.row.label;
     out += text(point.x, y + h + 34, label, `fill="${colors.muted}" font-size="14" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
@@ -728,9 +1041,13 @@ function renderLineOrArea(rows, size, colors, palette, area=false){
   return out;
 }
 function renderLinearGraph(rows, size, colors, palette){
+  const legend = legendLayout(size);
   const x = Math.round(size.w * 0.08);
   const y = Math.round(size.h * 0.19);
-  const w = Math.round(size.w * (state.showLegend ? 0.70 : 0.84));
+  const baseW = Math.round(size.w * (state.showLegend ? 0.70 : 0.84));
+  const w = state.showLegend
+    ? Math.max(Math.round(size.w * 0.44), Math.min(baseW, legend.leftEdge - Math.round(size.w * 0.025) - x - 34))
+    : baseW;
   const h = Math.round(size.h * 0.62);
   const values = rows.map(r => Number(r.value));
   const scale = scaleInfo(values);
@@ -752,9 +1069,9 @@ function renderLinearGraph(rows, size, colors, palette){
   const mainPath = smoothPath(main);
   const softPath = smoothPath(soft);
   const basePath = smoothPath(baseline);
-  let out = `<rect x="${x - 34}" y="${y - 78}" width="${w + (state.showLegend ? Math.round(size.w * 0.18) : 68)}" height="${h + 128}" rx="16" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
-  if (state.title) out += text(x - 18, y - 46, state.title, `fill="${colors.text}" font-size="${Math.max(16, Math.round(size.w * 0.013))}" font-weight="850" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
-  if (state.subtitle) out += text(x - 18, y - 22, state.subtitle, `fill="${colors.muted}" font-size="${Math.max(12, Math.round(size.w * 0.0095))}" font-weight="650" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+  let out = `<rect x="${x - 34}" y="${y - 78}" width="${w + 68}" height="${h + 128}" rx="16" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
+  if (state.title) out += fittedText(x - 18, y - 46, state.title, w + 36, Math.max(16, Math.round(size.w * 0.013)), 12, `fill="${colors.text}" font-weight="850" font-family="${fontStack(state.fontFamily)}"`, 850);
+  if (state.subtitle) out += fittedText(x - 18, y - 22, state.subtitle, w + 36, Math.max(12, Math.round(size.w * 0.0095)), 10, `fill="${colors.muted}" font-weight="650" font-family="${fontStack(state.fontFamily)}"`, 650);
   for (let i = 0; i <= 5; i++) {
     const yy = y + h - (i / 5) * h;
     const value = scale.min + (i / 5) * scale.span;
@@ -765,27 +1082,27 @@ function renderLinearGraph(rows, size, colors, palette){
   if (main.length) {
     const areaD = `${mainPath} L ${main[main.length - 1].x} ${baseY} L ${main[0].x} ${baseY} Z`;
     out += `<path d="${areaD}" fill="${colors.accent}" opacity=".16"/>`;
-    out += `<path d="${basePath}" fill="none" stroke="${palette[2] || colors.accent2}" stroke-width="${Math.max(2.5, 3.5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".20"/>`;
-    out += `<path d="${softPath}" fill="none" stroke="${palette[1] || colors.accent2}" stroke-width="${Math.max(3, 4.5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".42"/>`;
-    out += `<path d="${mainPath}" fill="none" stroke="${palette[0] || colors.accent}" stroke-width="${Math.max(3.5, 5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"/>`;
+    out += `<path class="lineAnim" d="${basePath}" fill="none" stroke="${palette[2] || colors.accent2}" stroke-width="${Math.max(2.5, 3.5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".20"/>`;
+    out += `<path class="lineAnim" style="--delay:.12s" d="${softPath}" fill="none" stroke="${palette[1] || colors.accent2}" stroke-width="${Math.max(3, 4.5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".42"/>`;
+    out += `<path class="lineAnim" style="--delay:.18s" d="${mainPath}" fill="none" stroke="${palette[0] || colors.accent}" stroke-width="${Math.max(3.5, 5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   main.forEach((point, index) => {
     const label = point.row.label.length > 9 ? point.row.label.slice(0, 8) + '...' : point.row.label;
     out += text(point.x, y + h + 30, label || String(index + 1), `fill="${colors.muted}" font-size="12" font-weight="700" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     if (state.showValues) {
-      out += `<circle cx="${point.x}" cy="${point.y}" r="4.5" fill="${palette[0] || colors.accent}" stroke="${colors.panel}" stroke-width="2"/>`;
+      out += `<circle class="pointAnim" style="--delay:${itemDelay(index, 0.78)}s" cx="${point.x}" cy="${point.y}" r="4.5" fill="${palette[0] || colors.accent}" stroke="${colors.panel}" stroke-width="2"/>`;
       out += text(point.x, point.y - 14, formatValue(point.value), `fill="${colors.text}" font-size="12" font-weight="850" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     }
   });
   if (state.showLegend) {
-    const legendX = x + w + Math.round(size.w * 0.04);
+    const legendX = Math.max(x + w + Math.round(size.w * 0.055), legend.x);
     const legendY = y + Math.round(h * 0.30);
     const labels = ['Serie principale','Tendance lissee','Reference'];
     const legendColors = [palette[0] || colors.accent, palette[1] || colors.accent2, palette[2] || brightenColor(colors.accent, .4)];
     labels.forEach((label, index) => {
       const yy = legendY + index * 36;
       out += `<circle cx="${legendX}" cy="${yy}" r="9" fill="${legendColors[index]}" opacity="${index === 2 ? '.35' : '1'}"/>`;
-      out += text(legendX + 22, yy + 5, label, `fill="${colors.text}" font-size="14" font-weight="700" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+      out += text(legendX + 22, yy + 5, truncateText(label, 14, size.w - legendX - 42, 700), `fill="${colors.text}" font-size="14" font-weight="700" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     });
   }
   return out;
@@ -984,10 +1301,12 @@ function buildSvgMarkup(){
   const hasCustomChrome = ['donutTable','linearGraph'].includes(state.chartType);
   const chrome = isGlitter ? legendMarkup(rows, size, colors, palette) : `${hasCustomChrome ? '' : headerMarkup(size, colors)}${hasCustomChrome ? '' : legendMarkup(rows, size, colors, palette)}`;
   const defs = isGlitter ? '' : seriesDefs(palette, colors);
+  const motion = motionMarkup(colors);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${size.w}" height="${size.h}" viewBox="0 0 ${size.w} ${size.h}" role="img" aria-label="${attr(state.title || 'Graphique')}">
   ${backgroundMarkup(size, state.transparent)}
   ${defs}
+  ${motion}
   ${chrome}
   <g>${body}</g>
 </svg>`;
@@ -1018,12 +1337,23 @@ function renderControls(){
   els.showValues.checked = state.showValues;
   els.showLegend.checked = state.showLegend;
   els.showGrid.checked = state.showGrid;
+  els.showAxis.checked = state.showAxis;
   els.transparent.checked = state.transparent;
+  els.enableAnimations.checked = state.enableAnimations;
+  els.animationDuration.value = String(state.animationDuration);
+  els.animationDelay.value = String(state.animationDelay);
+  els.animationStagger.value = String(state.animationStagger);
+  els.valuePlacement.value = state.valuePlacement;
+  els.horizontalShape.value = state.horizontalShape;
+  els.glitterRoundness.value = String(state.glitterRoundness);
   els.sort.value = state.sort;
   els.compareMode.checked = state.compareMode;
   els.compareMethod.value = state.compareMethod;
   els.decimals.value = String(state.decimals);
   els.weight.value = String(state.weight);
+  els.titleScale.value = String(state.titleScale);
+  els.valueScale.value = String(state.valueScale);
+  els.fontFamily.value = state.fontFamily;
   els.chartStatus.textContent = TYPE_LABELS[state.chartType] || 'Graphique';
   const count = getRows().length;
   els.dataStatus.textContent = `${count} valeur${count > 1 ? 's' : ''}`;
@@ -1057,6 +1387,7 @@ function renderAll(){
   renderCanvasClasses();
   renderControls();
   renderRowsEditor();
+  renderLibrary();
   requestAnimationFrame(() => {
     fitPreview();
     renderSvg();
@@ -1073,12 +1404,23 @@ function updateFromControls(){
   state.showValues = els.showValues.checked;
   state.showLegend = els.showLegend.checked;
   state.showGrid = els.showGrid.checked;
+  state.showAxis = els.showAxis.checked;
   state.transparent = els.transparent.checked;
+  state.enableAnimations = els.enableAnimations.checked;
+  state.animationDuration = clamp(els.animationDuration.value, 0.6, 3, 1);
+  state.animationDelay = clamp(els.animationDelay.value, 0, 3, 1);
+  state.animationStagger = clamp(els.animationStagger.value, 0, 0.35, 0.12);
+  state.valuePlacement = oneOf(els.valuePlacement.value, ['outside','inside'], 'outside');
+  state.horizontalShape = oneOf(els.horizontalShape.value, ['rounded','glitter2'], 'rounded');
+  state.glitterRoundness = clamp(els.glitterRoundness.value, 0.5, 3, 1);
   state.sort = oneOf(els.sort.value, ['none','asc','desc'], 'none');
   state.compareMode = els.compareMode.checked;
   state.compareMethod = oneOf(els.compareMethod.value, ['ratio','difference','evolution'], 'ratio');
   state.decimals = clamp(els.decimals.value, 0, 2, 0);
   state.weight = clamp(els.weight.value, 0.7, 1.5, 1);
+  state.titleScale = clamp(els.titleScale.value, 0.7, 1.25, 1);
+  state.valueScale = clamp(els.valueScale.value, 0.7, 1.35, 1);
+  state.fontFamily = oneOf(els.fontFamily.value, FONT_FAMILIES, 'system');
   renderCanvasClasses();
   renderControls();
   requestAnimationFrame(() => { fitPreview(); renderSvg(); });
@@ -1185,7 +1527,7 @@ function exportPng(){
   img.src = url;
 }
 function bind(){
-  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.transparent, els.sort, els.compareMode, els.compareMethod, els.decimals, els.weight]
+  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.transparent, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.sort, els.compareMode, els.compareMethod, els.decimals, els.weight, els.titleScale, els.valueScale, els.fontFamily]
     .forEach(input => {
       input.addEventListener('input', updateFromControls);
       input.addEventListener('change', updateFromControls);
@@ -1204,6 +1546,9 @@ function bind(){
   });
   els.addRow.addEventListener('click', addRow);
   els.save.addEventListener('click', () => save(false));
+  els.saveGraph.addEventListener('click', () => upsertLibraryItem('graph'));
+  els.saveTemplate.addEventListener('click', () => upsertLibraryItem('template'));
+  els.libraryList.addEventListener('click', handleLibraryClick);
   els.undo.addEventListener('click', undo);
   els.redo.addEventListener('click', redo);
   els.reset.addEventListener('click', openResetModal);
@@ -1223,6 +1568,7 @@ function bind(){
 }
 
 load();
+loadLibrary();
 bind();
 renderAll();
 save(true);

@@ -153,6 +153,27 @@ input[type="range"]{padding:0;background:transparent;border:0}
 .quickActions--one{grid-template-columns:1fr}
 .quickActions .btn{min-height:38px;padding:6px 8px;font-size:12px}
 .fileHint{margin:7px 0 0;color:var(--muted);font-size:11px;line-height:1.35}
+.libraryList{display:flex;flex-direction:column;gap:7px;margin-top:10px}
+.libraryEmpty{
+  padding:10px;border:1px dashed rgba(255,255,255,.18);border-radius:8px;
+  color:var(--muted);font-size:12px;font-weight:750;line-height:1.35;
+}
+.libraryItem{
+  display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;
+  align-items:center;padding:8px;border:1px solid var(--line);border-radius:8px;background:#121c2e;
+}
+.libraryMeta{min-width:0}
+.libraryMeta strong{
+  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:12px;font-weight:950;color:#fff;
+}
+.libraryMeta span{display:block;margin-top:2px;font-size:10px;font-weight:850;color:var(--muted)}
+.libraryType{
+  display:inline-flex;align-items:center;min-height:18px;margin-right:5px;padding:0 6px;
+  border-radius:999px;background:#1e293b;color:#dbeafe;font-size:10px;font-weight:950;
+}
+.libraryActions{display:flex;gap:5px;align-items:center}
+.libraryActions .btn{min-height:28px;padding:4px 7px;font-size:11px;border-radius:7px}
 
 .switchBox{
   display:flex;flex-direction:row;align-items:center;gap:9px;
