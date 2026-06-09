@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GraphiquesGPT - G&eacute;n&eacute;rateur de graphiques</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=20260609-priority-audit-fixes">
 </head>
 <body>
   <header class="topbar">
@@ -12,7 +12,7 @@
       <div class="brand__mark">GRAPH</div>
       <div>
         <h1>G&eacute;n&eacute;rateur de graphiques</h1>
-        <p>Cr&eacute;e, sauvegarde et exporte des graphiques statiques</p>
+        <p>Cr&eacute;e, sauvegarde et exporte des graphiques SVG/PNG</p>
       </div>
     </div>
     <div class="topActions">
@@ -20,6 +20,8 @@
       <button class="btn btn--ghost" id="undoBtn" type="button">&larr; Annuler</button>
       <button class="btn btn--ghost" id="redoBtn" type="button">&rarr; R&eacute;tablir</button>
       <button class="btn btn--danger" id="resetBtn" type="button">R&eacute;initialiser</button>
+      <button class="btn btn--ghost" id="copySvgBtn" type="button">Copier SVG</button>
+      <button class="btn btn--ghost" id="downloadSvgBtn" type="button">Exporter SVG</button>
       <button class="btn btn--primary" id="exportPngBtn" type="button">Exporter PNG</button>
     </div>
   </header>
@@ -82,79 +84,28 @@
             <span>3</span>
             <div>
               <h2>Type &amp; affichage</h2>
-              <p>Graphique statique, sans animation.</p>
+              <p>Graphique personnalisable, export SVG/PNG.</p>
             </div>
           </div>
         </summary>
         <div class="panelBody">
           <label class="field">
             <span>Type de graphique</span>
-            <select id="chartTypeInput">
-              <option value="bar">Barres verticales</option>
-              <option value="glitterBar">Barres arrondies glitter 1</option>
-              <option value="glitterBarNoShadow">Barres arrondies glitter 1 sans ombre</option>
-              <option value="glitterBar2">Barres arrondies glitter 2</option>
-              <option value="glitterBar2NoShadow">Barres arrondies glitter 2 sans ombre</option>
-              <option value="horizontalBar">Barres horizontales</option>
-              <option value="line">Courbe</option>
-              <option value="linearGraph">Graphique lineaire</option>
-              <option value="area">Aire</option>
-              <option value="pie">Camembert</option>
-              <option value="donut">Donut</option>
-              <option value="donutTable">Tableau des beignets</option>
-              <option value="bubble">Graphique a bulles</option>
-              <option value="funnel">Diagramme en entonnoir</option>
-              <option value="radar">Radar</option>
-            </select>
+            <select id="chartTypeInput"></select>
           </label>
           <div class="grid2">
             <label class="field">
               <span>Style</span>
-              <select id="themeInput">
-                <option value="midnight">Midnight</option>
-                <option value="clean">Minimal clair</option>
-                <option value="executive">Executive clair</option>
-                <option value="editorial">Editorial premium</option>
-                <option value="graphite">Graphite studio</option>
-                <option value="sage">Sage analytics</option>
-                <option value="haute">Haute couture</option>
-                <option value="bloom">Bloom moderne</option>
-                <option value="cyberclear">Cyber clair</option>
-                <option value="noir">Noir luxe</option>
-                <option value="neon">Neon violet</option>
-                <option value="ocean">Ocean bleu</option>
-                <option value="forest">Foret</option>
-                <option value="sunset">Sunset</option>
-                <option value="astral">Astral RPG</option>
-                <option value="crystal">Cristal ethere</option>
-                <option value="lifestream">Lifestream bleu</option>
-                <option value="phoenix">Phenix rubis</option>
-                <option value="voidstar">Neant stellaire</option>
-                <option value="twitch">Twitch Pulse</option>
-                <option value="streamdeck">Stream Overlay</option>
-                <option value="resonance">Onde resonante</option>
-                <option value="royal">Nocturne royal</option>
-                <option value="arcade">Arcade neon</option>
-                <option value="glitter1soft">Glitter 1 sans ombre</option>
-                <option value="glitter2soft">Glitter 2 sans ombre</option>
-              </select>
+              <select id="themeInput"></select>
             </label>
             <label class="field">
               <span>Format export</span>
-              <select id="formatInput">
-                <option value="wide">16:9</option>
-                <option value="square">Carre</option>
-                <option value="story">Vertical</option>
-              </select>
+              <select id="formatInput"></select>
             </label>
           </div>
           <label class="field">
             <span>Mode couleurs</span>
-            <select id="paletteInput">
-              <option value="auto">Palette automatique</option>
-              <option value="custom">Couleurs des lignes</option>
-              <option value="mono">Couleur principale</option>
-            </select>
+            <select id="paletteInput"></select>
           </label>
           <div class="grid2">
             <label class="switchBox">
@@ -169,31 +120,54 @@
           <div class="grid2">
             <label class="field">
               <span>Position valeurs</span>
-              <select id="valuePlacementInput">
-                <option value="outside">A l'exterieur</option>
-                <option value="inside">Dans la barre</option>
-              </select>
+              <select id="valuePlacementInput"></select>
             </label>
-            <label class="field">
+            <label class="field isHidden" id="horizontalShapeField">
               <span>Barres horizontales</span>
-              <select id="horizontalShapeInput">
-                <option value="rounded">Arrondies simples</option>
-                <option value="glitter2">Forme glitter 2</option>
-              </select>
+              <select id="horizontalShapeInput"></select>
             </label>
           </div>
-          <label class="field">
+          <label class="field isHidden" id="glitterRoundnessField">
             <span>Arrondi glitter</span>
             <input id="glitterRoundnessInput" type="range" min="0.5" max="3" step="0.05">
           </label>
+          <label class="switchBox" id="customCornersField">
+            <input id="customCornersInput" type="checkbox">
+            <span><strong>Arrondis par angle</strong><small>Permet un rayon different pour chaque coin.</small></span>
+          </label>
+          <div class="cornerTools grid2 isHidden" id="cornerTools">
+            <label class="field">
+              <span>Preset arrondis</span>
+              <select id="cornerPresetInput"></select>
+            </label>
+            <button class="btn btn--ghost cornerButton" id="uniformCornersBtn" type="button">Uniformiser</button>
+          </div>
+          <div class="cornerControls grid2 isHidden" id="cornerControls">
+            <label class="field cornerField">
+              <span>Haut gauche <output id="cornerTopLeftValue">100%</output></span>
+              <input id="cornerTopLeftInput" type="range" min="-50" max="150" step="1">
+            </label>
+            <label class="field cornerField">
+              <span>Haut droit <output id="cornerTopRightValue">100%</output></span>
+              <input id="cornerTopRightInput" type="range" min="-50" max="150" step="1">
+            </label>
+            <label class="field cornerField">
+              <span>Bas droit <output id="cornerBottomRightValue">100%</output></span>
+              <input id="cornerBottomRightInput" type="range" min="-50" max="150" step="1">
+            </label>
+            <label class="field cornerField">
+              <span>Bas gauche <output id="cornerBottomLeftValue">100%</output></span>
+              <input id="cornerBottomLeftInput" type="range" min="-50" max="150" step="1">
+            </label>
+          </div>
           <div class="grid2">
             <label class="switchBox">
               <input id="showGridInput" type="checkbox">
               <span><strong>Grille</strong><small>Reperes visuels.</small></span>
             </label>
-            <label class="switchBox">
-              <input id="transparentInput" type="checkbox">
-              <span><strong>PNG transparent</strong><small>Retire le fond global.</small></span>
+            <label class="field">
+              <span>Transparence</span>
+              <select id="transparentModeInput"></select>
             </label>
           </div>
           <label class="switchBox">
@@ -202,7 +176,7 @@
           </label>
           <label class="switchBox">
             <input id="enableAnimationsInput" type="checkbox">
-            <span><strong>Animations</strong><small>Anime le SVG dans l'apercu.</small></span>
+            <span><strong>Animations</strong><small>Anime le SVG dans l'apercu. Desactive l'export PNG.</small></span>
           </label>
           <div class="grid2">
             <label class="field">
@@ -278,24 +252,8 @@
           </div>
           <label class="field">
             <span>Police</span>
-            <select id="fontFamilyInput">
-              <option value="system">Systeme</option>
-              <option value="display">Display epaisse</option>
-              <option value="wuwa">WuWa inspire</option>
-              <option value="neo">Neo futuriste</option>
-              <option value="condensed">Condensee esport</option>
-              <option value="techno">Techno carree</option>
-              <option value="elegant">Elegant luxe</option>
-              <option value="editorial">Editorial</option>
-              <option value="serif">Serif classique</option>
-              <option value="arcade">Arcade</option>
-              <option value="mono">Monospace</option>
-            </select>
+            <select id="fontFamilyInput"></select>
           </label>
-          <div class="quickActions quickActions--two">
-            <button class="btn btn--ghost" id="copySvgBtn" type="button">Copier SVG</button>
-            <button class="btn btn--ghost" id="downloadSvgBtn" type="button">Exporter SVG</button>
-          </div>
         </div>
       </details>
 
@@ -327,7 +285,7 @@
       <div class="previewHeader">
         <div>
           <strong>Apercu du graphique</strong>
-          <p>Rendu statique fidele a l'export PNG.</p>
+          <p>Rendu fidele a l'export SVG. Le PNG est disponible hors animation.</p>
         </div>
         <div class="statusLine">
           <span id="saveStatus">Non sauvegarde</span>
@@ -364,6 +322,6 @@
   </div>
 
   <div class="toastContainer" id="toastContainer" aria-live="polite"></div>
-  <script src="script.js"></script>
+  <script src="script.js?v=20260609-priority-audit-fixes"></script>
 </body>
 </html>

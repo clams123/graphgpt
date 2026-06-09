@@ -148,6 +148,21 @@ input[type="color"]{padding:3px;min-height:34px}
 input[type="range"]{padding:0;background:transparent;border:0}
 
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.isHidden{display:none!important}
+.cornerTools{align-items:end}
+.cornerButton{min-height:34px;margin-top:8px}
+.cornerField span{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.cornerField output{
+  min-width:42px;
+  padding:2px 6px;
+  border:1px solid rgba(255,255,255,.12);
+  border-radius:999px;
+  background:#172133;
+  color:#fff;
+  font-size:10px;
+  font-weight:950;
+  text-align:center;
+}
 .quickActions{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:9px}
 .quickActions--two{grid-template-columns:1fr 1fr}
 .quickActions--one{grid-template-columns:1fr}
@@ -267,6 +282,7 @@ input[type="range"]{padding:0;background:transparent;border:0}
 .chartCanvas.format-square{aspect-ratio:1/1;max-width:1000px}
 .chartCanvas.format-story{aspect-ratio:4/5;max-width:900px}
 .chartCanvas.isTransparent{background:transparent!important;border-color:rgba(255,255,255,.18)}
+.chartCanvas.isTransparentFull{border-color:transparent;box-shadow:none}
 .chartCanvas svg{display:block;width:100%;height:100%}
 
 .theme-midnight{--canvasBg:linear-gradient(180deg,#121a2b,#081123);--canvasText:#fff;--canvasMuted:#b6c2d6;--panelCard:#17233a;--axis:#7dd3fc;--grid:rgba(255,255,255,.12);--accent:#38bdf8;--accent2:#a78bfa}
@@ -359,15 +375,11 @@ body::-webkit-scrollbar-thumb:hover,.editor::-webkit-scrollbar-thumb:hover{backg
 
 /* Styles des graphiques glitter : le theme actif reste prioritaire */
 .chartCanvas.chart-glitterBar,
-.chartCanvas.chart-glitterBarNoShadow,
-.chartCanvas.chart-glitterBar2,
-.chartCanvas.chart-glitterBar2NoShadow{
+.chartCanvas.chart-glitterBarNoShadow{
   border-color:rgba(255,255,255,.05);
 }
 .chartCanvas.chart-glitterBar svg,
-.chartCanvas.chart-glitterBarNoShadow svg,
-.chartCanvas.chart-glitterBar2 svg,
-.chartCanvas.chart-glitterBar2NoShadow svg{
+.chartCanvas.chart-glitterBarNoShadow svg{
   shape-rendering:geometricPrecision;
   text-rendering:geometricPrecision;
 }

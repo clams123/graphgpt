@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'graphiquesgpt_v9_1_5_glitter_sans_ombre_types';
 const LIBRARY_KEY = `${STORAGE_KEY}_library`;
 const THEMES = ['midnight','clean','executive','editorial','graphite','sage','haute','bloom','cyberclear','noir','neon','ocean','forest','sunset','astral','crystal','lifestream','phoenix','voidstar','twitch','streamdeck','resonance','royal','arcade','glitter1soft','glitter2soft'];
-const CHART_TYPES = ['bar','glitterBar','glitterBarNoShadow','glitterBar2','glitterBar2NoShadow','horizontalBar','line','linearGraph','area','pie','donut','donutTable','bubble','funnel','radar'];
+const CHART_TYPES = ['bar','glitterBar','glitterBarNoShadow','horizontalBar','line','linearGraph','area','pie','donut','donutTable','bubble','funnel','radar'];
 const FORMATS = {
   wide:{w:1600,h:900,label:'16:9'},
   square:{w:1200,h:1200,label:'Carre'},
@@ -12,8 +12,6 @@ const TYPE_LABELS = {
   bar:'Barres verticales',
   glitterBar:'Barres arrondies glitter 1',
   glitterBarNoShadow:'Barres arrondies glitter 1 sans ombre',
-  glitterBar2:'Barres arrondies glitter 2',
-  glitterBar2NoShadow:'Barres arrondies glitter 2 sans ombre',
   horizontalBar:'Barres horizontales',
   line:'Courbe',
   linearGraph:'Graphique lineaire',
@@ -24,6 +22,74 @@ const TYPE_LABELS = {
   bubble:'Graphique a bulles',
   funnel:'Diagramme en entonnoir',
   radar:'Radar'
+};
+const THEME_LABELS = {
+  midnight:'Midnight',
+  clean:'Minimal clair',
+  executive:'Executive clair',
+  editorial:'Editorial premium',
+  graphite:'Graphite studio',
+  sage:'Sage analytics',
+  haute:'Haute couture',
+  bloom:'Bloom moderne',
+  cyberclear:'Cyber clair',
+  noir:'Noir luxe',
+  neon:'Neon violet',
+  ocean:'Ocean bleu',
+  forest:'Foret',
+  sunset:'Sunset',
+  astral:'Astral RPG',
+  crystal:'Cristal ethere',
+  lifestream:'Lifestream bleu',
+  phoenix:'Phenix rubis',
+  voidstar:'Neant stellaire',
+  twitch:'Twitch Pulse',
+  streamdeck:'Stream Overlay',
+  resonance:'Onde resonante',
+  royal:'Nocturne royal',
+  arcade:'Arcade neon',
+  glitter1soft:'Glitter 1 sans ombre',
+  glitter2soft:'Glitter 2 sans ombre'
+};
+const PALETTE_LABELS = {
+  auto:'Palette automatique',
+  custom:'Couleurs des lignes',
+  mono:'Couleur principale'
+};
+const FONT_LABELS = {
+  system:'Systeme',
+  display:'Display epaisse',
+  wuwa:'WuWa inspire',
+  neo:'Neo futuriste',
+  condensed:'Condensee esport',
+  techno:'Techno carree',
+  elegant:'Elegant luxe',
+  editorial:'Editorial',
+  serif:'Serif classique',
+  arcade:'Arcade',
+  mono:'Monospace'
+};
+const HORIZONTAL_SHAPE_LABELS = {
+  rounded:'Arrondies simples',
+  glitter2:'Forme glitter 2'
+};
+const VALUE_PLACEMENT_LABELS = {
+  outside:"A l'exterieur",
+  inside:'Dans la barre'
+};
+const TRANSPARENCY_LABELS = {
+  none:'Fond normal',
+  background:'Fond transparent',
+  full:'Graphique flottant'
+};
+const CORNER_PRESET_LABELS = {
+  custom:'Personnalise',
+  standard:'Standard 0%',
+  uniform:'Uniforme 100%',
+  pill:'Pilule',
+  softChaos:'Chaotique doux',
+  hardChaos:'Chaotique fort',
+  slash:'Diagonale'
 };
 const AUTO_COLORS = ['#38bdf8','#a78bfa','#f472b6','#fbbf24','#34d399','#fb7185','#60a5fa','#c084fc','#f97316','#22d3ee'];
 const THEME_PALETTES = {
@@ -60,10 +126,15 @@ const els = {
   title:$('titleInput'), subtitle:$('subtitleInput'), source:$('sourceInput'),
   rows:$('rowsEditor'), addRow:$('addRowBtn'),
   chartType:$('chartTypeInput'), theme:$('themeInput'), format:$('formatInput'), palette:$('paletteInput'),
-  showValues:$('showValuesInput'), showLegend:$('showLegendInput'), showGrid:$('showGridInput'), showAxis:$('showAxisInput'), transparent:$('transparentInput'),
+  showValues:$('showValuesInput'), showLegend:$('showLegendInput'), showGrid:$('showGridInput'), showAxis:$('showAxisInput'), transparentMode:$('transparentModeInput'),
   enableAnimations:$('enableAnimationsInput'),
   animationDuration:$('animationDurationInput'), animationDelay:$('animationDelayInput'), animationStagger:$('animationStaggerInput'),
-  valuePlacement:$('valuePlacementInput'), horizontalShape:$('horizontalShapeInput'), glitterRoundness:$('glitterRoundnessInput'),
+  valuePlacement:$('valuePlacementInput'),
+  horizontalShapeField:$('horizontalShapeField'), horizontalShape:$('horizontalShapeInput'),
+  glitterRoundnessField:$('glitterRoundnessField'), glitterRoundness:$('glitterRoundnessInput'),
+  customCornersField:$('customCornersField'), customCorners:$('customCornersInput'), cornerTools:$('cornerTools'), cornerPreset:$('cornerPresetInput'), uniformCorners:$('uniformCornersBtn'), cornerControls:$('cornerControls'),
+  cornerTopLeft:$('cornerTopLeftInput'), cornerTopRight:$('cornerTopRightInput'), cornerBottomRight:$('cornerBottomRightInput'), cornerBottomLeft:$('cornerBottomLeftInput'),
+  cornerTopLeftValue:$('cornerTopLeftValue'), cornerTopRightValue:$('cornerTopRightValue'), cornerBottomRightValue:$('cornerBottomRightValue'), cornerBottomLeftValue:$('cornerBottomLeftValue'),
   sort:$('sortInput'), decimals:$('decimalsInput'), weight:$('weightInput'),
   titleScale:$('titleScaleInput'), valueScale:$('valueScaleInput'), fontFamily:$('fontFamilyInput'),
   libraryName:$('libraryNameInput'), libraryList:$('libraryList'), saveGraph:$('saveGraphBtn'), saveTemplate:$('saveTemplateBtn'),
@@ -89,6 +160,7 @@ const DEFAULT_STATE = {
   showGrid:false,
   showAxis:true,
   transparent:false,
+  transparentMode:'none',
   enableAnimations:false,
   animationDuration:1,
   animationDelay:1,
@@ -96,6 +168,12 @@ const DEFAULT_STATE = {
   valuePlacement:'outside',
   horizontalShape:'rounded',
   glitterRoundness:1,
+  customCorners:false,
+  cornerPreset:'custom',
+  cornerTopLeft:100,
+  cornerTopRight:100,
+  cornerBottomRight:100,
+  cornerBottomLeft:100,
   titleScale:1,
   valueScale:1,
   fontFamily:'wuwa',
@@ -120,16 +198,41 @@ let restoring = false;
 let library = [];
 const MAX_HISTORY = 60;
 const MAX_LIBRARY_ITEMS = 60;
+const CORNER_PRESETS = {
+  standard:{cornerTopLeft:0, cornerTopRight:0, cornerBottomRight:0, cornerBottomLeft:0},
+  uniform:{cornerTopLeft:100, cornerTopRight:100, cornerBottomRight:100, cornerBottomLeft:100},
+  pill:{cornerTopLeft:150, cornerTopRight:150, cornerBottomRight:150, cornerBottomLeft:150},
+  softChaos:{cornerTopLeft:20, cornerTopRight:100, cornerBottomRight:45, cornerBottomLeft:80},
+  hardChaos:{cornerTopLeft:-50, cornerTopRight:150, cornerBottomRight:-25, cornerBottomLeft:125},
+  slash:{cornerTopLeft:0, cornerTopRight:140, cornerBottomRight:0, cornerBottomLeft:140}
+};
 
 function clone(value){ return JSON.parse(JSON.stringify(value)); }
 function esc(value){ return String(value ?? '').replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#039;'); }
 function attr(value){ return esc(value); }
 function oneOf(value, list, fallback){ return list.includes(value) ? value : fallback; }
+function optionMarkup(value, label){ return `<option value="${attr(value)}">${esc(label)}</option>`; }
+function populateSelect(select, entries){
+  if (!select) return;
+  select.innerHTML = entries.map(([value, label]) => optionMarkup(value, label)).join('');
+}
+function populateGeneratedControls(){
+  populateSelect(els.chartType, CHART_TYPES.map(value => [value, TYPE_LABELS[value] || value]));
+  populateSelect(els.theme, THEMES.map(value => [value, THEME_LABELS[value] || value]));
+  populateSelect(els.format, Object.entries(FORMATS).map(([value, format]) => [value, format.label]));
+  populateSelect(els.palette, Object.entries(PALETTE_LABELS));
+  populateSelect(els.valuePlacement, Object.entries(VALUE_PLACEMENT_LABELS));
+  populateSelect(els.horizontalShape, Object.entries(HORIZONTAL_SHAPE_LABELS));
+  populateSelect(els.transparentMode, Object.entries(TRANSPARENCY_LABELS));
+  populateSelect(els.cornerPreset, Object.entries(CORNER_PRESET_LABELS));
+  populateSelect(els.fontFamily, FONT_FAMILIES.map(value => [value, FONT_LABELS[value] || value]));
+}
 function clamp(value, min, max, fallback){
   const n = Number(value);
   if (!Number.isFinite(n)) return fallback;
   return Math.max(min, Math.min(max, n));
 }
+function percentLabel(value){ return `${Math.round(Number(value) || 0)}%`; }
 function normalizeColor(value, fallback=''){
   const raw = String(value || '').trim();
   if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toLowerCase();
@@ -174,7 +277,8 @@ function normalizeState(raw){
   base.title = String(input.title ?? base.title);
   base.subtitle = String(input.subtitle ?? base.subtitle);
   base.source = String(input.source ?? base.source);
-  base.chartType = oneOf(input.chartType, CHART_TYPES, base.chartType);
+  const chartType = input.chartType === 'glitterBar2' ? 'glitterBar' : input.chartType === 'glitterBar2NoShadow' ? 'glitterBarNoShadow' : input.chartType;
+  base.chartType = oneOf(chartType, CHART_TYPES, base.chartType);
   base.theme = oneOf(input.theme, THEMES, base.theme);
   base.format = oneOf(input.format, Object.keys(FORMATS), base.format);
   base.palette = oneOf(input.palette, ['auto','custom','mono'], base.palette);
@@ -182,7 +286,8 @@ function normalizeState(raw){
   base.showLegend = !!input.showLegend;
   base.showGrid = input.showGrid !== false;
   base.showAxis = input.showAxis !== false;
-  base.transparent = !!input.transparent;
+  base.transparentMode = oneOf(input.transparentMode, Object.keys(TRANSPARENCY_LABELS), input.transparent ? 'background' : 'none');
+  base.transparent = base.transparentMode !== 'none';
   base.enableAnimations = !!input.enableAnimations;
   base.animationDuration = clamp(input.animationDuration, 0.6, 3, 1);
   base.animationDelay = clamp(input.animationDelay, 0, 3, 1);
@@ -191,6 +296,12 @@ function normalizeState(raw){
   const horizontalShape = ['glitter3','glitter4'].includes(input.horizontalShape) ? 'glitter2' : input.horizontalShape;
   base.horizontalShape = oneOf(horizontalShape, ['rounded','glitter2'], base.horizontalShape);
   base.glitterRoundness = clamp(input.glitterRoundness, 0.5, 3, 1);
+  base.customCorners = !!input.customCorners;
+  base.cornerPreset = oneOf(input.cornerPreset, ['custom', ...Object.keys(CORNER_PRESETS)], 'custom');
+  base.cornerTopLeft = clamp(input.cornerTopLeft, -50, 150, base.cornerTopLeft);
+  base.cornerTopRight = clamp(input.cornerTopRight, -50, 150, base.cornerTopRight);
+  base.cornerBottomRight = clamp(input.cornerBottomRight, -50, 150, base.cornerBottomRight);
+  base.cornerBottomLeft = clamp(input.cornerBottomLeft, -50, 150, base.cornerBottomLeft);
   base.titleScale = clamp(input.titleScale, 0.7, 1.25, 1);
   base.valueScale = clamp(input.valueScale, 0.7, 1.35, 1);
   base.fontDefaultUpgraded = true;
@@ -575,17 +686,28 @@ function smoothPath(points){
 function text(x, y, content, attrs=''){
   return `<text x="${x}" y="${y}" ${attrs}>${esc(content)}</text>`;
 }
-function seriesGradientId(index){ return `series-${state.chartType}-${index}`; }
+let svgBuildCount = 0;
+let currentSvgPrefix = 'gsvg';
+function beginSvgBuild(){
+  svgBuildCount += 1;
+  currentSvgPrefix = `gsvg-${Date.now().toString(36)}-${svgBuildCount}`;
+}
+function localId(id){ return `${currentSvgPrefix}-${id}`; }
+function transparencyMode(){ return oneOf(state.transparentMode, Object.keys(TRANSPARENCY_LABELS), state.transparent ? 'background' : 'none'); }
+function hasTransparentBackground(){ return transparencyMode() !== 'none'; }
+function hasFloatingChart(){ return transparencyMode() === 'full'; }
+function seriesGradientId(index){ return localId(`series-${state.chartType}-${index}`); }
 function seriesFill(index){ return `url(#${seriesGradientId(index)})`; }
 function seriesDefs(palette, colors){
   const areaTop = brightenColor(colors.accent, 0.34);
+  const lineAreaId = localId('line-area-fill');
   return `<defs>
     ${palette.map((color, index) => `<linearGradient id="${seriesGradientId(index)}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="${brightenColor(color, 0.18)}"/>
       <stop offset=".58" stop-color="${color}"/>
       <stop offset="1" stop-color="${deepenColor(color, 0.2)}"/>
     </linearGradient>`).join('')}
-    <linearGradient id="line-area-fill" x1="0" y1="0" x2="0" y2="1">
+    <linearGradient id="${lineAreaId}" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="${areaTop}" stop-opacity=".42"/>
       <stop offset=".78" stop-color="${colors.accent}" stop-opacity=".08"/>
       <stop offset="1" stop-color="${colors.accent}" stop-opacity="0"/>
@@ -593,6 +715,7 @@ function seriesDefs(palette, colors){
   </defs>`;
 }
 function plotSurface(x, y, w, h, colors, opacity=1){
+  if (hasFloatingChart()) return '';
   return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="24" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2" opacity="${opacity}"/>`;
 }
 function motionMarkup(){
@@ -631,9 +754,9 @@ function legendLayout(size){
     leftEdge:x - Math.round(size.w * 0.03)
   };
 }
-function backgroundMarkup(size, transparent){
-  if (transparent) return '';
-  const id = `bg-${state.theme}`;
+function backgroundMarkup(size){
+  if (hasTransparentBackground()) return '';
+  const id = localId(`bg-${state.theme}`);
   const bg = {
     midnight:{from:'#101827', to:'#050914', wash:[['18%','14%','52%','#38bdf8','.10'],['82%','22%','46%','#d8b4fe','.10']]},
     clean:{from:'#f8fafc', to:'#eef2f7', wash:[['84%','12%','42%','#bfdbfe','.28']]},
@@ -719,45 +842,102 @@ function axisAndGrid(x, y, w, h, scale, colors){
   return out;
 }
 function glitterDefs(){
+  const shadowId = localId('glitter-bar-shadow');
+  const sideShineId = localId('glitter-side-shine');
+  const stageGlowId = localId('glitter-stage-glow');
   return `<defs>
-    <filter id="glitter-bar-shadow" x="-22%" y="-10%" width="150%" height="128%" color-interpolation-filters="sRGB">
+    <filter id="${shadowId}" x="-22%" y="-10%" width="150%" height="128%" color-interpolation-filters="sRGB">
       <feDropShadow dx="16" dy="16" stdDeviation="3.5" flood-color="#020407" flood-opacity=".72"/>
     </filter>
-    <linearGradient id="glitter-side-shine" x1="0" y1="0" x2="1" y2="0">
+    <linearGradient id="${sideShineId}" x1="0" y1="0" x2="1" y2="0">
       <stop offset="0" stop-color="#ffffff" stop-opacity=".18"/>
       <stop offset="0.34" stop-color="#ffffff" stop-opacity=".06"/>
       <stop offset="0.72" stop-color="#000000" stop-opacity="0"/>
       <stop offset="1" stop-color="#000000" stop-opacity=".10"/>
     </linearGradient>
-    <radialGradient id="glitter-stage-glow" cx="50%" cy="18%" r="88%">
+    <radialGradient id="${stageGlowId}" cx="50%" cy="18%" r="88%">
       <stop offset="0" stop-color="#ffffff" stop-opacity=".07"/>
       <stop offset="0.55" stop-color="#ffffff" stop-opacity=".02"/>
       <stop offset="1" stop-color="#000000" stop-opacity=".12"/>
     </radialGradient>
   </defs>`;
 }
+function isGlitterChartType(type=state.chartType){
+  return ['glitterBar','glitterBarNoShadow'].includes(type);
+}
+function isCornerShapeChart(type=state.chartType){
+  return type === 'bar' || type === 'horizontalBar' || isGlitterChartType(type);
+}
+function shouldShowGlitterRoundness(){
+  return !state.customCorners && (isGlitterChartType() || (state.chartType === 'horizontalBar' && state.horizontalShape === 'glitter2'));
+}
+function cornerRadiusPercent(name, fallback=100){
+  return clamp(state[name], -50, 150, fallback) / 100;
+}
+function customCornerRadii(w, h){
+  const maxRadius = Math.max(0, Math.min(Math.abs(w), Math.abs(h)) / 2);
+  return {
+    topLeft:maxRadius * cornerRadiusPercent('cornerTopLeft'),
+    topRight:maxRadius * cornerRadiusPercent('cornerTopRight'),
+    bottomRight:maxRadius * cornerRadiusPercent('cornerBottomRight'),
+    bottomLeft:maxRadius * cornerRadiusPercent('cornerBottomLeft')
+  };
+}
+function scaleCornerRadii(w, h, r){
+  const side = (a, b, limit) => {
+    const sum = Math.abs(a) + Math.abs(b);
+    return sum > 0 ? limit / sum : 1;
+  };
+  const scale = Math.min(
+    1,
+    side(r.topLeft, r.topRight, w),
+    side(r.topRight, r.bottomRight, h),
+    side(r.bottomLeft, r.bottomRight, w),
+    side(r.topLeft, r.bottomLeft, h)
+  );
+  return {
+    topLeft:r.topLeft * scale,
+    topRight:r.topRight * scale,
+    bottomRight:r.bottomRight * scale,
+    bottomLeft:r.bottomLeft * scale
+  };
+}
+function cornerCurve(control, end){
+  return `Q ${control.x} ${control.y} ${end.x} ${end.y}`;
+}
+function roundedBoxPath(x, y, w, h, radii){
+  const r = scaleCornerRadii(w, h, {
+    topLeft:radii.topLeft || 0,
+    topRight:radii.topRight || 0,
+    bottomRight:radii.bottomRight || 0,
+    bottomLeft:radii.bottomLeft || 0
+  });
+  const a = {
+    topLeft:Math.abs(r.topLeft),
+    topRight:Math.abs(r.topRight),
+    bottomRight:Math.abs(r.bottomRight),
+    bottomLeft:Math.abs(r.bottomLeft)
+  };
+  const controls = {
+    topRight:r.topRight >= 0 ? {x:x + w, y} : {x:x + w - a.topRight, y:y + a.topRight},
+    bottomRight:r.bottomRight >= 0 ? {x:x + w, y:y + h} : {x:x + w - a.bottomRight, y:y + h - a.bottomRight},
+    bottomLeft:r.bottomLeft >= 0 ? {x, y:y + h} : {x:x + a.bottomLeft, y:y + h - a.bottomLeft},
+    topLeft:r.topLeft >= 0 ? {x, y} : {x:x + a.topLeft, y:y + a.topLeft}
+  };
+  return `M ${x + a.topLeft} ${y}
+    L ${x + w - a.topRight} ${y}
+    ${cornerCurve(controls.topRight, {x:x + w, y:y + a.topRight})}
+    L ${x + w} ${y + h - a.bottomRight}
+    ${cornerCurve(controls.bottomRight, {x:x + w - a.bottomRight, y:y + h})}
+    L ${x + a.bottomLeft} ${y + h}
+    ${cornerCurve(controls.bottomLeft, {x, y:y + h - a.bottomLeft})}
+    L ${x} ${y + a.topLeft}
+    ${cornerCurve(controls.topLeft, {x:x + a.topLeft, y})}
+    Z`;
+}
 function roundedReferenceBarPath(x, y, w, h, variant='glitterBar'){
+  if (state.customCorners) return roundedBoxPath(x, y, w, h, customCornerRadii(w, h));
   const roundness = clamp(state.glitterRoundness, 0.5, 3, 1);
-  if (variant === 'glitterBar2') {
-    // Glitter 2: forme inversee demandee.
-    // - grand arrondi en haut a gauche ;
-    // - grand arrondi en bas a droite ;
-    // - les deux autres coins restent presque droits.
-    const topLeft = Math.min(h * 0.21 * roundness, w * 1.08);
-    const topRight = Math.min(h * 0.04 * roundness, w * 0.12, 18);
-    const bottomRight = Math.min(h * 0.21 * roundness, w * 1.08);
-    const bottomLeft = Math.min(h * 0.04 * roundness, w * 0.12, 18);
-    return `M ${x + topLeft} ${y}
-      L ${x + w - topRight} ${y}
-      Q ${x + w} ${y} ${x + w} ${y + topRight}
-      L ${x + w} ${y + h - bottomRight}
-      Q ${x + w} ${y + h} ${x + w - bottomRight} ${y + h}
-      L ${x + bottomLeft} ${y + h}
-      Q ${x} ${y + h} ${x} ${y + h - bottomLeft}
-      L ${x} ${y + topLeft}
-      Q ${x} ${y} ${x + topLeft} ${y}
-      Z`;
-  }
 
   // Glitter 1 : forme historique, grand arrondi haut gauche + bas gauche.
   const leftTop = Math.min(h * 0.19 * roundness, w * 0.98);
@@ -775,6 +955,7 @@ function roundedReferenceBarPath(x, y, w, h, variant='glitterBar'){
     Z`;
 }
 function horizontalGlitterBarPath(x, y, w, h, shape='glitter2'){
+  if (state.customCorners) return roundedBoxPath(x, y, w, h, customCornerRadii(w, h));
   const roundness = clamp(state.glitterRoundness, 0.5, 3, 1);
   const profile = {
     glitter2:{big:0.58, small:0.075}
@@ -870,13 +1051,13 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
   const chartH = size.h - top - bottom;
   const step = chartW / count;
   const weight = clamp(state.weight, 0.7, 1.5, 1);
-  const widthFactor = variant === 'glitterBar2' ? 0.62 : 0.58;
+  const widthFactor = 0.58;
   const barW = Math.max(28, Math.min(step * widthFactor * weight, step - 18));
   const valueFont = Math.max(30, Math.round(size.w * (wide ? 0.024 : 0.04)));
   const labelFont = Math.max(15, Math.round(size.w * 0.013));
   const baseY = size.h - bottom;
   let out = glitterDefs();
-  out += `<rect width="${size.w}" height="${size.h}" fill="url(#glitter-stage-glow)"/>`;
+  if (!hasTransparentBackground()) out += `<rect width="${size.w}" height="${size.h}" fill="url(#${localId('glitter-stage-glow')})"/>`;
 
   cleanRows.forEach((row, index) => {
     const cx = left + step * index + step / 2;
@@ -885,8 +1066,8 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
     const x = cx - barW / 2;
     const y = baseY - barH;
     const path = roundedReferenceBarPath(x, y, barW, barH, variant);
-    const clipId = `glitter-clip-${variant}-${index}`;
-    const gradId = `glitter-fill-${variant}-${index}`;
+    const clipId = localId(`glitter-clip-${variant}-${index}`);
+    const gradId = localId(`glitter-fill-${variant}-${index}`);
     const color = palette[index] || colors.accent;
     const shadowDx = Math.max(12, barW * 0.14);
     const shadowDy = Math.max(12, barW * 0.15);
@@ -908,7 +1089,7 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
         <rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="url(#${gradId})"/>
         ${deterministicSparkles(index, x, y, barW, barH, color.toLowerCase().includes('e8') || color.toLowerCase().includes('f4') ? 'pink' : 'default')}
         <rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="url(#${gradId}-glow)" opacity=".62"/>
-        <rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="url(#glitter-side-shine)" opacity=".95"/>
+        <rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="url(#${localId('glitter-side-shine')})" opacity=".95"/>
       </g>
     </g>`;
 
@@ -941,7 +1122,12 @@ function renderBar(rows, size, colors, palette){
     const top = Math.min(baseY, targetY);
     const bh = Math.abs(baseY - targetY);
     const rx = Math.min(18, barW / 2);
-    out += `<rect class="vBarAnim" style="--delay:${itemDelay(index)}s" x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
+    if (state.customCorners) {
+      const path = roundedBoxPath(cx - barW / 2, top, barW, bh, customCornerRadii(barW, bh));
+      out += `<path class="vBarAnim" style="--delay:${itemDelay(index)}s" d="${path}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
+    } else {
+      out += `<rect class="vBarAnim" style="--delay:${itemDelay(index)}s" x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
+    }
     out += `<rect x="${cx - barW / 2 + Math.max(3, barW * 0.08)}" y="${top + 4}" width="${Math.max(2, barW * 0.18)}" height="${Math.max(0, bh - 8)}" rx="${Math.max(1, rx * .55)}" fill="#ffffff" opacity=".13"/>`;
     if (state.showValues) out += text(cx, top - 10, formatValue(row.value), `fill="${colors.text}" font-size="16" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
@@ -987,18 +1173,33 @@ function renderHorizontalBar(rows, size, colors, palette){
     const bw = Math.abs(row.value) / max * w;
     const label = truncateText(row.label, labelFont, labelW, 800);
     const barY = yy - barH / 2;
+    const shineInset = Math.max(4, bw * 0.05);
+    const shineX = x + shineInset;
+    const shineW = Math.max(0, bw - shineInset * 2);
+    const shineY = yy - barH / 2 + Math.max(3, barH * .12);
+    const shineH = Math.max(2, barH * .18);
     out += text(x - 14, yy + labelFont * 0.34, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="800" text-anchor="end" font-family="${family}"`);
     if (state.horizontalShape === 'glitter2') {
       const path = horizontalGlitterBarPath(x, barY, bw, barH, state.horizontalShape);
-      const clipId = `horizontal-${state.horizontalShape}-${index}`;
+      const clipId = localId(`horizontal-${state.horizontalShape}-${index}`);
       out += `<clipPath id="${clipId}"><path d="${path}"/></clipPath>
       <path class="barAnim" style="--delay:${itemDelay(index)}s" d="${path}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.35)}" stroke-width="1"/>
       <g clip-path="url(#${clipId})">
-        <rect x="${x + 5}" y="${yy - barH / 2 + Math.max(3, barH * .12)}" width="${Math.max(0, bw - 10)}" height="${Math.max(2, barH * .18)}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>
+        <rect x="${shineX}" y="${shineY}" width="${shineW}" height="${shineH}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>
       </g>`;
     } else {
-      out += `<rect class="barAnim" style="--delay:${itemDelay(index)}s" x="${x}" y="${barY}" width="${bw}" height="${barH}" rx="${barH / 2}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.35)}" stroke-width="1"/>`;
-      out += `<rect x="${x + 5}" y="${yy - barH / 2 + Math.max(3, barH * .12)}" width="${Math.max(0, bw - 10)}" height="${Math.max(2, barH * .18)}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>`;
+      if (state.customCorners) {
+        const path = roundedBoxPath(x, barY, bw, barH, customCornerRadii(bw, barH));
+        const clipId = localId(`horizontal-rounded-${index}`);
+        out += `<clipPath id="${clipId}"><path d="${path}"/></clipPath>
+        <path class="barAnim" style="--delay:${itemDelay(index)}s" d="${path}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.35)}" stroke-width="1"/>
+        <g clip-path="url(#${clipId})">
+          <rect x="${shineX}" y="${shineY}" width="${shineW}" height="${shineH}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>
+        </g>`;
+      } else {
+        out += `<rect class="barAnim" style="--delay:${itemDelay(index)}s" x="${x}" y="${barY}" width="${bw}" height="${barH}" rx="${barH / 2}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.35)}" stroke-width="1"/>`;
+        out += `<rect x="${shineX}" y="${shineY}" width="${shineW}" height="${shineH}" rx="${barH * .09}" fill="#ffffff" opacity=".12"/>`;
+      }
     }
     if (state.showValues) {
       const valueText = formatValue(row.value);
@@ -1028,7 +1229,7 @@ function renderLineOrArea(rows, size, colors, palette, area=false){
   if (area && points.length) {
     const baseY = y + h - ((0 - scale.min) / scale.span) * h;
     const areaPoints = [{x:points[0].x,y:baseY}, ...points, {x:points[points.length - 1].x,y:baseY}];
-    out += polygon(areaPoints, `fill="url(#line-area-fill)"`);
+    out += polygon(areaPoints, `fill="url(#${localId('line-area-fill')})"`);
   }
   out += line(points, `class="lineAnim" fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".28" transform="translate(0 5)"`);
   out += line(points, `class="lineAnim" fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"`);
@@ -1275,6 +1476,7 @@ function emptyMarkup(size, colors){
   return `<text x="${size.w / 2}" y="${size.h / 2}" fill="${colors.text}" font-size="34" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif">Ajoute au moins une donnee</text>`;
 }
 function buildSvgMarkup(){
+  beginSvgBuild();
   const size = chartSize();
   const rows = getRows();
   const colors = getThemeColors();
@@ -1284,8 +1486,6 @@ function buildSvgMarkup(){
   else if (state.chartType === 'bar') body = renderBar(rows, size, colors, palette);
   else if (state.chartType === 'glitterBar') body = renderGlitterBar(rows, size, colors, palette, 'glitterBar');
   else if (state.chartType === 'glitterBarNoShadow') body = renderGlitterBar(rows, size, colors, palette, 'glitterBar', true);
-  else if (state.chartType === 'glitterBar2') body = renderGlitterBar(rows, size, colors, palette, 'glitterBar2');
-  else if (state.chartType === 'glitterBar2NoShadow') body = renderGlitterBar(rows, size, colors, palette, 'glitterBar2', true);
   else if (state.chartType === 'horizontalBar') body = renderHorizontalBar(rows, size, colors, palette);
   else if (state.chartType === 'line') body = renderLineOrArea(rows, size, colors, palette, false);
   else if (state.chartType === 'linearGraph') body = renderLinearGraph(rows, size, colors, palette);
@@ -1297,14 +1497,14 @@ function buildSvgMarkup(){
   else if (state.chartType === 'funnel') body = renderFunnel(rows, size, colors, palette);
   else if (state.chartType === 'radar') body = renderRadar(rows, size, colors, palette);
 
-  const isGlitter = ['glitterBar','glitterBarNoShadow','glitterBar2','glitterBar2NoShadow'].includes(state.chartType);
+  const isGlitter = ['glitterBar','glitterBarNoShadow'].includes(state.chartType);
   const hasCustomChrome = ['donutTable','linearGraph'].includes(state.chartType);
   const chrome = isGlitter ? legendMarkup(rows, size, colors, palette) : `${hasCustomChrome ? '' : headerMarkup(size, colors)}${hasCustomChrome ? '' : legendMarkup(rows, size, colors, palette)}`;
   const defs = isGlitter ? '' : seriesDefs(palette, colors);
   const motion = motionMarkup(colors);
   return `<?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="${size.w}" height="${size.h}" viewBox="0 0 ${size.w} ${size.h}" role="img" aria-label="${attr(state.title || 'Graphique')}">
-  ${backgroundMarkup(size, state.transparent)}
+  ${backgroundMarkup(size)}
   ${defs}
   ${motion}
   ${chrome}
@@ -1338,7 +1538,7 @@ function renderControls(){
   els.showLegend.checked = state.showLegend;
   els.showGrid.checked = state.showGrid;
   els.showAxis.checked = state.showAxis;
-  els.transparent.checked = state.transparent;
+  els.transparentMode.value = transparencyMode();
   els.enableAnimations.checked = state.enableAnimations;
   els.animationDuration.value = String(state.animationDuration);
   els.animationDelay.value = String(state.animationDelay);
@@ -1346,6 +1546,22 @@ function renderControls(){
   els.valuePlacement.value = state.valuePlacement;
   els.horizontalShape.value = state.horizontalShape;
   els.glitterRoundness.value = String(state.glitterRoundness);
+  els.customCorners.checked = state.customCorners;
+  els.cornerTopLeft.value = String(state.cornerTopLeft);
+  els.cornerTopRight.value = String(state.cornerTopRight);
+  els.cornerBottomRight.value = String(state.cornerBottomRight);
+  els.cornerBottomLeft.value = String(state.cornerBottomLeft);
+  els.cornerTopLeftValue.value = percentLabel(state.cornerTopLeft);
+  els.cornerTopRightValue.value = percentLabel(state.cornerTopRight);
+  els.cornerBottomRightValue.value = percentLabel(state.cornerBottomRight);
+  els.cornerBottomLeftValue.value = percentLabel(state.cornerBottomLeft);
+  els.cornerPreset.value = oneOf(state.cornerPreset, ['custom', ...Object.keys(CORNER_PRESETS)], 'custom');
+  const cornerOptionsVisible = isCornerShapeChart();
+  els.horizontalShapeField.classList.toggle('isHidden', state.chartType !== 'horizontalBar');
+  els.glitterRoundnessField.classList.toggle('isHidden', !shouldShowGlitterRoundness());
+  els.customCornersField.classList.toggle('isHidden', !cornerOptionsVisible);
+  els.cornerTools.classList.toggle('isHidden', !cornerOptionsVisible || !state.customCorners);
+  els.cornerControls.classList.toggle('isHidden', !cornerOptionsVisible || !state.customCorners);
   els.sort.value = state.sort;
   els.compareMode.checked = state.compareMode;
   els.compareMethod.value = state.compareMethod;
@@ -1357,6 +1573,9 @@ function renderControls(){
   els.chartStatus.textContent = TYPE_LABELS[state.chartType] || 'Graphique';
   const count = getRows().length;
   els.dataStatus.textContent = `${count} valeur${count > 1 ? 's' : ''}`;
+  els.exportPng.disabled = state.enableAnimations;
+  els.exportPng.textContent = state.enableAnimations ? 'PNG indisponible' : 'Exporter PNG';
+  els.exportPng.title = state.enableAnimations ? 'Desactive les animations pour exporter en PNG.' : '';
   updateHistoryButtons();
 }
 function renderCanvasClasses(){
@@ -1365,9 +1584,10 @@ function renderCanvasClasses(){
     `theme-${state.theme}`,
     `format-${state.format}`,
     `chart-${state.chartType}`,
-    state.transparent ? 'isTransparent' : ''
+    hasTransparentBackground() ? 'isTransparent' : '',
+    hasFloatingChart() ? 'isTransparentFull' : ''
   ].filter(Boolean).join(' ');
-  els.previewFrame.classList.toggle('isChecker', state.transparent);
+  els.previewFrame.classList.toggle('isChecker', hasTransparentBackground());
 }
 function fitPreview(){
   const frame = els.previewFrame.getBoundingClientRect();
@@ -1405,7 +1625,8 @@ function updateFromControls(){
   state.showLegend = els.showLegend.checked;
   state.showGrid = els.showGrid.checked;
   state.showAxis = els.showAxis.checked;
-  state.transparent = els.transparent.checked;
+  state.transparentMode = oneOf(els.transparentMode.value, Object.keys(TRANSPARENCY_LABELS), 'none');
+  state.transparent = state.transparentMode !== 'none';
   state.enableAnimations = els.enableAnimations.checked;
   state.animationDuration = clamp(els.animationDuration.value, 0.6, 3, 1);
   state.animationDelay = clamp(els.animationDelay.value, 0, 3, 1);
@@ -1413,6 +1634,12 @@ function updateFromControls(){
   state.valuePlacement = oneOf(els.valuePlacement.value, ['outside','inside'], 'outside');
   state.horizontalShape = oneOf(els.horizontalShape.value, ['rounded','glitter2'], 'rounded');
   state.glitterRoundness = clamp(els.glitterRoundness.value, 0.5, 3, 1);
+  state.customCorners = els.customCorners.checked;
+  state.cornerPreset = 'custom';
+  state.cornerTopLeft = clamp(els.cornerTopLeft.value, -50, 150, 100);
+  state.cornerTopRight = clamp(els.cornerTopRight.value, -50, 150, 100);
+  state.cornerBottomRight = clamp(els.cornerBottomRight.value, -50, 150, 100);
+  state.cornerBottomLeft = clamp(els.cornerBottomLeft.value, -50, 150, 100);
   state.sort = oneOf(els.sort.value, ['none','asc','desc'], 'none');
   state.compareMode = els.compareMode.checked;
   state.compareMethod = oneOf(els.compareMethod.value, ['ratio','difference','evolution'], 'ratio');
@@ -1425,6 +1652,33 @@ function updateFromControls(){
   renderControls();
   requestAnimationFrame(() => { fitPreview(); renderSvg(); });
   scheduleSave();
+}
+function setCornerState(values, presetName='custom'){
+  state.customCorners = true;
+  state.cornerPreset = oneOf(presetName, ['custom', ...Object.keys(CORNER_PRESETS)], 'custom');
+  state.cornerTopLeft = clamp(values.cornerTopLeft, -50, 150, state.cornerTopLeft);
+  state.cornerTopRight = clamp(values.cornerTopRight, -50, 150, state.cornerTopRight);
+  state.cornerBottomRight = clamp(values.cornerBottomRight, -50, 150, state.cornerBottomRight);
+  state.cornerBottomLeft = clamp(values.cornerBottomLeft, -50, 150, state.cornerBottomLeft);
+  renderCanvasClasses();
+  renderControls();
+  requestAnimationFrame(() => { fitPreview(); renderSvg(); });
+  scheduleSave();
+}
+function applyCornerPreset(){
+  const presetName = els.cornerPreset.value;
+  const preset = CORNER_PRESETS[presetName];
+  if (!preset) return;
+  setCornerState(preset, presetName);
+}
+function uniformCorners(){
+  const value = clamp(state.cornerTopLeft, -50, 150, 100);
+  setCornerState({
+    cornerTopLeft:value,
+    cornerTopRight:value,
+    cornerBottomRight:value,
+    cornerBottomLeft:value
+  }, 'custom');
 }
 function updateRowFromInput(input){
   const rowNode = input.closest('[data-row]');
@@ -1499,6 +1753,7 @@ async function copySvg(){
   }
 }
 function exportPng(){
+  if (state.enableAnimations) return toast('Desactive les animations pour exporter en PNG.');
   const size = chartSize();
   const svg = getSvgForDownload();
   const blob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
@@ -1527,7 +1782,7 @@ function exportPng(){
   img.src = url;
 }
 function bind(){
-  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.transparent, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.sort, els.compareMode, els.compareMethod, els.decimals, els.weight, els.titleScale, els.valueScale, els.fontFamily]
+  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.transparentMode, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.customCorners, els.cornerTopLeft, els.cornerTopRight, els.cornerBottomRight, els.cornerBottomLeft, els.sort, els.compareMode, els.compareMethod, els.decimals, els.weight, els.titleScale, els.valueScale, els.fontFamily]
     .forEach(input => {
       input.addEventListener('input', updateFromControls);
       input.addEventListener('change', updateFromControls);
@@ -1545,6 +1800,8 @@ function bind(){
     if (btn) removeRow(Number(btn.dataset.removeRow));
   });
   els.addRow.addEventListener('click', addRow);
+  els.cornerPreset.addEventListener('change', applyCornerPreset);
+  els.uniformCorners.addEventListener('click', uniformCorners);
   els.save.addEventListener('click', () => save(false));
   els.saveGraph.addEventListener('click', () => upsertLibraryItem('graph'));
   els.saveTemplate.addEventListener('click', () => upsertLibraryItem('template'));
@@ -1569,6 +1826,7 @@ function bind(){
 
 load();
 loadLibrary();
+populateGeneratedControls();
 bind();
 renderAll();
 save(true);
