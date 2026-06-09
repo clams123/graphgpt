@@ -1816,6 +1816,14 @@ function bind(){
   els.exportPng.addEventListener('click', exportPng);
   els.copySvg.addEventListener('click', copySvg);
   els.downloadSvg.addEventListener('click', exportSvg);
+  document.querySelectorAll('[data-panel-target]').forEach((button) => {
+    button.addEventListener('click', () => {
+      const panel = document.getElementById(button.dataset.panelTarget);
+      if (!panel) return;
+      panel.open = true;
+      panel.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  });
   window.addEventListener('resize', fitPreview);
   document.addEventListener('keydown', (event) => {
     if (event.key === 'Escape') { closeResetModal(); }

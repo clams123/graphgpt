@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GraphiquesGPT - G&eacute;n&eacute;rateur de graphiques</title>
-  <link rel="stylesheet" href="style.css?v=20260609-priority-audit-fixes">
+  <link rel="stylesheet" href="style.css?v=20260609-menu-polish-2">
 </head>
 <body>
   <header class="topbar">
@@ -28,7 +28,15 @@
 
   <main class="layout">
     <aside class="editor" aria-label="Editeur du graphique">
-      <details class="panel accordionMenu" open>
+      <nav class="editorNav" aria-label="Navigation des reglages">
+        <button class="editorNav__button" type="button" data-panel-target="panelInfo">Infos</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelData">Donnees</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelDisplay">Affichage</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelSettings">Reglages</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelLibrary">Biblio</button>
+      </nav>
+
+      <details class="panel accordionMenu" id="panelInfo" open>
         <summary>
           <div class="sectionTitle">
             <span>1</span>
@@ -55,7 +63,7 @@
         </div>
       </details>
 
-      <details class="panel accordionMenu" open>
+      <details class="panel accordionMenu" id="panelData" open>
         <summary>
           <div class="sectionTitle">
             <span>2</span>
@@ -78,7 +86,7 @@
         </div>
       </details>
 
-      <details class="panel accordionMenu" open>
+      <details class="panel accordionMenu" id="panelDisplay" open>
         <summary>
           <div class="sectionTitle">
             <span>3</span>
@@ -89,113 +97,130 @@
           </div>
         </summary>
         <div class="panelBody">
-          <label class="field">
-            <span>Type de graphique</span>
-            <select id="chartTypeInput"></select>
-          </label>
-          <div class="grid2">
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Graphique</div>
             <label class="field">
-              <span>Style</span>
-              <select id="themeInput"></select>
+              <span>Type de graphique</span>
+              <select id="chartTypeInput"></select>
             </label>
+            <div class="grid2">
+              <label class="field">
+                <span>Style</span>
+                <select id="themeInput"></select>
+              </label>
+              <label class="field">
+                <span>Format export</span>
+                <select id="formatInput"></select>
+              </label>
+            </div>
             <label class="field">
-              <span>Format export</span>
-              <select id="formatInput"></select>
+              <span>Mode couleurs</span>
+              <select id="paletteInput"></select>
             </label>
           </div>
-          <label class="field">
-            <span>Mode couleurs</span>
-            <select id="paletteInput"></select>
-          </label>
-          <div class="grid2">
+
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Affichage</div>
+            <div class="grid2">
+              <label class="switchBox">
+                <input id="showValuesInput" type="checkbox">
+                <span><strong>Afficher valeurs</strong><small>Ajoute les nombres.</small></span>
+              </label>
+              <label class="switchBox">
+                <input id="showLegendInput" type="checkbox">
+                <span><strong>Legende</strong><small>Donut, camembert, series.</small></span>
+              </label>
+            </div>
+            <div class="grid2">
+              <label class="field">
+                <span>Position valeurs</span>
+                <select id="valuePlacementInput"></select>
+              </label>
+              <label class="switchBox">
+                <input id="showGridInput" type="checkbox">
+                <span><strong>Grille</strong><small>Reperes visuels.</small></span>
+              </label>
+            </div>
             <label class="switchBox">
-              <input id="showValuesInput" type="checkbox">
-              <span><strong>Afficher valeurs</strong><small>Ajoute les nombres sur le graphique.</small></span>
-            </label>
-            <label class="switchBox">
-              <input id="showLegendInput" type="checkbox">
-              <span><strong>Legende</strong><small>Utile pour donut/camembert.</small></span>
+              <input id="showAxisInput" type="checkbox">
+              <span><strong>Axe bleu</strong><small>Repere de depart.</small></span>
             </label>
           </div>
-          <div class="grid2">
-            <label class="field">
-              <span>Position valeurs</span>
-              <select id="valuePlacementInput"></select>
-            </label>
+
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Formes</div>
             <label class="field isHidden" id="horizontalShapeField">
               <span>Barres horizontales</span>
               <select id="horizontalShapeInput"></select>
             </label>
+            <label class="field isHidden" id="glitterRoundnessField">
+              <span>Arrondi glitter</span>
+              <input id="glitterRoundnessInput" type="range" min="0.5" max="3" step="0.05">
+            </label>
+            <label class="switchBox" id="customCornersField">
+              <input id="customCornersInput" type="checkbox">
+              <span><strong>Arrondis par angle</strong><small>Rayon different pour chaque coin.</small></span>
+            </label>
+            <div class="cornerTools grid2 isHidden" id="cornerTools">
+              <label class="field">
+                <span>Preset arrondis</span>
+                <select id="cornerPresetInput"></select>
+              </label>
+              <button class="btn btn--ghost cornerButton" id="uniformCornersBtn" type="button">Uniformiser</button>
+            </div>
+            <div class="cornerControls grid2 isHidden" id="cornerControls">
+              <label class="field cornerField">
+                <span>Haut gauche <output id="cornerTopLeftValue">100%</output></span>
+                <input id="cornerTopLeftInput" type="range" min="-50" max="150" step="1">
+              </label>
+              <label class="field cornerField">
+                <span>Haut droit <output id="cornerTopRightValue">100%</output></span>
+                <input id="cornerTopRightInput" type="range" min="-50" max="150" step="1">
+              </label>
+              <label class="field cornerField">
+                <span>Bas droit <output id="cornerBottomRightValue">100%</output></span>
+                <input id="cornerBottomRightInput" type="range" min="-50" max="150" step="1">
+              </label>
+              <label class="field cornerField">
+                <span>Bas gauche <output id="cornerBottomLeftValue">100%</output></span>
+                <input id="cornerBottomLeftInput" type="range" min="-50" max="150" step="1">
+              </label>
+            </div>
           </div>
-          <label class="field isHidden" id="glitterRoundnessField">
-            <span>Arrondi glitter</span>
-            <input id="glitterRoundnessInput" type="range" min="0.5" max="3" step="0.05">
-          </label>
-          <label class="switchBox" id="customCornersField">
-            <input id="customCornersInput" type="checkbox">
-            <span><strong>Arrondis par angle</strong><small>Permet un rayon different pour chaque coin.</small></span>
-          </label>
-          <div class="cornerTools grid2 isHidden" id="cornerTools">
-            <label class="field">
-              <span>Preset arrondis</span>
-              <select id="cornerPresetInput"></select>
-            </label>
-            <button class="btn btn--ghost cornerButton" id="uniformCornersBtn" type="button">Uniformiser</button>
-          </div>
-          <div class="cornerControls grid2 isHidden" id="cornerControls">
-            <label class="field cornerField">
-              <span>Haut gauche <output id="cornerTopLeftValue">100%</output></span>
-              <input id="cornerTopLeftInput" type="range" min="-50" max="150" step="1">
-            </label>
-            <label class="field cornerField">
-              <span>Haut droit <output id="cornerTopRightValue">100%</output></span>
-              <input id="cornerTopRightInput" type="range" min="-50" max="150" step="1">
-            </label>
-            <label class="field cornerField">
-              <span>Bas droit <output id="cornerBottomRightValue">100%</output></span>
-              <input id="cornerBottomRightInput" type="range" min="-50" max="150" step="1">
-            </label>
-            <label class="field cornerField">
-              <span>Bas gauche <output id="cornerBottomLeftValue">100%</output></span>
-              <input id="cornerBottomLeftInput" type="range" min="-50" max="150" step="1">
-            </label>
-          </div>
-          <div class="grid2">
-            <label class="switchBox">
-              <input id="showGridInput" type="checkbox">
-              <span><strong>Grille</strong><small>Reperes visuels.</small></span>
-            </label>
+
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Export</div>
             <label class="field">
               <span>Transparence</span>
               <select id="transparentModeInput"></select>
             </label>
           </div>
-          <label class="switchBox">
-            <input id="showAxisInput" type="checkbox">
-            <span><strong>Axe bleu</strong><small>Affiche le repere de depart du graphique.</small></span>
-          </label>
-          <label class="switchBox">
-            <input id="enableAnimationsInput" type="checkbox">
-            <span><strong>Animations</strong><small>Anime le SVG dans l'apercu. Desactive l'export PNG.</small></span>
-          </label>
-          <div class="grid2">
-            <label class="field">
-              <span>Duree animation</span>
-              <input id="animationDurationInput" type="range" min="0.6" max="3" step="0.1">
+
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Animation SVG</div>
+            <label class="switchBox">
+              <input id="enableAnimationsInput" type="checkbox">
+              <span><strong>Animations</strong><small>Anime l'apercu. Desactive le PNG.</small></span>
             </label>
+            <div class="grid2">
+              <label class="field">
+                <span>Duree animation</span>
+                <input id="animationDurationInput" type="range" min="0.6" max="3" step="0.1">
+              </label>
+              <label class="field">
+                <span>Depart animation</span>
+                <input id="animationDelayInput" type="range" min="0" max="3" step="0.1">
+              </label>
+            </div>
             <label class="field">
-              <span>Depart animation</span>
-              <input id="animationDelayInput" type="range" min="0" max="3" step="0.1">
+              <span>Progression</span>
+              <input id="animationStaggerInput" type="range" min="0" max="0.35" step="0.01">
             </label>
           </div>
-          <label class="field">
-            <span>Progression</span>
-            <input id="animationStaggerInput" type="range" min="0" max="0.35" step="0.01">
-          </label>
         </div>
       </details>
 
-      <details class="panel accordionMenu">
+      <details class="panel accordionMenu" id="panelSettings">
         <summary>
           <div class="sectionTitle">
             <span>4</span>
@@ -206,58 +231,65 @@
           </div>
         </summary>
         <div class="panelBody">
-          <div class="grid2">
-            <label class="field">
-              <span>Tri</span>
-              <select id="sortInput">
-                <option value="none">Aucun</option>
-                <option value="desc">Plus grand au plus petit</option>
-                <option value="asc">Plus petit au plus grand</option>
-              </select>
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Donnees</div>
+            <div class="grid2">
+              <label class="field">
+                <span>Tri</span>
+                <select id="sortInput">
+                  <option value="none">Aucun</option>
+                  <option value="desc">Plus grand au plus petit</option>
+                  <option value="asc">Plus petit au plus grand</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Decimales</span>
+                <select id="decimalsInput">
+                  <option value="0">0</option>
+                  <option value="1">1</option>
+                  <option value="2">2</option>
+                </select>
+              </label>
+            </div>
+            <label class="switchBox">
+              <input id="compareModeInput" type="checkbox">
+              <span><strong>Mode comparaison A/B</strong><small>Compare les lignes par duos.</small></span>
             </label>
             <label class="field">
-              <span>Decimales</span>
-              <select id="decimalsInput">
-                <option value="0">0</option>
-                <option value="1">1</option>
-                <option value="2">2</option>
+              <span>Calcul comparaison</span>
+              <select id="compareMethodInput">
+                <option value="ratio">Ratio A/B x 100</option>
+                <option value="difference">Ecart A - B</option>
+                <option value="evolution">Evolution % depuis B</option>
               </select>
             </label>
           </div>
-          <label class="switchBox">
-            <input id="compareModeInput" type="checkbox">
-            <span><strong>Mode comparaison A/B</strong><small>Compare les lignes par duos : A/B, C/D, E/F...</small></span>
-          </label>
-          <label class="field">
-            <span>Calcul comparaison</span>
-            <select id="compareMethodInput">
-              <option value="ratio">Ratio A/B x 100</option>
-              <option value="difference">Ecart A - B</option>
-              <option value="evolution">Evolution % depuis B</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Epaisseur / taille visuelle</span>
-            <input id="weightInput" type="range" min="0.7" max="1.5" step="0.05">
-          </label>
-          <div class="grid2">
+
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Typographie</div>
             <label class="field">
-              <span>Taille titre</span>
-              <input id="titleScaleInput" type="range" min="0.7" max="1.25" step="0.05">
+              <span>Police</span>
+              <select id="fontFamilyInput"></select>
             </label>
+            <div class="grid2">
+              <label class="field">
+                <span>Taille titre</span>
+                <input id="titleScaleInput" type="range" min="0.7" max="1.25" step="0.05">
+              </label>
+              <label class="field">
+                <span>Taille valeurs</span>
+                <input id="valueScaleInput" type="range" min="0.7" max="1.35" step="0.05">
+              </label>
+            </div>
             <label class="field">
-              <span>Taille valeurs</span>
-              <input id="valueScaleInput" type="range" min="0.7" max="1.35" step="0.05">
+              <span>Epaisseur / taille visuelle</span>
+              <input id="weightInput" type="range" min="0.7" max="1.5" step="0.05">
             </label>
           </div>
-          <label class="field">
-            <span>Police</span>
-            <select id="fontFamilyInput"></select>
-          </label>
         </div>
       </details>
 
-      <details class="panel accordionMenu">
+      <details class="panel accordionMenu" id="panelLibrary">
         <summary>
           <div class="sectionTitle">
             <span>5</span>
@@ -322,6 +354,6 @@
   </div>
 
   <div class="toastContainer" id="toastContainer" aria-live="polite"></div>
-  <script src="script.js?v=20260609-priority-audit-fixes"></script>
+  <script src="script.js?v=20260609-menu-polish-2"></script>
 </body>
 </html>
