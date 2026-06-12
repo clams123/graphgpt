@@ -204,6 +204,7 @@ let ffmpegRuntimePromise = null;
 const MAX_HISTORY = 60;
 const MAX_LIBRARY_ITEMS = 60;
 const FFMPEG_SCRIPT_URL = 'vendor/ffmpeg/ffmpeg.js';
+const FFMPEG_CLASS_WORKER_URL = 'vendor/ffmpeg/814.ffmpeg.js';
 const FFMPEG_CORE_BASE_URL = 'vendor/ffmpeg/core';
 const CORNER_PRESETS = {
   standard:{cornerTopLeft:0, cornerTopRight:0, cornerBottomRight:0, cornerBottomLeft:0},
@@ -1944,7 +1945,9 @@ async function getFfmpegRuntime(){
       const FFmpegClass = window.FFmpegWASM?.FFmpeg || window.FFmpeg?.FFmpeg;
       if (!FFmpegClass) throw new Error('FFmpeg indisponible');
       const ffmpeg = new FFmpegClass();
+      const classWorkerURL = new URL(FFMPEG_CLASS_WORKER_URL, document.baseURI).href;
       await ffmpeg.load({
+        classWorkerURL,
         coreURL:`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.js`,
         wasmURL:`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.wasm`
       });
