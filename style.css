@@ -72,6 +72,23 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
 .btn--danger{background:#4c1418;border-color:rgba(248,113,113,.35)}
 .btn--adobe{background:linear-gradient(135deg,#24103f,#4f1e8f);border-color:rgba(192,132,252,.42)}
 .btn--adobe:hover{background:linear-gradient(135deg,#301650,#6428ad);border-color:rgba(216,180,254,.62)}
+.adobeStatus{
+  display:inline-flex;
+  align-items:center;
+  min-height:32px;
+  padding:0 10px;
+  border:1px solid rgba(251,191,36,.34);
+  border-radius:8px;
+  background:rgba(120,53,15,.30);
+  color:#fde68a;
+  font-size:12px;
+  font-weight:900;
+}
+.adobeStatus.isReady{
+  border-color:rgba(52,211,153,.42);
+  background:rgba(6,78,59,.34);
+  color:#bbf7d0;
+}
 
 .layout{
   flex:1 1 auto;

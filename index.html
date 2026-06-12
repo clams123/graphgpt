@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>GraphiquesGPT - G&eacute;n&eacute;rateur de graphiques</title>
-  <link rel="stylesheet" href="style.css?v=20260612-adobe-button">
+  <link rel="stylesheet" href="style.css?v=20260612-adobe-static-host">
 </head>
 <body>
   <header class="topbar">
@@ -23,7 +23,8 @@
       <button class="btn btn--ghost" id="copySvgBtn" type="button">Copier SVG</button>
       <button class="btn btn--ghost" id="downloadSvgBtn" type="button">Exporter SVG</button>
       <button class="btn btn--primary" id="exportPngBtn" type="button">Exporter PNG</button>
-      <button class="btn btn--adobe" id="exportAdobeBtn" type="button">Export Adobe</button>
+      <button class="btn btn--adobe" id="exportAdobeBtn" type="button">Export Adobe MOV</button>
+      <span class="adobeStatus" id="adobeModeStatus">Adobe : non verifie</span>
     </div>
   </header>
 
@@ -355,6 +356,6 @@
   </div>
 
   <div class="toastContainer" id="toastContainer" aria-live="polite"></div>
-  <script src="script.js?v=20260612-adobe-button"></script>
+  <script src="script.js?v=20260612-adobe-static-host"></script>
 </body>
 </html>

@@ -143,6 +143,7 @@ const els = {
   previewFrame:$('previewFrame'), canvas:$('chartCanvas'), svg:$('chartSvg'),
   saveStatus:$('saveStatus'), chartStatus:$('chartStatus'), dataStatus:$('dataStatus'),
   exportPng:$('exportPngBtn'), copySvg:$('copySvgBtn'), downloadSvg:$('downloadSvgBtn'),
+  adobeModeStatus:$('adobeModeStatus'),
   save:$('saveBtn'), undo:$('undoBtn'), redo:$('redoBtn'), reset:$('resetBtn'),
   resetModal:$('resetModal'), resetCancel:$('resetCancelBtn'), resetKeep:$('resetKeepBtn'), resetConfirm:$('resetConfirmBtn'),
   toast:$('toastContainer')
@@ -198,8 +199,13 @@ let undoStack = [];
 let redoStack = [];
 let restoring = false;
 let library = [];
+let adobeFrameTime = null;
+let ffmpegRuntimePromise = null;
 const MAX_HISTORY = 60;
 const MAX_LIBRARY_ITEMS = 60;
+const FFMPEG_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js';
+const FFMPEG_UTIL_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js';
+const FFMPEG_CORE_BASE_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
 const CORNER_PRESETS = {
   standard:{cornerTopLeft:0, cornerTopRight:0, cornerBottomRight:0, cornerBottomLeft:0},
   uniform:{cornerTopLeft:100, cornerTopRight:100, cornerBottomRight:100, cornerBottomLeft:100},
@@ -235,6 +241,13 @@ function clamp(value, min, max, fallback){
   return Math.max(min, Math.min(max, n));
 }
 function percentLabel(value){ return `${Math.round(Number(value) || 0)}%`; }
+function valueFontSize(size, ratio=0.014, min=16, max=46){
+  return Math.round(Math.max(min, Math.min(max, size.w * ratio * state.valueScale)));
+}
+function compactValueFontSize(size){ return valueFontSize(size, 0.0125, 15, 34); }
+function labelFontSize(size, ratio=0.012, min=14, max=30){
+  return Math.round(Math.max(min, Math.min(max, size.w * ratio)));
+}
 function normalizeColor(value, fallback=''){
   const raw = String(value || '').trim();
   if (/^#[0-9a-fA-F]{6}$/.test(raw)) return raw.toLowerCase();
@@ -698,6 +711,31 @@ function localId(id){ return `${currentSvgPrefix}-${id}`; }
 function transparencyMode(){ return oneOf(state.transparentMode, Object.keys(TRANSPARENCY_LABELS), state.transparent ? 'background' : 'none'); }
 function hasTransparentBackground(){ return transparencyMode() !== 'none'; }
 function hasFloatingChart(){ return transparencyMode() === 'full'; }
+function isAdobeVideoModeReady(){
+  return window.location.protocol === 'https:' || window.location.host.startsWith('127.0.0.1') || window.location.host.startsWith('localhost');
+}
+function adobeModeDetails(){
+  const protocol = window.location.protocol;
+  const host = window.location.host || 'fichier local';
+  const isLocalFile = protocol === 'file:';
+  const isSecureHost = protocol === 'https:' || host.startsWith('127.0.0.1') || host.startsWith('localhost');
+  return {
+    ready:isAdobeVideoModeReady(),
+    protocol,
+    host,
+    isLocalFile,
+    isSecureHost,
+    isolated:window.crossOriginIsolated === true,
+    sharedArrayBuffer:typeof SharedArrayBuffer !== 'undefined'
+  };
+}
+function adobeModeHint(mode=adobeModeDetails()){
+  if (mode.ready && mode.sharedArrayBuffer) return 'Mode video OK : export rapide disponible.';
+  if (mode.ready) return 'Mode video OK : export compatible GitHub Pages, plus lent.';
+  if (mode.isLocalFile) return 'Ouvre la page via GitHub Pages HTTPS ou via Lancer_GraphiquesGPT_Adobe.bat.';
+  if (!mode.isSecureHost) return 'L export video demande HTTPS, localhost, ou 127.0.0.1.';
+  return 'Mode video indisponible.';
+}
 function seriesGradientId(index){ return localId(`series-${state.chartType}-${index}`); }
 function seriesFill(index){ return `url(#${seriesGradientId(index)})`; }
 function seriesDefs(palette, colors){
@@ -805,6 +843,28 @@ function headerMarkup(size, colors){
     state.subtitle ? fittedText(left, subY, state.subtitle, maxTextW, fontSub, 13, `fill="${colors.muted}" font-weight="700" font-family="${family}"`, 700) : '',
     state.source ? fittedText(left, sourceY, state.source, maxTextW, Math.max(18, Math.round(size.w * 0.015)), 13, `fill="${colors.muted}" font-weight="750" font-family="${fontStack('system')}"`, 750) : ''
   ].join('');
+}
+function headerReservedBottom(size){
+  const hasHeader = !!String(`${state.title}${state.subtitle}`).trim();
+  if (!hasHeader) return Math.round(size.h * 0.14);
+  const titleSize = Math.max(34, Math.round(size.w * 0.047 * state.titleScale));
+  const subSize = state.subtitle ? Math.max(21, Math.round(size.w * 0.019)) : 0;
+  return Math.round(size.h * 0.12 + titleSize + (subSize ? subSize + size.h * 0.022 : size.h * 0.018));
+}
+function chartArea(size, options={}){
+  const left = Math.round(size.w * (options.leftRatio ?? 0.10));
+  const right = Math.round(size.w * (options.rightRatio ?? (state.showLegend ? 0.30 : 0.08)));
+  const top = Math.max(
+    Math.round(size.h * (options.minTopRatio ?? 0.22)),
+    headerReservedBottom(size) + Math.round(size.h * (options.headerGapRatio ?? 0.04))
+  );
+  const bottom = Math.round(size.h * (options.bottomRatio ?? 0.12));
+  return {
+    x:left,
+    y:top,
+    w:Math.max(Math.round(size.w * 0.22), size.w - left - right),
+    h:Math.max(Math.round(size.h * 0.28), size.h - top - bottom)
+  };
 }
 function legendMarkup(rows, size, colors, palette){
   if (!state.showLegend && !['pie','donut'].includes(state.chartType)) return '';
@@ -1036,6 +1096,22 @@ function glitterBarGradientDef(id, color){
 function itemDelay(index, base=0){
   return (base + index * clamp(state.animationStagger, 0, 0.35, 0.12)).toFixed(2);
 }
+function easeOutCubic(t){
+  const x = clamp(t, 0, 1, 0);
+  return 1 - Math.pow(1 - x, 3);
+}
+function itemAnimationProgress(index, base=0){
+  if (adobeFrameTime == null) return 1;
+  const duration = clamp(state.animationDuration, 0.6, 3, 1);
+  const start = clamp(state.animationDelay, 0, 3, 1) + index * clamp(state.animationStagger, 0, 0.35, 0.12) + base;
+  return easeOutCubic((adobeFrameTime - start) / duration);
+}
+function overallAnimationProgress(base=0){
+  if (adobeFrameTime == null) return 1;
+  const duration = clamp(state.animationDuration, 0.6, 3, 1);
+  const start = clamp(state.animationDelay, 0, 3, 1) + base;
+  return easeOutCubic((adobeFrameTime - start) / duration);
+}
 function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', forceNoShadow=false){
   const cleanRows = rows.filter(row => Number.isFinite(row.value)).slice(0, 14);
   if (!cleanRows.length) return '';
@@ -1055,7 +1131,7 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
   const weight = clamp(state.weight, 0.7, 1.5, 1);
   const widthFactor = 0.58;
   const barW = Math.max(28, Math.min(step * widthFactor * weight, step - 18));
-  const valueFont = Math.max(34, Math.round(size.w * (wide ? 0.028 : 0.044) * state.valueScale));
+  const valueFont = valueFontSize(size, wide ? 0.021 : 0.032, 28, wide ? 42 : 52);
   const labelFont = Math.max(18, Math.round(size.w * 0.016));
   const baseY = size.h - bottom;
   let out = glitterDefs();
@@ -1064,7 +1140,8 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
   cleanRows.forEach((row, index) => {
     const cx = left + step * index + step / 2;
     const value = Math.max(0, Number(row.value));
-    const barH = Math.max(12, (value / max) * chartH);
+    const progress = itemAnimationProgress(index);
+    const barH = Math.max(0.5, Math.max(12, (value / max) * chartH) * progress);
     const x = cx - barW / 2;
     const y = baseY - barH;
     const path = roundedReferenceBarPath(x, y, barW, barH, variant);
@@ -1121,8 +1198,9 @@ function renderBar(rows, size, colors, palette){
   rows.forEach((row, index) => {
     const cx = x + step * index + step / 2;
     const targetY = y + h - ((row.value - scale.min) / scale.span) * h;
-    const top = Math.min(baseY, targetY);
-    const bh = Math.abs(baseY - targetY);
+    const finalBh = Math.abs(baseY - targetY);
+    const bh = finalBh * itemAnimationProgress(index);
+    const top = targetY < baseY ? baseY - bh : baseY;
     const rx = Math.min(18, barW / 2);
     if (state.customCorners) {
       const path = roundedBoxPath(cx - barW / 2, top, barW, bh, customCornerRadii(barW, bh));
@@ -1131,7 +1209,7 @@ function renderBar(rows, size, colors, palette){
       out += `<rect class="vBarAnim" style="--delay:${itemDelay(index)}s" x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
     }
     out += `<rect x="${cx - barW / 2 + Math.max(3, barW * 0.08)}" y="${top + 4}" width="${Math.max(2, barW * 0.18)}" height="${Math.max(0, bh - 8)}" rx="${Math.max(1, rx * .55)}" fill="#ffffff" opacity=".13"/>`;
-    if (state.showValues) out += text(cx, top - 12, formatValue(row.value), `fill="${colors.text}" font-size="${Math.max(18, Math.round(size.w * 0.013 * state.valueScale))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(cx, top - 12, formatValue(row.value), `fill="${colors.text}" font-size="${valueFontSize(size, 0.014, 18, 38)}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
     out += text(cx, y + h + 38, label, `fill="${colors.muted}" font-size="${Math.max(17, Math.round(size.w * 0.0125))}" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
@@ -1141,7 +1219,7 @@ function renderHorizontalBar(rows, size, colors, palette){
   const family = fontStack(state.fontFamily);
   const legend = legendLayout(size);
   const labelFont = Math.max(16, Math.round(size.w * 0.014));
-  const valueFont = Math.max(16, Math.round(size.w * 0.014 * state.valueScale));
+  const valueFont = valueFontSize(size, 0.014, 16, 40);
   const sidePad = Math.round(size.w * 0.045);
   const maxLabelTextW = Math.round(size.w * 0.24);
   const labelW = Math.min(
@@ -1172,7 +1250,7 @@ function renderHorizontalBar(rows, size, colors, palette){
   if (state.showAxis) out += `<line x1="${x}" y1="${y}" x2="${x}" y2="${y + h}" stroke="${colors.axis}" stroke-width="2" opacity=".64" stroke-linecap="round"/>`;
   rows.forEach((row, index) => {
     const yy = y + index * rowH + rowH / 2;
-    const bw = Math.abs(row.value) / max * w;
+    const bw = Math.abs(row.value) / max * w * itemAnimationProgress(index);
     const label = truncateText(row.label, labelFont, labelW, 800);
     const barY = yy - barH / 2;
     const shineInset = Math.max(4, bw * 0.05);
@@ -1228,30 +1306,37 @@ function renderLineOrArea(rows, size, colors, palette, area=false){
   }));
   let out = plotSurface(x - 18, y - 18, w + 36, h + 36, colors);
   out += axisAndGrid(x, y, w, h, scale, colors);
+  const revealProgress = overallAnimationProgress();
+  const clipId = localId(`line-reveal-${area ? 'area' : 'line'}`);
   if (area && points.length) {
     const baseY = y + h - ((0 - scale.min) / scale.span) * h;
     const areaPoints = [{x:points[0].x,y:baseY}, ...points, {x:points[points.length - 1].x,y:baseY}];
+    out += `<clipPath id="${clipId}"><rect x="${x - 12}" y="${y - 46}" width="${(w + 24) * revealProgress}" height="${h + 92}"/></clipPath><g clip-path="url(#${clipId})">`;
     out += polygon(areaPoints, `fill="url(#${localId('line-area-fill')})"`);
+  } else {
+    out += `<clipPath id="${clipId}"><rect x="${x - 12}" y="${y - 46}" width="${(w + 24) * revealProgress}" height="${h + 92}"/></clipPath><g clip-path="url(#${clipId})">`;
   }
   out += line(points, `class="lineAnim" fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round" opacity=".28" transform="translate(0 5)"`);
   out += line(points, `class="lineAnim" fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"`);
   points.forEach((point, index) => {
     out += `<circle class="pointAnim" style="--delay:${itemDelay(index, 0.65)}s" cx="${point.x}" cy="${point.y}" r="${Math.max(6, 8 * state.weight)}" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
-    if (state.showValues) out += text(point.x, point.y - 16, formatValue(point.row.value), `fill="${colors.text}" font-size="15" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(point.x, point.y - 18, formatValue(point.row.value), `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     const label = point.row.label.length > 12 ? point.row.label.slice(0, 11) + '...' : point.row.label;
-    out += text(point.x, y + h + 34, label, `fill="${colors.muted}" font-size="14" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    out += text(point.x, y + h + 36, label, `fill="${colors.muted}" font-size="${labelFontSize(size, 0.0115, 15, 24)}" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
+  out += '</g>';
   return out;
 }
 function renderLinearGraph(rows, size, colors, palette){
   const legend = legendLayout(size);
-  const x = Math.round(size.w * 0.08);
-  const y = Math.round(size.h * 0.19);
+  const area = chartArea(size, {leftRatio:0.08, rightRatio:state.showLegend ? 0.26 : 0.08, minTopRatio:0.24, bottomRatio:0.12, headerGapRatio:0.035});
+  const x = area.x;
+  const y = area.y;
   const baseW = Math.round(size.w * (state.showLegend ? 0.70 : 0.84));
   const w = state.showLegend
     ? Math.max(Math.round(size.w * 0.44), Math.min(baseW, legend.leftEdge - Math.round(size.w * 0.025) - x - 34))
-    : baseW;
-  const h = Math.round(size.h * 0.62);
+    : Math.min(baseW, area.w);
+  const h = area.h;
   const values = rows.map(r => Number(r.value));
   const scale = scaleInfo(values);
   const toPoint = (value, index, row) => ({
@@ -1272,14 +1357,12 @@ function renderLinearGraph(rows, size, colors, palette){
   const mainPath = smoothPath(main);
   const softPath = smoothPath(soft);
   const basePath = smoothPath(baseline);
-  let out = `<rect x="${x - 34}" y="${y - 78}" width="${w + 68}" height="${h + 128}" rx="16" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
-  if (state.title) out += fittedText(x - 18, y - 46, state.title, w + 36, Math.max(16, Math.round(size.w * 0.013)), 12, `fill="${colors.text}" font-weight="850" font-family="${fontStack(state.fontFamily)}"`, 850);
-  if (state.subtitle) out += fittedText(x - 18, y - 22, state.subtitle, w + 36, Math.max(12, Math.round(size.w * 0.0095)), 10, `fill="${colors.muted}" font-weight="650" font-family="${fontStack(state.fontFamily)}"`, 650);
+  let out = `<rect x="${x - 34}" y="${y - 26}" width="${w + 68}" height="${h + 76}" rx="16" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
   for (let i = 0; i <= 5; i++) {
     const yy = y + h - (i / 5) * h;
     const value = scale.min + (i / 5) * scale.span;
     out += `<line x1="${x}" y1="${yy}" x2="${x + w}" y2="${yy}" stroke="${colors.grid}" stroke-width="1"/>`;
-    out += text(x - 16, yy + 5, formatValue(value), `fill="${colors.muted}" font-size="12" font-weight="650" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    out += text(x - 16, yy + 5, formatValue(value), `fill="${colors.muted}" font-size="${labelFontSize(size, 0.0105, 13, 22)}" font-weight="650" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
   }
   out += `<line x1="${x}" y1="${baseY}" x2="${x + w}" y2="${baseY}" stroke="${colors.axis}" stroke-width="1.2" opacity=".42"/>`;
   if (main.length) {
@@ -1291,10 +1374,10 @@ function renderLinearGraph(rows, size, colors, palette){
   }
   main.forEach((point, index) => {
     const label = point.row.label.length > 9 ? point.row.label.slice(0, 8) + '...' : point.row.label;
-    out += text(point.x, y + h + 30, label || String(index + 1), `fill="${colors.muted}" font-size="12" font-weight="700" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    out += text(point.x, y + h + 32, label || String(index + 1), `fill="${colors.muted}" font-size="${labelFontSize(size, 0.0105, 13, 22)}" font-weight="700" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     if (state.showValues) {
       out += `<circle class="pointAnim" style="--delay:${itemDelay(index, 0.78)}s" cx="${point.x}" cy="${point.y}" r="4.5" fill="${palette[0] || colors.accent}" stroke="${colors.panel}" stroke-width="2"/>`;
-      out += text(point.x, point.y - 14, formatValue(point.value), `fill="${colors.text}" font-size="12" font-weight="850" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+      out += text(point.x, point.y - 16, formatValue(point.value), `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="850" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     }
   });
   if (state.showLegend) {
@@ -1305,7 +1388,7 @@ function renderLinearGraph(rows, size, colors, palette){
     labels.forEach((label, index) => {
       const yy = legendY + index * 36;
       out += `<circle cx="${legendX}" cy="${yy}" r="9" fill="${legendColors[index]}" opacity="${index === 2 ? '.35' : '1'}"/>`;
-      out += text(legendX + 22, yy + 5, truncateText(label, 14, size.w - legendX - 42, 700), `fill="${colors.text}" font-size="14" font-weight="700" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+      out += text(legendX + 22, yy + 5, truncateText(label, labelFontSize(size, 0.0115, 14, 24), size.w - legendX - 42, 700), `fill="${colors.text}" font-size="${labelFontSize(size, 0.0115, 14, 24)}" font-weight="700" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     });
   }
   return out;
@@ -1327,7 +1410,7 @@ function renderPieOrDonut(rows, size, colors, palette, donut=false){
       const mid = (start + end) / 2;
       const labelPos = polar(cx, cy, donut ? (r + inner) / 2 : r * 0.66, mid);
       const pct = Math.round((value / total) * 100);
-      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, `fill="#ffffff" font-size="18" font-weight="950" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, `fill="#ffffff" font-size="${valueFontSize(size, 0.015, 18, 38)}" font-weight="950" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     }
     start = end;
   });
@@ -1370,7 +1453,7 @@ function renderDonutTable(rows, size, colors, palette){
       const mid = (segStart + segEnd) / 2;
       const labelPos = polar(cx, cy, r + stroke * 0.62, mid);
       const pct = Math.round(value / total * 100);
-      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, `fill="${colors.text}" font-size="${Math.max(13, Math.round(size.w * 0.011))}" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     }
     start = end;
   });
@@ -1386,34 +1469,61 @@ function renderDonutTable(rows, size, colors, palette){
     const label = row.label.length > 28 ? row.label.slice(0, 27) + '...' : row.label;
     out += `<circle cx="${legendX}" cy="${yy}" r="${dot / 2}" fill="${seriesFill(index)}"/>`;
     out += text(legendX + dot + 16, yy + dot * 0.32, label || `Element ${index + 1}`, `fill="${colors.text}" font-size="${Math.max(15, Math.round(size.w * 0.014))}" font-weight="650" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
-    if (state.showValues) out += text(legendX + Math.round(size.w * 0.27), yy + dot * 0.32, `${pct}%`, `fill="${colors.muted}" font-size="${Math.max(14, Math.round(size.w * 0.012))}" font-weight="850" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(legendX + Math.round(size.w * 0.27), yy + dot * 0.32, `${pct}%`, `fill="${colors.muted}" font-size="${compactValueFontSize(size)}" font-weight="850" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
   });
   return out;
 }
 function renderBubble(rows, size, colors, palette){
   const cleanRows = rows.filter(row => Number.isFinite(row.value)).slice(0, 14);
   if (!cleanRows.length) return emptyMarkup(size, colors);
-  const x = Math.round(size.w * 0.10);
-  const y = Math.round(size.h * 0.24);
-  const w = Math.round(size.w * (state.showLegend ? 0.58 : 0.80));
-  const h = Math.round(size.h * 0.58);
+  const labelFont = labelFontSize(size, 0.0135, 17, 34);
+  const valueFont = valueFontSize(size, 0.0145, 18, 44);
+  const needsOuterText = state.showValues && state.valueScale > 1.05;
+  const area = chartArea(size, {
+    leftRatio:0.10,
+    rightRatio:state.showLegend ? 0.30 : 0.10,
+    minTopRatio:needsOuterText ? 0.30 : 0.27,
+    bottomRatio:needsOuterText ? 0.10 : 0.13,
+    headerGapRatio:0.055
+  });
+  const x = area.x;
+  const y = area.y;
+  const w = area.w;
+  const h = area.h;
   const max = Math.max(...cleanRows.map(row => Math.abs(row.value)), 1);
   const slots = [
     [0.50,0.48,1.00],[0.27,0.42,.74],[0.73,0.42,.70],[0.38,0.72,.58],[0.63,0.72,.54],
     [0.16,0.66,.46],[0.84,0.66,.44],[0.18,0.24,.40],[0.82,0.24,.38],[0.50,0.18,.34],
     [0.31,0.18,.32],[0.69,0.18,.30],[0.08,0.45,.28],[0.92,0.45,.26]
   ];
-  let out = plotSurface(x - 18, y - 18, w + 36, h + 36, colors);
+  const surfacePad = Math.max(22, Math.round(valueFont * 1.4));
+  let out = plotSurface(x - surfacePad, y - surfacePad, w + surfacePad * 2, h + surfacePad * 2, colors);
   cleanRows.forEach((row, index) => {
     const slot = slots[index % slots.length];
-    const radius = Math.max(34, Math.min(132, Math.sqrt(Math.abs(row.value) / max) * 112 * slot[2] * state.weight));
+    const label = row.label || `Element ${index + 1}`;
+    const valueText = formatValue(row.value);
+    const textNeed = Math.max(
+      estimateTextWidth(label, labelFont, 900),
+      state.showValues ? estimateTextWidth(valueText, valueFont, 800) : 0
+    );
+    const minTextRadius = needsOuterText ? labelFont * 1.15 : Math.max(34, textNeed * 0.58);
+    const radius = Math.max(minTextRadius, Math.min(150, Math.sqrt(Math.abs(row.value) / max) * 120 * slot[2] * state.weight));
     const cx = x + slot[0] * w;
     const cy = y + slot[1] * h;
-    const label = row.label.length > 14 ? row.label.slice(0, 13) + '...' : row.label;
+    const innerLabel = truncateText(label, Math.min(labelFont, radius * 0.26), radius * 1.62, 900);
     out += `<circle cx="${cx}" cy="${cy}" r="${radius}" fill="${seriesFill(index)}" opacity=".88" stroke="${brightenColor(palette[index], .38)}" stroke-width="2"/>`;
     out += `<circle cx="${cx - radius * .28}" cy="${cy - radius * .28}" r="${radius * .28}" fill="#ffffff" opacity=".14"/>`;
-    out += text(cx, cy - 4, label || `Element ${index + 1}`, `fill="#ffffff" font-size="${Math.max(13, Math.min(22, radius * .22))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    if (state.showValues) out += text(cx, cy + Math.max(16, radius * .24), formatValue(row.value), `fill="#ffffff" font-size="${Math.max(12, Math.min(20, radius * .20))}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (needsOuterText) {
+      const boxW = Math.min(Math.max(textNeed + 22, radius * 1.35), w * 0.28);
+      const boxH = state.showValues ? valueFont + labelFont + 18 : labelFont + 14;
+      const boxY = Math.min(y + h + surfacePad - boxH, cy + radius + 10);
+      out += `<rect x="${cx - boxW / 2}" y="${boxY}" width="${boxW}" height="${boxH}" rx="10" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1" opacity=".86"/>`;
+      out += text(cx, boxY + labelFont + 3, truncateText(label, labelFont, boxW - 18, 900), `fill="${colors.text}" font-size="${labelFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      if (state.showValues) out += text(cx, boxY + labelFont + valueFont + 8, valueText, `fill="${colors.muted}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    } else {
+      out += text(cx, cy - 4, innerLabel, `fill="#ffffff" font-size="${Math.max(15, Math.min(labelFont, radius * .27))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      if (state.showValues) out += text(cx, cy + Math.max(20, radius * .29), valueText, `fill="#ffffff" font-size="${Math.max(16, Math.min(valueFont, radius * .27))}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    }
   });
   return out;
 }
@@ -1442,8 +1552,8 @@ function renderFunnel(rows, size, colors, palette){
     ];
     const label = row.label.length > 24 ? row.label.slice(0, 23) + '...' : row.label;
     out += polygon(points, `fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], .34)}" stroke-width="1.2" opacity=".96"`);
-    out += text(cx, y1 + stepH * .45, label || `Etape ${index + 1}`, `fill="#ffffff" font-size="${Math.max(15, Math.round(size.w * 0.012))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    if (state.showValues) out += text(cx, y1 + stepH * .68, formatValue(row.value), `fill="#ffffff" font-size="${Math.max(13, Math.round(size.w * 0.010))}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif" opacity=".88"`);
+    out += text(cx, y1 + stepH * .43, label || `Etape ${index + 1}`, `fill="#ffffff" font-size="${labelFontSize(size, 0.012, 16, 28)}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(cx, y1 + stepH * .69, formatValue(row.value), `fill="#ffffff" font-size="${compactValueFontSize(size)}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif" opacity=".88"`);
   });
   return out;
 }
@@ -1471,6 +1581,11 @@ function renderRadar(rows, size, colors, palette){
   out += polygon(dataPoints, `fill="${colors.accent}" opacity=".25" stroke="${colors.accent}" stroke-width="${Math.max(4, 5 * state.weight)}"`);
   dataPoints.forEach((point, index) => {
     out += `<circle cx="${point.x}" cy="${point.y}" r="6" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
+    if (state.showValues) {
+      const angle = -Math.PI / 2 + index / count * Math.PI * 2;
+      const label = polar(point.x, point.y, 24, angle);
+      out += text(label.x, label.y + 5, formatValue(rows[index].value), `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    }
   });
   return out;
 }
@@ -1500,7 +1615,7 @@ function buildSvgMarkup(){
   else if (state.chartType === 'radar') body = renderRadar(rows, size, colors, palette);
 
   const isGlitter = ['glitterBar','glitterBarNoShadow'].includes(state.chartType);
-  const hasCustomChrome = ['donutTable','linearGraph'].includes(state.chartType);
+  const hasCustomChrome = ['donutTable'].includes(state.chartType);
   const chrome = isGlitter ? legendMarkup(rows, size, colors, palette) : `${hasCustomChrome ? '' : headerMarkup(size, colors)}${hasCustomChrome ? '' : legendMarkup(rows, size, colors, palette)}`;
   const defs = isGlitter ? '' : seriesDefs(palette, colors);
   const motion = motionMarkup(colors);
@@ -1578,6 +1693,10 @@ function renderControls(){
   els.exportPng.disabled = state.enableAnimations;
   els.exportPng.textContent = state.enableAnimations ? 'PNG indisponible' : 'Exporter PNG';
   els.exportPng.title = state.enableAnimations ? 'Desactive les animations pour exporter en PNG.' : '';
+  const adobeMode = adobeModeDetails();
+  els.adobeModeStatus.textContent = adobeMode.ready ? 'Adobe : pret' : 'Adobe : HTTPS requis';
+  els.adobeModeStatus.classList.toggle('isReady', adobeMode.ready);
+  els.adobeModeStatus.title = `${adobeModeHint(adobeMode)} URL actuelle : ${adobeMode.protocol}//${adobeMode.host}.`;
   updateHistoryButtons();
 }
 function renderCanvasClasses(){
@@ -1748,18 +1867,150 @@ function filenameWithSuffix(suffix, ext){
 function exportSvg(){
   downloadBlob(getSvgForDownload(), filename('svg'), 'image/svg+xml;charset=utf-8');
 }
-function getAdobeSourceSvg(){
-  const previousAnimations = state.enableAnimations;
+function adobeTotalSeconds(rowCount){
+  const duration = clamp(state.animationDuration, 0.6, 3, 1);
+  const delay = clamp(state.animationDelay, 0, 3, 1);
+  const stagger = clamp(state.animationStagger, 0, 0.35, 0.12);
+  return Math.min(7, Math.max(1.2, delay + duration + Math.max(0, rowCount - 1) * stagger + 0.35));
+}
+function buildAdobeFrameSvg(time){
+  const previous = {
+    enableAnimations:state.enableAnimations,
+    transparentMode:state.transparentMode,
+    transparent:state.transparent
+  };
+  adobeFrameTime = time;
   state.enableAnimations = false;
+  state.transparentMode = 'full';
+  state.transparent = true;
   try{
     return buildSvgMarkup();
   }finally{
-    state.enableAnimations = previousAnimations;
+    adobeFrameTime = null;
+    state.enableAnimations = previous.enableAnimations;
+    state.transparentMode = previous.transparentMode;
+    state.transparent = previous.transparent;
   }
 }
-function exportAdobe(){
-  downloadBlob(getAdobeSourceSvg(), filenameWithSuffix('adobe-source', 'svg'), 'image/svg+xml;charset=utf-8');
-  toast('Export Adobe : SVG source statique exporte. Animation Adobe prevue via sequence PNG alpha.');
+function svgToPngBytes(svg, size){
+  return new Promise((resolve, reject) => {
+    const blob = new Blob([svg], {type:'image/svg+xml;charset=utf-8'});
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = size.w;
+      canvas.height = size.h;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, size.w, size.h);
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
+      ctx.drawImage(img, 0, 0, size.w, size.h);
+      canvas.toBlob(async (pngBlob) => {
+        URL.revokeObjectURL(url);
+        if (!pngBlob) return reject(new Error('PNG frame impossible'));
+        resolve(new Uint8Array(await pngBlob.arrayBuffer()));
+      }, 'image/png');
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('SVG frame non lisible'));
+    };
+    img.src = url;
+  });
+}
+function loadScript(src){
+  return new Promise((resolve, reject) => {
+    const existing = document.querySelector(`script[src="${src}"]`);
+    if (existing) {
+      existing.addEventListener('load', resolve, {once:true});
+      existing.addEventListener('error', reject, {once:true});
+      if (window.FFmpeg) resolve();
+      return;
+    }
+    const script = document.createElement('script');
+    script.src = src;
+    script.async = true;
+    script.crossOrigin = 'anonymous';
+    script.onload = resolve;
+    script.onerror = () => reject(new Error('Chargement FFmpeg impossible'));
+    document.head.appendChild(script);
+  });
+}
+async function getFfmpegRuntime(){
+  if (!isAdobeVideoModeReady()) throw new Error('MODE_ADOBE_HOST_REQUIRED');
+  if (!ffmpegRuntimePromise) {
+    ffmpegRuntimePromise = (async () => {
+      if (!window.FFmpeg) await loadScript(FFMPEG_SCRIPT_URL);
+      if (!window.FFmpegUtil) await loadScript(FFMPEG_UTIL_URL);
+      const FFmpegClass = window.FFmpegWASM?.FFmpeg || window.FFmpeg?.FFmpeg;
+      const toBlobURL = window.FFmpegUtil?.toBlobURL;
+      if (!FFmpegClass || !toBlobURL) throw new Error('FFmpeg indisponible');
+      const ffmpeg = new FFmpegClass();
+      await ffmpeg.load({
+        coreURL:await toBlobURL(`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
+        wasmURL:await toBlobURL(`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.wasm`, 'application/wasm')
+      });
+      return ffmpeg;
+    })();
+  }
+  return ffmpegRuntimePromise;
+}
+async function encodeAdobeMov(ffmpeg, frames, fps, outputName){
+  const job = `job_${Date.now().toString(36)}`;
+  const inputPattern = `${job}_%04d.png`;
+  const output = `${job}.mov`;
+  for (let index = 0; index < frames.length; index++) {
+    await ffmpeg.writeFile(`${job}_${String(index).padStart(4, '0')}.png`, frames[index]);
+  }
+  await ffmpeg.exec([
+    '-framerate', String(fps),
+    '-i', inputPattern,
+    '-c:v', 'qtrle',
+    '-pix_fmt', 'argb',
+    '-r', String(fps),
+    output
+  ]);
+  const data = await ffmpeg.readFile(output);
+  frames.forEach((_, index) => {
+    try{ ffmpeg.deleteFile(`${job}_${String(index).padStart(4, '0')}.png`); }catch{}
+  });
+  try{ ffmpeg.deleteFile(output); }catch{}
+  downloadBlob(new Blob([data], {type:'video/quicktime'}), outputName, 'video/quicktime');
+}
+async function exportAdobe(){
+  const fps = 24;
+  const rows = getRows();
+  const totalSeconds = adobeTotalSeconds(rows.length);
+  const frameCount = Math.min(168, Math.ceil(totalSeconds * fps) + 1);
+  const size = chartSize();
+  const frames = [];
+  els.exportAdobe.disabled = true;
+  try{
+    toast('Export Adobe : verification du mode video...');
+    const ffmpeg = await getFfmpegRuntime();
+    toast(`Export Adobe : generation de ${frameCount} frames alpha...`);
+    await new Promise(resolve => requestAnimationFrame(resolve));
+    for (let frame = 0; frame < frameCount; frame++) {
+      const time = frame / fps;
+      const svg = buildAdobeFrameSvg(time);
+      frames.push(await svgToPngBytes(svg, size));
+      if (frame % 8 === 0) await new Promise(resolve => setTimeout(resolve, 0));
+    }
+    toast('Export Adobe : chargement/encodage video en cours...');
+    await encodeAdobeMov(ffmpeg, frames, fps, filenameWithSuffix('adobe-alpha', 'mov'));
+    toast('Export Adobe termine : MOV alpha telecharge.');
+  }catch(error){
+    console.error(error);
+    if (error?.message === 'MODE_ADOBE_HOST_REQUIRED') {
+      const mode = adobeModeDetails();
+      toast(`Export Adobe : ${adobeModeHint(mode)}`);
+    } else {
+      toast('Export Adobe impossible : verifie ta connexion internet ou reessaie en format plus petit.');
+    }
+  }finally{
+    els.exportAdobe.disabled = false;
+  }
 }
 async function copySvg(){
   const svg = getSvgForDownload();
