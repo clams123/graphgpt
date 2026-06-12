@@ -70,6 +70,8 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
 .btn--soft{background:#1e293b;border-color:rgba(255,255,255,.16)}
 .btn--ghost{background:#111827}
 .btn--danger{background:#4c1418;border-color:rgba(248,113,113,.35)}
+.btn--adobe{background:linear-gradient(135deg,#24103f,#4f1e8f);border-color:rgba(192,132,252,.42)}
+.btn--adobe:hover{background:linear-gradient(135deg,#301650,#6428ad);border-color:rgba(216,180,254,.62)}
 
 .layout{
   flex:1 1 auto;
@@ -334,6 +336,7 @@ input[type="range"]{padding:0;background:transparent;border:0}
 }
 .chartCanvas.format-square{aspect-ratio:1/1;max-width:1000px}
 .chartCanvas.format-story{aspect-ratio:4/5;max-width:900px}
+.chartCanvas.format-reel{aspect-ratio:9/16;max-width:720px}
 .chartCanvas.isTransparent{background:transparent!important;border-color:rgba(255,255,255,.18)}
 .chartCanvas.isTransparentFull{border-color:transparent;box-shadow:none}
 .chartCanvas svg{display:block;width:100%;height:100%}

@@ -5,7 +5,8 @@ const CHART_TYPES = ['bar','glitterBar','glitterBarNoShadow','horizontalBar','li
 const FORMATS = {
   wide:{w:1600,h:900,label:'16:9'},
   square:{w:1200,h:1200,label:'Carre'},
-  story:{w:1080,h:1350,label:'Vertical'}
+  story:{w:1080,h:1350,label:'Vertical 4:5'},
+  reel:{w:1080,h:1920,label:'Vertical 9:16'}
 };
 const FONT_FAMILIES = ['system','display','wuwa','neo','condensed','techno','elegant','editorial','serif','arcade','mono'];
 const TYPE_LABELS = {
@@ -146,6 +147,7 @@ const els = {
   resetModal:$('resetModal'), resetCancel:$('resetCancelBtn'), resetKeep:$('resetKeepBtn'), resetConfirm:$('resetConfirmBtn'),
   toast:$('toastContainer')
 };
+els.exportAdobe = $('exportAdobeBtn');
 
 const DEFAULT_STATE = {
   title:'Titre du graphique',
@@ -738,7 +740,7 @@ function motionMarkup(){
 function legendLayout(size){
   const reserve = Math.round(size.w * 0.24);
   const pad = Math.round(size.w * 0.035);
-  const font = Math.max(12, Math.round(size.w * 0.011));
+  const font = Math.max(15, Math.round(size.w * 0.0135));
   const swatch = Math.max(12, Math.round(font * 0.9));
   const x = size.w - reserve + pad;
   const textX = x + swatch + Math.round(font * 0.7);
@@ -794,14 +796,14 @@ function headerMarkup(size, colors){
   const maxTextW = size.w - left - Math.round(size.w * 0.07);
   const titleY = Math.round(size.h * 0.12);
   const subY = titleY + Math.round(size.h * 0.045);
-  const fontTitle = Math.max(28, Math.round(size.w * 0.042 * state.titleScale));
-  const fontSub = Math.max(18, Math.round(size.w * 0.016));
+  const fontTitle = Math.max(34, Math.round(size.w * 0.047 * state.titleScale));
+  const fontSub = Math.max(21, Math.round(size.w * 0.019));
   const sourceY = size.h - Math.round(size.h * 0.045);
   const family = fontStack(state.fontFamily);
   return [
     state.title ? fittedText(left, titleY, state.title, maxTextW, fontTitle, 20, `fill="${colors.text}" font-weight="850" font-family="${family}"`, 850) : '',
     state.subtitle ? fittedText(left, subY, state.subtitle, maxTextW, fontSub, 13, `fill="${colors.muted}" font-weight="700" font-family="${family}"`, 700) : '',
-    state.source ? fittedText(left, sourceY, state.source, maxTextW, Math.max(14, Math.round(size.w * 0.012)), 11, `fill="${colors.muted}" font-weight="750" font-family="${fontStack('system')}"`, 750) : ''
+    state.source ? fittedText(left, sourceY, state.source, maxTextW, Math.max(18, Math.round(size.w * 0.015)), 13, `fill="${colors.muted}" font-weight="750" font-family="${fontStack('system')}"`, 750) : ''
   ].join('');
 }
 function legendMarkup(rows, size, colors, palette){
@@ -1053,8 +1055,8 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
   const weight = clamp(state.weight, 0.7, 1.5, 1);
   const widthFactor = 0.58;
   const barW = Math.max(28, Math.min(step * widthFactor * weight, step - 18));
-  const valueFont = Math.max(30, Math.round(size.w * (wide ? 0.024 : 0.04)));
-  const labelFont = Math.max(15, Math.round(size.w * 0.013));
+  const valueFont = Math.max(34, Math.round(size.w * (wide ? 0.028 : 0.044) * state.valueScale));
+  const labelFont = Math.max(18, Math.round(size.w * 0.016));
   const baseY = size.h - bottom;
   let out = glitterDefs();
   if (!hasTransparentBackground()) out += `<rect width="${size.w}" height="${size.h}" fill="url(#${localId('glitter-stage-glow')})"/>`;
@@ -1129,17 +1131,17 @@ function renderBar(rows, size, colors, palette){
       out += `<rect class="vBarAnim" style="--delay:${itemDelay(index)}s" x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
     }
     out += `<rect x="${cx - barW / 2 + Math.max(3, barW * 0.08)}" y="${top + 4}" width="${Math.max(2, barW * 0.18)}" height="${Math.max(0, bh - 8)}" rx="${Math.max(1, rx * .55)}" fill="#ffffff" opacity=".13"/>`;
-    if (state.showValues) out += text(cx, top - 10, formatValue(row.value), `fill="${colors.text}" font-size="16" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(cx, top - 12, formatValue(row.value), `fill="${colors.text}" font-size="${Math.max(18, Math.round(size.w * 0.013 * state.valueScale))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
-    out += text(cx, y + h + 34, label, `fill="${colors.muted}" font-size="15" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    out += text(cx, y + h + 38, label, `fill="${colors.muted}" font-size="${Math.max(17, Math.round(size.w * 0.0125))}" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
   return out;
 }
 function renderHorizontalBar(rows, size, colors, palette){
   const family = fontStack(state.fontFamily);
   const legend = legendLayout(size);
-  const labelFont = Math.max(11, Math.round(size.w * 0.0105));
-  const valueFont = Math.max(11, Math.round(size.w * 0.0105 * state.valueScale));
+  const labelFont = Math.max(16, Math.round(size.w * 0.014));
+  const valueFont = Math.max(16, Math.round(size.w * 0.014 * state.valueScale));
   const sidePad = Math.round(size.w * 0.045);
   const maxLabelTextW = Math.round(size.w * 0.24);
   const labelW = Math.min(
@@ -1739,8 +1741,25 @@ function filename(ext){
   const base = (state.title || 'graphique').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'graphique';
   return `${base}.${ext}`;
 }
+function filenameWithSuffix(suffix, ext){
+  const base = (state.title || 'graphique').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'graphique';
+  return `${base}-${suffix}.${ext}`;
+}
 function exportSvg(){
   downloadBlob(getSvgForDownload(), filename('svg'), 'image/svg+xml;charset=utf-8');
+}
+function getAdobeSourceSvg(){
+  const previousAnimations = state.enableAnimations;
+  state.enableAnimations = false;
+  try{
+    return buildSvgMarkup();
+  }finally{
+    state.enableAnimations = previousAnimations;
+  }
+}
+function exportAdobe(){
+  downloadBlob(getAdobeSourceSvg(), filenameWithSuffix('adobe-source', 'svg'), 'image/svg+xml;charset=utf-8');
+  toast('Export Adobe : SVG source statique exporte. Animation Adobe prevue via sequence PNG alpha.');
 }
 async function copySvg(){
   const svg = getSvgForDownload();
@@ -1816,6 +1835,7 @@ function bind(){
   els.exportPng.addEventListener('click', exportPng);
   els.copySvg.addEventListener('click', copySvg);
   els.downloadSvg.addEventListener('click', exportSvg);
+  els.exportAdobe.addEventListener('click', exportAdobe);
   document.querySelectorAll('[data-panel-target]').forEach((button) => {
     button.addEventListener('click', () => {
       const panel = document.getElementById(button.dataset.panelTarget);
