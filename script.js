@@ -203,9 +203,8 @@ let adobeFrameTime = null;
 let ffmpegRuntimePromise = null;
 const MAX_HISTORY = 60;
 const MAX_LIBRARY_ITEMS = 60;
-const FFMPEG_SCRIPT_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js';
-const FFMPEG_UTIL_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.js';
-const FFMPEG_CORE_BASE_URL = 'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd';
+const FFMPEG_SCRIPT_URL = 'vendor/ffmpeg/ffmpeg.js';
+const FFMPEG_CORE_BASE_URL = 'vendor/ffmpeg/core';
 const CORNER_PRESETS = {
   standard:{cornerTopLeft:0, cornerTopRight:0, cornerBottomRight:0, cornerBottomLeft:0},
   uniform:{cornerTopLeft:100, cornerTopRight:100, cornerBottomRight:100, cornerBottomLeft:100},
@@ -1942,14 +1941,12 @@ async function getFfmpegRuntime(){
   if (!ffmpegRuntimePromise) {
     ffmpegRuntimePromise = (async () => {
       if (!window.FFmpeg) await loadScript(FFMPEG_SCRIPT_URL);
-      if (!window.FFmpegUtil) await loadScript(FFMPEG_UTIL_URL);
       const FFmpegClass = window.FFmpegWASM?.FFmpeg || window.FFmpeg?.FFmpeg;
-      const toBlobURL = window.FFmpegUtil?.toBlobURL;
-      if (!FFmpegClass || !toBlobURL) throw new Error('FFmpeg indisponible');
+      if (!FFmpegClass) throw new Error('FFmpeg indisponible');
       const ffmpeg = new FFmpegClass();
       await ffmpeg.load({
-        coreURL:await toBlobURL(`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.js`, 'text/javascript'),
-        wasmURL:await toBlobURL(`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.wasm`, 'application/wasm')
+        coreURL:`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.js`,
+        wasmURL:`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.wasm`
       });
       return ffmpeg;
     })();

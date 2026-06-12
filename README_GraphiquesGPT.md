@@ -1,74 +1,65 @@
-# GraphiquesGPT - V9.2 themes pro
+# GraphiquesGPT
 
-Generateur local de graphiques statiques.
+Generateur local de graphiques SVG/PNG avec themes, modeles, arrondis personnalises et animation SVG optionnelle.
 
-## Lancer le projet
+## Utilisation
 
-Ouvrir simplement `index.html` dans le navigateur.
+Ouvrir `index.html` dans un navigateur.
 
-## Nouveautes V9.2
+L'application fonctionne en local et sauvegarde l'etat dans `localStorage`.
 
-- ajout de 8 themes plus professionnels : Executive clair, Editorial premium, Graphite studio, Sage analytics, Haute couture, Bloom moderne, Cyber clair et Noir luxe ;
-- amelioration des palettes automatiques pour limiter les rendus trop monochromes ;
-- fonds SVG/PNG enrichis avec des couches de lumiere discretes, synchronisees avec l'apercu ;
-- rendu plus qualitatif sur les graphiques standards : surface de plot subtile, barres en degrade, axes plus fins, aire plus douce et typographie moins "affiche" ;
-- nettoyage des textes visibles pour eviter les caracteres casses selon l'encodage local.
+Pour utiliser `Export Adobe MOV`, ouvrir l'application en HTTPS, par exemple via GitHub Pages. Le statut en haut doit afficher `Adobe : pret`.
 
-## Nouveautes graphiques
+En ouverture directe `file://`, l'export video est bloque par le navigateur. `Lancer_GraphiquesGPT_Adobe.bat` reste disponible uniquement comme fallback local.
 
-- correction de la legende sur les 4 graphiques Glitter : Glitter 1, Glitter 2 et leurs variantes sans ombre ;
-- ajout du type **Graphique lineaire** pour les tendances et sequences temporelles ;
-- ajout du type **Tableau des beignets** pour afficher un donut segmente avec bords arrondis et legende laterale ;
-- ajout du type **Graphique a bulles** pour visualiser les categories principales par taille ;
-- ajout du type **Diagramme en entonnoir** pour les etapes de conversion ou de processus.
+## Exports
 
-## Styles historiques conserves
+- `Copier SVG` copie le SVG courant dans le presse-papiers quand le navigateur l'autorise.
+- `Exporter SVG` telecharge le SVG courant.
+- `Exporter PNG` telecharge une image PNG statique.
+- `Export Adobe MOV` telecharge une video `.mov` avec alpha, encodee localement via FFmpeg WebAssembly.
+- Quand les animations sont activees, l'export PNG est desactive car il ne peut pas conserver l'animation.
 
-- Midnight
-- Minimal clair
-- Neon violet
-- Ocean bleu
-- Foret
-- Sunset
-- Astral RPG
-- Cristal ethere
-- Lifestream bleu
-- Phenix rubis
-- Neant stellaire
-- Twitch Pulse
-- Stream Overlay
-- Onde resonante
-- Nocturne royal
-- Arcade neon
-- Glitter 1 sans ombre
-- Glitter 2 sans ombre
+## Formats
 
-## Mode comparaison
+- `16:9` : 1600 x 900.
+- `Carre` : 1200 x 1200.
+- `Vertical 4:5` : 1080 x 1350.
+- `Vertical 9:16` : 1080 x 1920.
 
-Dans `Reglages rapides`, activer **Mode comparaison A/B**.
+## Adobe Premiere / After Effects
 
-Les donnees sont regroupees par duos :
+Les animations SVG actuelles sont des animations web integrees au SVG. Elles sont fiables dans un navigateur, mais ne doivent pas etre considerees comme un format d'animation video fiable pour Premiere ou After Effects.
 
-- ligne 1 / ligne 2 ;
-- ligne 3 / ligne 4 ;
-- ligne 5 / ligne 6 ;
-- etc.
+Pour un flux Adobe propre, l'export a privilegier est le `.mov` avec alpha genere par `Export Adobe MOV`. Le SVG reste utile comme source vectorielle statique.
 
-Trois calculs sont disponibles :
+Le bouton `Export Adobe MOV` est volontairement separe : il genere les frames localement, charge FFmpeg WebAssembly single-thread depuis `vendor/ffmpeg/`, puis encode une video QuickTime Animation (`qtrle`) avec canal alpha.
 
-- Ratio A/B x 100 ;
-- Ecart A - B ;
-- Evolution % depuis B.
+Aucune frame n'est envoyee sur Internet. Les fichiers FFmpeg doivent etre presents dans le repo, notamment `vendor/ffmpeg/core/ffmpeg-core.wasm`.
 
-## Historique recent
+Ce mode est plus lent que la version FFmpeg multi-thread, mais il est compatible avec un hebergement statique comme GitHub Pages.
 
-### V9.1.5
+## Transparence
 
-- ajout de **Barres arrondies glitter 1 sans ombre** dans le menu `Type de graphique` ;
-- ajout de **Barres arrondies glitter 2 sans ombre** dans le menu `Type de graphique` ;
-- les styles Glitter sans ombre restent aussi disponibles si presents dans le menu `Style`.
+Le menu `Transparence` propose trois modes :
 
-### V9.1.4
+- `Fond normal` : export complet avec fond.
+- `Fond transparent` : retire le fond global, mais garde les panneaux et elements du graphique.
+- `Graphique flottant` : retire le fond global et les panneaux de trace pour faciliter l'integration dans un montage.
 
-- ajout de 2 styles : **Glitter 1 sans ombre** et **Glitter 2 sans ombre** ;
-- sur ces deux styles, les graphiques Glitter n'affichent plus l'ombre portee.
+## Arrondis
+
+Les graphiques a barres peuvent utiliser :
+
+- arrondis simples ;
+- forme glitter horizontale ;
+- arrondis par angle avec valeurs de `-50%` a `150%` ;
+- presets d'arrondis, dont `Standard 0%`, `Pilule` et formes chaotiques.
+
+Les valeurs negatives creusent le coin vers l'interieur pour obtenir des formes asymetriques.
+
+## Notes techniques
+
+- Les listes de types, themes, formats, polices et presets sont generees depuis `script.js`.
+- Les IDs internes du SVG sont prefixes a chaque rendu pour limiter les collisions quand plusieurs SVG sont integres dans un meme document.
+- Les anciens graphes sauvegardes avec `glitterBar2` ou `glitterBar2NoShadow` sont migres vers les styles actuels.
