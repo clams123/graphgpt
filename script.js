@@ -1946,10 +1946,12 @@ async function getFfmpegRuntime(){
       if (!FFmpegClass) throw new Error('FFmpeg indisponible');
       const ffmpeg = new FFmpegClass();
       const classWorkerURL = new URL(FFMPEG_CLASS_WORKER_URL, document.baseURI).href;
+      const coreURL = new URL(`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.js`, document.baseURI).href;
+      const wasmURL = new URL(`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.wasm`, document.baseURI).href;
       await ffmpeg.load({
         classWorkerURL,
-        coreURL:`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.js`,
-        wasmURL:`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.wasm`
+        coreURL,
+        wasmURL
       });
       return ffmpeg;
     })();
