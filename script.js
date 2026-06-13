@@ -204,7 +204,6 @@ let ffmpegRuntimePromise = null;
 const MAX_HISTORY = 60;
 const MAX_LIBRARY_ITEMS = 60;
 const FFMPEG_SCRIPT_URL = 'vendor/ffmpeg/ffmpeg.js';
-const FFMPEG_CLASS_WORKER_URL = 'vendor/ffmpeg/814.ffmpeg.js';
 const FFMPEG_CORE_BASE_URL = 'vendor/ffmpeg/core';
 const CORNER_PRESETS = {
   standard:{cornerTopLeft:0, cornerTopRight:0, cornerBottomRight:0, cornerBottomLeft:0},
@@ -1945,11 +1944,9 @@ async function getFfmpegRuntime(){
       const FFmpegClass = window.FFmpegWASM?.FFmpeg || window.FFmpeg?.FFmpeg;
       if (!FFmpegClass) throw new Error('FFmpeg indisponible');
       const ffmpeg = new FFmpegClass();
-      const classWorkerURL = new URL(FFMPEG_CLASS_WORKER_URL, document.baseURI).href;
       const coreURL = new URL(`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.js`, document.baseURI).href;
       const wasmURL = new URL(`${FFMPEG_CORE_BASE_URL}/ffmpeg-core.wasm`, document.baseURI).href;
       await ffmpeg.load({
-        classWorkerURL,
         coreURL,
         wasmURL
       });
@@ -2007,6 +2004,8 @@ async function exportAdobe(){
     if (error?.message === 'MODE_ADOBE_HOST_REQUIRED') {
       const mode = adobeModeDetails();
       toast(`Export Adobe : ${adobeModeHint(mode)}`);
+    } else if (String(error?.message || error).includes('ffmpeg-core')) {
+      toast('Export Adobe impossible : fichiers FFmpeg locaux manquants ou mal deployes.');
     } else {
       toast('Export Adobe impossible : verifie ta connexion internet ou reessaie en format plus petit.');
     }
