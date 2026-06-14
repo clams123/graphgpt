@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GraphiquesGPT - G&eacute;n&eacute;rateur de graphiques</title>
-  <link rel="stylesheet" href="style.css?v=20260613-adobe-worker-umd">
+  <title>GraphGPT - G&eacute;n&eacute;rateur de graphiques</title>
+  <link rel="stylesheet" href="style.css?v=20260614-nav-content-fit">
 </head>
 <body>
   <header class="topbar">
@@ -12,33 +12,32 @@
       <div class="brand__mark">GRAPH</div>
       <div>
         <h1>G&eacute;n&eacute;rateur de graphiques</h1>
-        <p>Cr&eacute;e, sauvegarde et exporte des graphiques SVG/PNG</p>
+        <p>Cr&eacute;e, sauvegarde et exporte des graphiques SVG/PNG/MOV</p>
       </div>
     </div>
     <div class="topActions">
-      <button class="btn btn--soft" id="saveBtn" type="button">Sauvegarder</button>
       <button class="btn btn--ghost" id="undoBtn" type="button">&larr; Annuler</button>
       <button class="btn btn--ghost" id="redoBtn" type="button">&rarr; R&eacute;tablir</button>
       <button class="btn btn--danger" id="resetBtn" type="button">R&eacute;initialiser</button>
-      <button class="btn btn--ghost" id="copySvgBtn" type="button">Copier SVG</button>
       <button class="btn btn--ghost" id="downloadSvgBtn" type="button">Exporter SVG</button>
       <button class="btn btn--primary" id="exportPngBtn" type="button">Exporter PNG</button>
       <button class="btn btn--adobe" id="exportAdobeBtn" type="button">Export Adobe MOV</button>
-      <span class="adobeStatus" id="adobeModeStatus">Adobe : non verifie</span>
     </div>
   </header>
 
   <main class="layout">
     <aside class="editor" aria-label="Editeur du graphique">
       <nav class="editorNav" aria-label="Navigation des reglages">
-        <button class="editorNav__button" type="button" data-panel-target="panelInfo">Infos</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelInfo">Informations</button>
         <button class="editorNav__button" type="button" data-panel-target="panelData">Donnees</button>
-        <button class="editorNav__button" type="button" data-panel-target="panelDisplay">Affichage</button>
-        <button class="editorNav__button" type="button" data-panel-target="panelSettings">Reglages</button>
-        <button class="editorNav__button" type="button" data-panel-target="panelLibrary">Biblio</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelDisplay">Type &amp; Affichage</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelIcons">Icones</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelSettings">Reglages rapide</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelLibrary">Bibliotheque</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelTools">Outils</button>
       </nav>
 
-      <details class="panel accordionMenu" id="panelInfo" open>
+      <details class="panel accordionMenu" id="panelInfo">
         <summary>
           <div class="sectionTitle">
             <span>1</span>
@@ -61,11 +60,11 @@
             <span>Note / source</span>
             <input id="sourceInput" type="text" autocomplete="off">
           </label>
-          <p class="fileHint">Tout est optionnel</p>
+          <p class="fileHint"><i>*Tout est optionnel</i></p>
         </div>
       </details>
 
-      <details class="panel accordionMenu" id="panelData" open>
+      <details class="panel accordionMenu" id="panelData">
         <summary>
           <div class="sectionTitle">
             <span>2</span>
@@ -76,9 +75,10 @@
           </div>
         </summary>
         <div class="panelBody">
-          <div class="tableHeader">
+          <div class="tableHeader" id="rowsTableHeader">
             <span>Libell&eacute;</span>
             <span>Valeur</span>
+            <span data-icon-column>Icone</span>
             <span>Couleur</span>
           </div>
           <div id="rowsEditor" class="rowsEditor"></div>
@@ -88,13 +88,13 @@
         </div>
       </details>
 
-      <details class="panel accordionMenu" id="panelDisplay" open>
+      <details class="panel accordionMenu" id="panelDisplay">
         <summary>
           <div class="sectionTitle">
             <span>3</span>
             <div>
               <h2>Type &amp; affichage</h2>
-              <p>Graphique personnalisable, export SVG/PNG.</p>
+              <p>Graphique personnalisable, export SVG/PNG/MOV</p>
             </div>
           </div>
         </summary>
@@ -222,10 +222,73 @@
         </div>
       </details>
 
-      <details class="panel accordionMenu" id="panelSettings">
+      <details class="panel accordionMenu" id="panelIcons">
         <summary>
           <div class="sectionTitle">
             <span>4</span>
+            <div>
+              <h2>Icones</h2>
+              <p>API Encore pour les icones en barres horizontales.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="panelBody">
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Encore API</div>
+            <label class="switchBox">
+              <input id="encoreIconsEnabledInput" type="checkbox">
+              <span><strong>Icones barres horizontales</strong><small>Affiche le champ Icone dans les donnees.</small></span>
+            </label>
+            <div class="grid2">
+              <label class="field">
+                <span>Source</span>
+                <select id="encoreIconSourceInput">
+                  <option value="weapon">Armes</option>
+                  <option value="item">Items</option>
+                </select>
+              </label>
+              <label class="field">
+                <span>Langue</span>
+                <select id="encoreLangInput">
+                  <option value="fr">FR</option>
+                  <option value="en">EN</option>
+                  <option value="ja">JA</option>
+                  <option value="ko">KO</option>
+                </select>
+              </label>
+            </div>
+            <div class="toolStatusRow">
+              <span id="encoreIconStatus">Icones non chargees</span>
+              <button class="btn btn--ghost miniButton" id="loadEncoreIconsBtn" type="button">Charger</button>
+            </div>
+          </div>
+
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Placement</div>
+            <label class="field">
+              <span>Taille icone</span>
+              <input id="encoreIconSizeInput" type="range" min="0.45" max="1.8" step="0.05">
+            </label>
+            <label class="field">
+              <span>Decalage Y</span>
+              <input id="encoreIconOffsetYInput" type="range" min="-60" max="60" step="1">
+            </label>
+            <label class="field">
+              <span>Apparition icone</span>
+              <select id="encoreIconDelayInput">
+                <option value="sync">Avec la barre</option>
+                <option value="0.5">0.5s apres le graphique</option>
+                <option value="1">1s apres le graphique</option>
+              </select>
+            </label>
+          </div>
+        </div>
+      </details>
+
+      <details class="panel accordionMenu" id="panelSettings">
+        <summary>
+          <div class="sectionTitle">
+            <span>5</span>
             <div>
               <h2>Reglages rapides</h2>
               <p>Taille, tri et precision des valeurs.</p>
@@ -294,7 +357,7 @@
       <details class="panel accordionMenu" id="panelLibrary">
         <summary>
           <div class="sectionTitle">
-            <span>5</span>
+            <span>6</span>
             <div>
               <h2>Bibliotheque</h2>
               <p>Graphs complets et modeles de style.</p>
@@ -311,6 +374,41 @@
             <button class="btn btn--ghost" id="saveTemplateBtn" type="button">Sauver modele</button>
           </div>
           <div class="libraryList" id="libraryList" aria-live="polite"></div>
+        </div>
+      </details>
+
+      <details class="panel accordionMenu" id="panelTools">
+        <summary>
+          <div class="sectionTitle">
+            <span>7</span>
+            <div>
+              <h2>Sauvegarde &amp; outils</h2>
+              <p>Actions utiles, utilisation rare.</p>
+            </div>
+          </div>
+        </summary>
+        <div class="panelBody">
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Sauvegarde</div>
+            <div class="quickActions quickActions--one">
+              <button class="btn btn--soft" id="saveBtn" type="button">Sauvegarde locale</button>
+            </div>
+          </div>
+
+          <div class="controlGroup">
+            <div class="controlGroupTitle">SVG</div>
+            <div class="quickActions quickActions--one">
+              <button class="btn btn--ghost" id="copySvgBtn" type="button">Copier SVG</button>
+            </div>
+          </div>
+
+          <div class="controlGroup">
+            <div class="controlGroupTitle">Adobe</div>
+            <div class="toolStatusRow">
+              <span>Statut Adobe</span>
+              <span class="adobeStatus" id="adobeModeStatus">Adobe : non verifie</span>
+            </div>
+          </div>
         </div>
       </details>
     </aside>
@@ -356,6 +454,7 @@
   </div>
 
   <div class="toastContainer" id="toastContainer" aria-live="polite"></div>
-  <script src="script.js?v=20260613-adobe-worker-umd"></script>
+  <datalist id="encoreIconOptions"></datalist>
+  <script src="script.js?v=20260614-icon-select-fix"></script>
 </body>
 </html>
