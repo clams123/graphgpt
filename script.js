@@ -719,6 +719,18 @@ function smoothPath(points){
 function text(x, y, content, attrs=''){
   return `<text x="${x}" y="${y}" ${attrs}>${esc(content)}</text>`;
 }
+function valueRevealLag(){
+  return clamp(state.animationDuration, 0.6, 3, 1) * 0.78;
+}
+function valueVisible(index=0, base=0){
+  if (!state.enableAnimations || adobeFrameTime == null) return true;
+  const start = clamp(state.animationDelay, 0, 3, 1) + index * clamp(state.animationStagger, 0, 0.35, 0.12) + base + valueRevealLag();
+  return adobeFrameTime >= start;
+}
+function valueAttrs(index, attrs='', base=0){
+  if (!state.enableAnimations || adobeFrameTime != null) return attrs;
+  return `class="valueAnim" style="--delay:${itemDelay(index, base + valueRevealLag())}s" ${attrs}`;
+}
 let svgBuildCount = 0;
 let currentSvgPrefix = 'gsvg';
 function beginSvgBuild(){
@@ -988,11 +1000,13 @@ function motionMarkup(){
     .vBarAnim{transform-box:fill-box;transform-origin:center bottom;animation:vBarGrow ${duration.toFixed(2)}s cubic-bezier(.16,.82,.24,1) both;animation-delay:calc(var(--motion-start) + var(--delay,0s))}
     .lineAnim{stroke-dasharray:1800;stroke-dashoffset:1800;animation:lineDraw ${(duration * 1.38).toFixed(2)}s ease-out both;animation-delay:calc(var(--motion-start) + var(--delay,0s))}
     .pointAnim{transform-box:fill-box;transform-origin:center;animation:pointPop ${(duration * 0.46).toFixed(2)}s ease-out both;animation-delay:calc(var(--motion-start) + var(--delay,0s))}
+    .valueAnim{animation:valueReveal .32s ease-out both;animation-delay:calc(var(--motion-start) + var(--delay,0s))}
     @keyframes barGrow{0%{transform:scaleX(.01);opacity:.18}62%{opacity:1}100%{transform:scaleX(1);opacity:1}}
     @keyframes vBarGrow{0%{transform:scaleY(.01);opacity:.18}62%{opacity:1}100%{transform:scaleY(1);opacity:1}}
     @keyframes lineDraw{to{stroke-dashoffset:0}}
     @keyframes pointPop{from{transform:scale(.25);opacity:0}to{transform:scale(1);opacity:1}}
-    @media (prefers-reduced-motion: reduce){.barAnim,.vBarAnim,.lineAnim,.pointAnim{animation:none!important}}
+    @keyframes valueReveal{from{opacity:0}to{opacity:1}}
+    @media (prefers-reduced-motion: reduce){.barAnim,.vBarAnim,.lineAnim,.pointAnim,.valueAnim{animation:none!important}}
   ]]></style>`;
 }
 function legendLayout(size){
@@ -1398,11 +1412,11 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
       </g>
     </g>`;
 
-    if (state.showValues) {
+    if (state.showValues && valueVisible(index)) {
       const valueY = Math.max(valueFont + 8, y - Math.max(18, valueFont * 0.42));
       const valueText = formatValue(row.value);
       const valueX = textSafeX(cx, valueText, valueFont, left, left + chartW, 950);
-      out += text(valueX, valueY, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="950" text-anchor="middle" font-family="Arial Black, Impact, system-ui, Arial, sans-serif"`);
+      out += text(valueX, valueY, valueText, valueAttrs(index, `fill="${colors.text}" font-size="${valueFont}" font-weight="950" text-anchor="middle" font-family="Arial Black, Impact, system-ui, Arial, sans-serif"`));
     }
     out += text(cx, labelY, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
@@ -1447,11 +1461,11 @@ function renderBar(rows, size, colors, palette){
       out += `<rect class="vBarAnim" style="--delay:${itemDelay(index)}s" x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
     }
     out += `<rect x="${cx - barW / 2 + Math.max(3, barW * 0.08)}" y="${top + 4}" width="${Math.max(2, barW * 0.18)}" height="${Math.max(0, bh - 8)}" rx="${Math.max(1, rx * .55)}" fill="#ffffff" opacity=".13"/>`;
-    if (state.showValues) {
+    if (state.showValues && valueVisible(index)) {
       const valueText = formatValue(row.value);
       const valueX = textSafeX(cx, valueText, valueFont, surfaceX, surfaceX + surfaceW, 900);
       const valueY = Math.max(surfaceY + valueFont, top - Math.max(10, valueFont * 0.32));
-      out += text(valueX, valueY, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="${family}"`);
+      out += text(valueX, valueY, valueText, valueAttrs(index, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="${family}"`));
     }
     const label = truncateText(row.label, labelFont, Math.max(36, step - gap * 0.5), 750);
     out += text(cx, labelY, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="750" text-anchor="middle" font-family="${family}"`);
@@ -1555,12 +1569,12 @@ function renderHorizontalBar(rows, size, colors, palette){
       }
     }
     out += encoreIconMarkup(row, x, bw, yy, barH, index, rows.length);
-    if (state.showValues) {
+    if (state.showValues && valueVisible(index)) {
       const valueText = formatValue(row.value);
       if (state.valuePlacement === 'inside' && bw > estimateTextWidth(valueText, valueFont, 900) + 22) {
-        out += text(x + bw - 12, yy + valueFont * 0.34, valueText, `fill="#ffffff" font-size="${valueFont}" font-weight="900" text-anchor="end" font-family="${family}"`);
+        out += text(x + bw - 12, yy + valueFont * 0.34, valueText, valueAttrs(index, `fill="#ffffff" font-size="${valueFont}" font-weight="900" text-anchor="end" font-family="${family}"`));
       } else {
-        out += text(x + bw + 12, yy + valueFont * 0.34, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" font-family="${family}"`);
+        out += text(x + bw + 12, yy + valueFont * 0.34, valueText, valueAttrs(index, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" font-family="${family}"`));
       }
     }
   });
@@ -1630,12 +1644,12 @@ function renderHorizontalGlitterBar(rows, size, colors, palette, forceNoShadow=f
 
     out += text(x - 14, yy + labelFont * 0.34, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="800" text-anchor="end" font-family="${family}"`);
     out += encoreIconMarkup(row, x, bw, yy, barH, index, cleanRows.length);
-    if (state.showValues) {
+    if (state.showValues && valueVisible(index)) {
       const valueText = formatValue(row.value);
       if (state.valuePlacement === 'inside' && bw > estimateTextWidth(valueText, valueFont, 900) + 24) {
-        out += text(x + bw - 12, yy + valueFont * 0.34, valueText, `fill="#ffffff" font-size="${valueFont}" font-weight="900" text-anchor="end" font-family="${family}"`);
+        out += text(x + bw - 12, yy + valueFont * 0.34, valueText, valueAttrs(index, `fill="#ffffff" font-size="${valueFont}" font-weight="900" text-anchor="end" font-family="${family}"`));
       } else {
-        out += text(x + bw + 12, yy + valueFont * 0.34, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" font-family="${family}"`);
+        out += text(x + bw + 12, yy + valueFont * 0.34, valueText, valueAttrs(index, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" font-family="${family}"`));
       }
     }
   });
@@ -1685,14 +1699,14 @@ function renderLineOrArea(rows, size, colors, palette, area=false){
   out += line(points, `class="lineAnim" fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"`);
   points.forEach((point, index) => {
     out += `<circle class="pointAnim" style="--delay:${itemDelay(index, 0.65)}s" cx="${point.x}" cy="${point.y}" r="${Math.max(6, 8 * state.weight)}" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
-    if (state.showValues) {
+    if (state.showValues && valueVisible(index)) {
       const valueText = formatValue(point.row.value);
       const valueX = textSafeX(point.x, valueText, valueFont, surfaceX + 24, surfaceX + surfaceW - 24, 900);
       const isLowPoint = point.y > y + h - valueFont * 1.4;
       const valueY = isLowPoint
         ? Math.min(y + h - valueFont * 0.35, point.y - Math.max(10, valueFont * 0.28))
         : Math.max(surfaceY + valueFont, point.y - Math.max(12, valueFont * 0.55));
-      out += text(valueX, valueY, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="${family}"`);
+      out += text(valueX, valueY, valueText, valueAttrs(index, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="${family}"`));
     }
     const labelWidth = rows.length > 1 ? Math.max(42, w / Math.max(1, rows.length - 1) * 0.78) : w;
     const label = truncateText(point.row.label, labelFont, labelWidth, 750);
@@ -1764,12 +1778,12 @@ function renderLinearGraph(rows, size, colors, palette){
     const labelWidth = rows.length > 1 ? Math.max(42, w / Math.max(1, rows.length - 1) * 0.78) : w;
     const label = truncateText(point.row.label || String(index + 1), labelFont, labelWidth, 700);
     out += text(point.x, surface.y + surface.h + Math.max(16, labelFont * 0.1), label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="700" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
-    if (state.showValues) {
+    if (state.showValues && valueVisible(index, 0.78)) {
       out += `<circle class="pointAnim" style="--delay:${itemDelay(index, 0.78)}s" cx="${point.x}" cy="${point.y}" r="4.5" fill="${palette[0] || colors.accent}" stroke="${colors.panel}" stroke-width="2"/>`;
       const valueText = formatValue(point.value);
       const valueX = textSafeX(point.x, valueText, valueFont, surface.x - 12, surface.x + surface.w + 12, 850);
       const valueY = Math.max(surface.y + valueFont, point.y - Math.max(12, valueFont * 0.55));
-      out += text(valueX, valueY, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="850" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+      out += text(valueX, valueY, valueText, valueAttrs(index, `fill="${colors.text}" font-size="${valueFont}" font-weight="850" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`, 0.78));
     }
   });
   if (state.showLegend) {
@@ -1798,11 +1812,11 @@ function renderPieOrDonut(rows, size, colors, palette, donut=false){
     const end = start + (value / total) * Math.PI * 2;
     const path = donut ? donutPath(cx, cy, r, inner, start, end) : arcPath(cx, cy, r, start, end);
     out += `<path d="${path}" fill="${seriesFill(index)}" stroke="${state.transparent ? 'rgba(0,0,0,.25)' : colors.panel}" stroke-width="4"/>`;
-    if (state.showValues && value > 0) {
+    if (state.showValues && value > 0 && valueVisible(index)) {
       const mid = (start + end) / 2;
       const labelPos = polar(cx, cy, donut ? (r + inner) / 2 : r * 0.66, mid);
       const pct = Math.round((value / total) * 100);
-      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, `fill="#ffffff" font-size="${valueFontSize(size, 0.015, 18, 38)}" font-weight="950" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, valueAttrs(index, `fill="#ffffff" font-size="${valueFontSize(size, 0.015, 18, 38)}" font-weight="950" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`));
     }
     start = end;
   });
@@ -1810,7 +1824,7 @@ function renderPieOrDonut(rows, size, colors, palette, donut=false){
     const totalFont = Math.max(15, Math.round(Math.min(size.w, size.h) * 0.018));
     const totalValueFont = Math.max(28, Math.round(Math.min(size.w, size.h) * 0.034));
     out += text(cx, cy - Math.max(18, totalValueFont * 0.70), 'Total', `fill="${colors.muted}" font-size="${totalFont}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    out += text(cx, cy + Math.max(28, totalValueFont * 0.88), formatValue(total), `fill="${colors.text}" font-size="${totalValueFont}" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    if (valueVisible(0)) out += text(cx, cy + Math.max(28, totalValueFont * 0.88), formatValue(total), valueAttrs(0, `fill="${colors.text}" font-size="${totalValueFont}" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`));
   }
   return out;
 }
@@ -1843,11 +1857,11 @@ function renderDonutTable(rows, size, colors, palette){
     const segStart = start + gap;
     const segEnd = Math.max(segStart + 0.01, end - gap);
     out += `<path d="${ringArcPath(cx, cy, r, segStart, segEnd)}" fill="none" stroke="${seriesFill(index)}" stroke-width="${stroke}" stroke-linecap="round"/>`;
-    if (state.showValues && !state.showLegend) {
+    if (state.showValues && !state.showLegend && valueVisible(index)) {
       const mid = (segStart + segEnd) / 2;
       const labelPos = polar(cx, cy, r + stroke * 0.62, mid);
       const pct = Math.round(value / total * 100);
-      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+      out += text(labelPos.x, labelPos.y + 5, `${pct}%`, valueAttrs(index, `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`));
     }
     start = end;
   });
@@ -1863,7 +1877,7 @@ function renderDonutTable(rows, size, colors, palette){
     const label = row.label.length > 28 ? row.label.slice(0, 27) + '...' : row.label;
     out += `<circle cx="${legendX}" cy="${yy}" r="${dot / 2}" fill="${seriesFill(index)}"/>`;
     out += text(legendX + dot + 16, yy + dot * 0.32, label || `Element ${index + 1}`, `fill="${colors.text}" font-size="${labelFontSize(size, 0.014, 15, 42)}" font-weight="650" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
-    if (state.showValues) out += text(legendX + Math.round(size.w * 0.27), yy + dot * 0.32, `${pct}%`, `fill="${colors.muted}" font-size="${compactValueFontSize(size)}" font-weight="850" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    if (state.showValues && valueVisible(index)) out += text(legendX + Math.round(size.w * 0.27), yy + dot * 0.32, `${pct}%`, valueAttrs(index, `fill="${colors.muted}" font-size="${compactValueFontSize(size)}" font-weight="850" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`));
   });
   return out;
 }
@@ -1915,10 +1929,10 @@ function renderBubble(rows, size, colors, palette){
       const labelY = boxY + labelFont * 0.90 + 9;
       const bubbleValueY = labelY + labelFont * 1.25 + valueFont * 0.55 + 10;
       out += text(cx, labelY, truncateText(label, labelFont, boxW - 18, 900), `fill="${colors.text}" font-size="${labelFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-      if (state.showValues) out += text(cx, bubbleValueY, valueText, `fill="${colors.muted}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      if (state.showValues && valueVisible(index)) out += text(cx, bubbleValueY, valueText, valueAttrs(index, `fill="${colors.muted}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`));
     } else {
       out += text(cx, cy - 4, innerLabel, `fill="#ffffff" font-size="${Math.max(15, Math.min(labelFont, radius * .27))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-      if (state.showValues) out += text(cx, cy + Math.max(20, radius * .29), valueText, `fill="#ffffff" font-size="${Math.max(16, Math.min(valueFont, radius * .27))}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      if (state.showValues && valueVisible(index)) out += text(cx, cy + Math.max(20, radius * .29), valueText, valueAttrs(index, `fill="#ffffff" font-size="${Math.max(16, Math.min(valueFont, radius * .27))}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`));
     }
   });
   return out;
@@ -1953,7 +1967,7 @@ function renderFunnel(rows, size, colors, palette){
     const labelY = state.showValues ? y1 + stepH * .34 : y1 + stepH * .54;
     const valueY = y1 + stepH * .80;
     out += text(cx, labelY, label, `fill="#ffffff" font-size="${labelFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    if (state.showValues) out += text(cx, valueY, formatValue(row.value), `fill="#ffffff" font-size="${valueFont}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif" opacity=".88"`);
+    if (state.showValues && valueVisible(index)) out += text(cx, valueY, formatValue(row.value), valueAttrs(index, `fill="#ffffff" font-size="${valueFont}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif" opacity=".88"`));
   });
   return out;
 }
@@ -1985,12 +1999,12 @@ function renderRadar(rows, size, colors, palette){
   out += polygon(dataPoints, `fill="${colors.accent}" opacity=".25" stroke="${colors.accent}" stroke-width="${Math.max(4, 5 * state.weight)}"`);
   dataPoints.forEach((point, index) => {
     out += `<circle cx="${point.x}" cy="${point.y}" r="6" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
-    if (state.showValues) {
+    if (state.showValues && valueVisible(index)) {
       const angle = -Math.PI / 2 + index / count * Math.PI * 2;
       const valueRadius = Math.max(18, r * Math.max(0, rows[index].value) / max - Math.max(22, valueFont * 0.9));
       const valuePos = polar(cx, cy, valueRadius, angle);
       const valueText = formatValue(rows[index].value);
-      out += text(valuePos.x, valuePos.y + valueFont * 0.34, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      out += text(valuePos.x, valuePos.y + valueFont * 0.34, valueText, valueAttrs(index, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`));
     }
   });
   return out;
