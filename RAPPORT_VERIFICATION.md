@@ -1,6 +1,6 @@
 # Rapport de verification
 
-Derniere verification : 2026-06-09
+Derniere verification : 2026-06-17
 
 ## Points controles
 
@@ -11,6 +11,11 @@ Derniere verification : 2026-06-09
 - Formats export : 16:9, carre, vertical 4:5 et vertical 9:16.
 - Modes de transparence : fond normal, fond transparent, graphique flottant.
 - Prefixage des IDs SVG pour reduire les collisions en cas d'integration de plusieurs SVG dans un meme document.
+- Verification des IDs HTML utilises par `script.js` : aucun ID manquant.
+- Verification des references locales `style.css`, `script.js` et `vendor/ffmpeg/core/ffmpeg-core.wasm`.
+- Verification des endpoints Encore `character`, `weapon` et `item`.
+- Verification du filtre Encore par personnage pour les armes et items.
+- Ajout du lanceur local `Lancer_GraphiquesGPT_Adobe.bat` mentionne par l'application.
 
 ## Points a surveiller
 

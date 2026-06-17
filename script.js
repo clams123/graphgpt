@@ -1,7 +1,7 @@
 const STORAGE_KEY = 'graphiquesgpt_v9_1_5_glitter_sans_ombre_types';
 const LIBRARY_KEY = `${STORAGE_KEY}_library`;
 const THEMES = ['midnight','clean','executive','editorial','graphite','sage','haute','bloom','cyberclear','noir','neon','ocean','forest','sunset','astral','crystal','lifestream','phoenix','voidstar','twitch','streamdeck','resonance','royal','arcade','glitter1soft','glitter2soft'];
-const CHART_TYPES = ['bar','glitterBar','glitterBarNoShadow','horizontalBar','line','linearGraph','area','pie','donut','donutTable','bubble','funnel','radar'];
+const CHART_TYPES = ['bar','glitterBar','glitterBarNoShadow','horizontalGlitterBar','horizontalGlitterBarNoShadow','horizontalBar','line','linearGraph','area','pie','donut','donutTable','bubble','funnel','radar'];
 const FORMATS = {
   wide:{w:1600,h:900,label:'16:9'},
   square:{w:1200,h:1200,label:'Carre'},
@@ -13,6 +13,8 @@ const TYPE_LABELS = {
   bar:'Barres verticales',
   glitterBar:'Barres arrondies glitter 1',
   glitterBarNoShadow:'Barres arrondies glitter 1 sans ombre',
+  horizontalGlitterBar:'Barre H arrondie glitter 1',
+  horizontalGlitterBarNoShadow:'Barre H arrondie Glitter 1 sans ombre',
   horizontalBar:'Barres horizontales',
   line:'Courbe',
   linearGraph:'Graphique lineaire',
@@ -144,9 +146,8 @@ const els = {
   cornerTopLeft:$('cornerTopLeftInput'), cornerTopRight:$('cornerTopRightInput'), cornerBottomRight:$('cornerBottomRightInput'), cornerBottomLeft:$('cornerBottomLeftInput'),
   cornerTopLeftValue:$('cornerTopLeftValue'), cornerTopRightValue:$('cornerTopRightValue'), cornerBottomRightValue:$('cornerBottomRightValue'), cornerBottomLeftValue:$('cornerBottomLeftValue'),
   sort:$('sortInput'), decimals:$('decimalsInput'), weight:$('weightInput'),
-  titleScale:$('titleScaleInput'), valueScale:$('valueScaleInput'), fontFamily:$('fontFamilyInput'),
+  titleScale:$('titleScaleInput'), valueScale:$('valueScaleInput'), labelScale:$('labelScaleInput'), fontFamily:$('fontFamilyInput'),
   libraryName:$('libraryNameInput'), libraryList:$('libraryList'), saveGraph:$('saveGraphBtn'), saveTemplate:$('saveTemplateBtn'),
-  compareMode:$('compareModeInput'), compareMethod:$('compareMethodInput'),
   previewFrame:$('previewFrame'), canvas:$('chartCanvas'), svg:$('chartSvg'),
   saveStatus:$('saveStatus'), chartStatus:$('chartStatus'), dataStatus:$('dataStatus'),
   exportPng:$('exportPngBtn'), copySvg:$('copySvgBtn'), downloadSvg:$('downloadSvgBtn'),
@@ -195,11 +196,10 @@ const DEFAULT_STATE = {
   cornerBottomLeft:100,
   titleScale:1,
   valueScale:1,
+  labelScale:1,
   fontFamily:'wuwa',
   fontDefaultUpgraded:true,
   sort:'none',
-  compareMode:false,
-  compareMethod:'ratio',
   decimals:0,
   weight:1,
   rows:[
@@ -270,12 +270,13 @@ function normalizeIconXPosition(value, fallback=82){
   return clamp(n, 0, 100, fallback);
 }
 function percentLabel(value){ return `${Math.round(Number(value) || 0)}%`; }
-function valueFontSize(size, ratio=0.014, min=16, max=46){
+function valueFontSize(size, ratio=0.014, min=16, max=60){
   return Math.round(Math.max(min, Math.min(max, size.w * ratio * state.valueScale)));
 }
-function compactValueFontSize(size){ return valueFontSize(size, 0.0125, 15, 34); }
-function labelFontSize(size, ratio=0.012, min=14, max=30){
-  return Math.round(Math.max(min, Math.min(max, size.w * ratio)));
+function compactValueFontSize(size){ return valueFontSize(size, 0.0125, 15, 46); }
+function labelFontSize(size, ratio=0.012, min=14, max=44){
+  const scale = clamp(state.labelScale, 0.7, 2, 1);
+  return Math.round(Math.max(min * scale, Math.min(max * scale, size.w * ratio * scale)));
 }
 function normalizeColor(value, fallback=''){
   const raw = String(value || '').trim();
@@ -361,7 +362,8 @@ function normalizeState(raw){
   base.cornerBottomRight = clamp(input.cornerBottomRight, -50, 150, base.cornerBottomRight);
   base.cornerBottomLeft = clamp(input.cornerBottomLeft, -50, 150, base.cornerBottomLeft);
   base.titleScale = clamp(input.titleScale, 0.7, 1.25, 1);
-  base.valueScale = clamp(input.valueScale, 0.7, 1.35, 1);
+  base.valueScale = clamp(input.valueScale, 0.7, 1.7, 1);
+  base.labelScale = clamp(input.labelScale, 0.7, 2, 1);
   base.fontDefaultUpgraded = true;
   if ((input.fontFamily === 'system' || input.fontFamily == null) && input.fontDefaultUpgraded !== true) {
     base.fontFamily = 'wuwa';
@@ -369,8 +371,6 @@ function normalizeState(raw){
     base.fontFamily = oneOf(input.fontFamily, FONT_FAMILIES, base.fontFamily);
   }
   base.sort = oneOf(input.sort, ['none','asc','desc'], base.sort);
-  base.compareMode = !!input.compareMode;
-  base.compareMethod = oneOf(input.compareMethod, ['ratio','difference','evolution'], base.compareMethod);
   base.decimals = clamp(input.decimals, 0, 2, 0);
   base.weight = clamp(input.weight, 0.7, 1.5, 1);
   if (Array.isArray(input.rows) && input.rows.length) base.rows = input.rows.map(normalizeRow).slice(0, 30);
@@ -583,37 +583,8 @@ function handleLibraryClick(event){
   }
 }
 
-function comparisonLabel(a, b){
-  const left = String(a?.label ?? '').trim();
-  const right = String(b?.label ?? '').trim();
-  return [left, right].filter(Boolean).join(' / ');
-}
-function comparisonValue(a, b){
-  const av = Number(a?.value ?? 0);
-  const bv = Number(b?.value ?? 0);
-  if (state.compareMethod === 'difference') return av - bv;
-  if (bv === 0) return null;
-  if (state.compareMethod === 'evolution') return ((av - bv) / Math.abs(bv)) * 100;
-  return (av / bv) * 100;
-}
-function buildComparisonRows(rows){
-  const pairs = [];
-  for (let index = 0; index < rows.length - 1; index += 2) {
-    const a = rows[index];
-    const b = rows[index + 1];
-    const value = comparisonValue(a, b);
-    if (!Number.isFinite(value)) continue;
-    pairs.push({
-      label:comparisonLabel(a, b),
-      value,
-      color:normalizeColor(a.color, normalizeColor(b.color, ''))
-    });
-  }
-  return pairs;
-}
 function getRows(){
   let rows = state.rows.map(normalizeRow).filter(row => Number.isFinite(row.value));
-  if (state.compareMode) rows = buildComparisonRows(rows);
   if (state.sort === 'asc') rows = rows.slice().sort((a,b) => a.value - b.value);
   if (state.sort === 'desc') rows = rows.slice().sort((a,b) => b.value - a.value);
   return rows;
@@ -701,6 +672,10 @@ function fittedText(x, y, content, maxWidth, maxFont, minFont, attrs='', weight=
   const fontSize = fitFontSize(content, maxFont, minFont, maxWidth, weight);
   const value = fontSize <= minFont ? truncateText(content, fontSize, maxWidth, weight) : content;
   return text(x, y, value, `${attrs} font-size="${fontSize}"`);
+}
+function textSafeX(x, content, fontSize, minX, maxX, weight=900){
+  const half = estimateTextWidth(content, fontSize, weight) / 2;
+  return clamp(x, minX + half, maxX - half, x);
 }
 function polar(cx, cy, r, angle){ return {x:cx + Math.cos(angle) * r, y:cy + Math.sin(angle) * r}; }
 function arcPath(cx, cy, r, start, end){
@@ -1023,7 +998,7 @@ function motionMarkup(){
 function legendLayout(size){
   const reserve = Math.round(size.w * 0.24);
   const pad = Math.round(size.w * 0.035);
-  const font = Math.max(15, Math.round(size.w * 0.0135));
+  const font = labelFontSize(size, 0.0135, 15, 40);
   const swatch = Math.max(12, Math.round(font * 0.9));
   const x = size.w - reserve + pad;
   const textX = x + swatch + Math.round(font * 0.7);
@@ -1033,7 +1008,7 @@ function legendLayout(size){
     textX,
     swatch,
     y:Math.round(size.h * 0.23),
-    itemH:Math.max(24, Math.round(size.h * 0.035)),
+    itemH:Math.max(font + 9, Math.round(size.h * 0.035)),
     font,
     maxTextW,
     leftEdge:x - Math.round(size.w * 0.03)
@@ -1112,7 +1087,7 @@ function chartArea(size, options={}){
   };
 }
 function legendMarkup(rows, size, colors, palette){
-  if (!state.showLegend && !['pie','donut'].includes(state.chartType)) return '';
+  if (!state.showLegend) return '';
   const layout = legendLayout(size);
   const family = fontStack(state.fontFamily);
   return `<g aria-label="Legende">${rows.slice(0, 12).map((row, index) => {
@@ -1172,11 +1147,14 @@ function glitterDefs(){
 function isGlitterChartType(type=state.chartType){
   return ['glitterBar','glitterBarNoShadow'].includes(type);
 }
+function isHorizontalGlitterChartType(type=state.chartType){
+  return ['horizontalGlitterBar','horizontalGlitterBarNoShadow'].includes(type);
+}
 function isCornerShapeChart(type=state.chartType){
-  return type === 'bar' || type === 'horizontalBar' || isGlitterChartType(type);
+  return type === 'bar' || type === 'horizontalBar' || isGlitterChartType(type) || isHorizontalGlitterChartType(type);
 }
 function shouldShowGlitterRoundness(){
-  return !state.customCorners && (isGlitterChartType() || (state.chartType === 'horizontalBar' && state.horizontalShape === 'glitter2'));
+  return !state.customCorners && (isGlitterChartType() || isHorizontalGlitterChartType() || (state.chartType === 'horizontalBar' && state.horizontalShape === 'glitter2'));
 }
 function cornerRadiusPercent(name, fallback=100){
   return clamp(state[name], -50, 150, fallback) / 100;
@@ -1368,17 +1346,21 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
   const hasInfo = !!String(`${state.title}${state.subtitle}${state.source}`).trim();
   const left = Math.round(size.w * (wide ? 0.03 : 0.07));
   const right = Math.round(size.w * (state.showLegend ? (wide ? 0.25 : 0.18) : (wide ? 0.03 : 0.07)));
-  const top = Math.round(size.h * (wide ? (hasInfo ? 0.22 : 0.09) : (hasInfo ? 0.20 : 0.11)));
-  const bottom = Math.round(size.h * (wide ? 0.16 : 0.15));
+  const top = Math.round(size.h * (wide ? (hasInfo ? 0.28 : 0.09) : (hasInfo ? 0.24 : 0.11)));
+  const bottom = Math.round(size.h * (wide ? 0.18 : 0.16));
   const chartW = size.w - left - right;
-  const chartH = size.h - top - bottom;
   const step = chartW / count;
   const weight = clamp(state.weight, 0.7, 1.5, 1);
   const widthFactor = 0.58;
   const barW = Math.max(28, Math.min(step * widthFactor * weight, step - 18));
-  const valueFont = valueFontSize(size, wide ? 0.021 : 0.032, 28, wide ? 42 : 52);
-  const labelFont = Math.max(18, Math.round(size.w * 0.016));
+  const valueFont = Math.min(valueFontSize(size, wide ? 0.021 : 0.032, 28, wide ? 56 : 68), Math.max(22, step * 0.34));
+  const labelRows = count > 6 || state.labelScale > 1.25 ? 2 : 1;
+  const labelFont = Math.min(labelFontSize(size, 0.016, 18, wide ? 48 : 58), Math.max(16, step * 0.28));
   const baseY = size.h - bottom;
+  const labelGap = Math.max(14, Math.min(18, size.h * 0.018));
+  const labelYBase = baseY + labelFont + labelGap;
+  const labelStackH = labelRows === 2 ? Math.max(labelFont * 1.05, 18) : 0;
+  const chartH = Math.max(size.h * 0.22, labelYBase - labelStackH - top - Math.max(16, valueFont * 0.7));
   let out = glitterDefs();
   if (!hasTransparentBackground()) out += `<rect width="${size.w}" height="${size.h}" fill="url(#${localId('glitter-stage-glow')})"/>`;
 
@@ -1395,15 +1377,14 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
     const color = palette[index] || colors.accent;
     const shadowDx = Math.max(12, barW * 0.14);
     const shadowDy = Math.max(12, barW * 0.15);
-    const labelGap = Math.max(14, Math.min(18, size.h * 0.018));
-    const labelY = baseY + labelFont + labelGap;
+    const labelY = labelYBase - (labelRows === 2 ? (index % 2) * labelStackH : 0);
     const shadowLimitY = labelY - Math.max(10, labelFont * 0.9);
     const shadowTopY = y + shadowDy;
     const shadowBottomY = Math.min(y + shadowDy + barH, shadowLimitY);
     const shadowH = Math.max(12, shadowBottomY - shadowTopY);
     const shadowPath = roundedReferenceBarPath(x + shadowDx, shadowTopY, barW, shadowH, variant);
     const disableShadow = forceNoShadow || ['glitter1soft','glitter2soft'].includes(state.theme);
-    const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
+    const label = truncateText(row.label, labelFont, Math.max(36, step * 0.78), 800);
 
     out += `${glitterBarGradientDef(gradId, color)}
     <g class="glitterBarItem vBarAnim" style="--delay:${itemDelay(index)}s">
@@ -1419,7 +1400,9 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
 
     if (state.showValues) {
       const valueY = Math.max(valueFont + 8, y - Math.max(18, valueFont * 0.42));
-      out += text(cx, valueY, formatValue(row.value), `fill="${colors.text}" font-size="${valueFont}" font-weight="950" text-anchor="middle" font-family="Arial Black, Impact, system-ui, Arial, sans-serif"`);
+      const valueText = formatValue(row.value);
+      const valueX = textSafeX(cx, valueText, valueFont, left, left + chartW, 950);
+      out += text(valueX, valueY, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="950" text-anchor="middle" font-family="Arial Black, Impact, system-ui, Arial, sans-serif"`);
     }
     out += text(cx, labelY, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
@@ -1428,17 +1411,27 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
 }
 
 function renderBar(rows, size, colors, palette){
-  const x = Math.round(size.w * 0.11);
-  const y = Math.round(size.h * 0.24);
-  const w = Math.round(size.w * (state.showLegend ? 0.58 : 0.80));
-  const h = Math.round(size.h * 0.55);
+  const family = fontStack(state.fontFamily);
+  const labelFont = labelFontSize(size, 0.0125, 17, 44);
+  const valueFont = valueFontSize(size, 0.014, 18, 52);
+  const surfaceX = Math.round(size.w * 0.10);
+  const surfaceY = Math.round(size.h * 0.24);
+  const surfaceW = Math.round(size.w * (state.showLegend ? 0.58 : 0.80));
+  const surfaceH = Math.round(size.h * 0.58);
+  const labelPad = Math.max(18, Math.round(labelFont * 0.72));
+  const valuePad = state.showValues ? Math.max(24, Math.round(valueFont * 1.15)) : 20;
+  const x = surfaceX + Math.max(24, Math.round(labelFont * 0.3));
+  const y = surfaceY + valuePad;
+  const w = Math.max(Math.round(size.w * 0.22), surfaceW - Math.max(48, Math.round(labelFont * 0.6)));
+  const labelY = surfaceY + surfaceH - Math.max(14, Math.round(labelFont * 0.35));
+  const h = Math.max(Math.round(size.h * 0.20), labelY - labelFont - labelPad - y);
   const values = rows.map(r => r.value);
   const scale = scaleInfo(values);
   const gap = Math.max(10, w * 0.018);
   const barW = Math.max(14, (w - gap * (rows.length - 1)) / Math.max(1, rows.length) * state.weight);
   const step = w / Math.max(1, rows.length);
   const baseY = y + h - ((0 - scale.min) / scale.span) * h;
-  let out = plotSurface(x - 18, y - 18, w + 36, h + 36, colors);
+  let out = plotSurface(surfaceX - 18, surfaceY - 18, surfaceW + 36, surfaceH + 36, colors);
   out += axisAndGrid(x, y, w, h, scale, colors);
   rows.forEach((row, index) => {
     const cx = x + step * index + step / 2;
@@ -1454,9 +1447,14 @@ function renderBar(rows, size, colors, palette){
       out += `<rect class="vBarAnim" style="--delay:${itemDelay(index)}s" x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
     }
     out += `<rect x="${cx - barW / 2 + Math.max(3, barW * 0.08)}" y="${top + 4}" width="${Math.max(2, barW * 0.18)}" height="${Math.max(0, bh - 8)}" rx="${Math.max(1, rx * .55)}" fill="#ffffff" opacity=".13"/>`;
-    if (state.showValues) out += text(cx, top - 12, formatValue(row.value), `fill="${colors.text}" font-size="${valueFontSize(size, 0.014, 18, 38)}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    const label = row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label;
-    out += text(cx, y + h + 38, label, `fill="${colors.muted}" font-size="${Math.max(17, Math.round(size.w * 0.0125))}" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) {
+      const valueText = formatValue(row.value);
+      const valueX = textSafeX(cx, valueText, valueFont, surfaceX, surfaceX + surfaceW, 900);
+      const valueY = Math.max(surfaceY + valueFont, top - Math.max(10, valueFont * 0.32));
+      out += text(valueX, valueY, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="${family}"`);
+    }
+    const label = truncateText(row.label, labelFont, Math.max(36, step - gap * 0.5), 750);
+    out += text(cx, labelY, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="750" text-anchor="middle" font-family="${family}"`);
   });
   return out;
 }
@@ -1493,8 +1491,8 @@ function encoreIconMarkup(row, x, bw, yy, barH, index, rowCount){
 function renderHorizontalBar(rows, size, colors, palette){
   const family = fontStack(state.fontFamily);
   const legend = legendLayout(size);
-  const labelFont = Math.max(16, Math.round(size.w * 0.014));
-  const valueFont = valueFontSize(size, 0.014, 16, 40);
+  const labelFont = labelFontSize(size, 0.014, 16, 52);
+  const valueFont = valueFontSize(size, 0.014, 16, 52);
   const sidePad = Math.round(size.w * 0.045);
   const maxLabelTextW = Math.round(size.w * 0.24);
   const labelW = Math.min(
@@ -1568,11 +1566,102 @@ function renderHorizontalBar(rows, size, colors, palette){
   });
   return out;
 }
+function renderHorizontalGlitterBar(rows, size, colors, palette, forceNoShadow=false){
+  const cleanRows = rows.filter(row => Number.isFinite(row.value)).slice(0, 14);
+  if (!cleanRows.length) return '';
+
+  const family = fontStack(state.fontFamily);
+  const values = cleanRows.map(row => Math.max(0, Number(row.value)));
+  const max = Math.max(...values, 1);
+  const labelFont = labelFontSize(size, 0.014, 16, 52);
+  const valueFont = valueFontSize(size, 0.014, 16, 52);
+  const labelW = Math.min(
+    Math.round(size.w * 0.24),
+    Math.max(Math.round(size.w * 0.10), ...cleanRows.map(row => estimateTextWidth(row.label, labelFont, 800) + 12))
+  );
+  const maxValueW = state.showValues && state.valuePlacement === 'outside'
+    ? Math.max(...cleanRows.map(row => estimateTextWidth(formatValue(row.value), valueFont, 900))) + Math.round(size.w * 0.025)
+    : 0;
+  const sidePad = Math.round(size.w * 0.045);
+  const x = sidePad + Math.round(labelW);
+  const y = Math.round(size.h * 0.22);
+  const rightLimit = size.w - Math.round(size.w * 0.055);
+  const surfaceRightPad = state.showValues && state.valuePlacement === 'outside' ? Math.round(maxValueW) : 20;
+  const w = Math.max(Math.round(size.w * 0.22), rightLimit - x - surfaceRightPad - 26);
+  const h = Math.round(size.h * 0.60);
+  const rowH = h / Math.max(1, cleanRows.length);
+  const barH = Math.max(18, rowH * 0.58 * state.weight);
+  const disableShadow = forceNoShadow || ['glitter1soft','glitter2soft'].includes(state.theme);
+  let out = `${glitterInfoMarkup(size, colors)}${glitterDefs()}`;
+  if (!hasTransparentBackground()) out += `<rect width="${size.w}" height="${size.h}" fill="url(#${localId('glitter-stage-glow')})"/>`;
+  out += plotSurface(x - 4, y - 18, w + surfaceRightPad + 24, h + 36, colors);
+
+  cleanRows.forEach((row, index) => {
+    const yy = y + index * rowH + rowH / 2;
+    const bw = Math.max(0.5, (Math.max(0, Number(row.value)) / max) * w * itemAnimationProgress(index));
+    const barY = yy - barH / 2;
+    const path = roundedReferenceBarPath(x, barY, bw, barH, 'glitterBar');
+    const clipId = localId(`h-glitter1-clip-${index}`);
+    const gradId = localId(`h-glitter1-fill-${index}`);
+    const color = palette[index] || colors.accent;
+    const shadowDx = Math.max(10, barH * 0.30);
+    const shadowDy = Math.max(8, barH * 0.22);
+    const shadowW = Math.max(0.5, Math.min(w - shadowDx, bw));
+    const shadowPath = roundedReferenceBarPath(x + shadowDx, barY + shadowDy, shadowW, barH, 'glitterBar');
+    const shineInset = Math.max(6, bw * 0.035);
+    const shineX = x + shineInset;
+    const shineW = Math.max(0, bw - shineInset * 2);
+    const shineY = barY + Math.max(4, barH * 0.13);
+    const shineH = Math.max(3, barH * 0.16);
+    const label = truncateText(row.label, labelFont, labelW, 800);
+
+    out += `${glitterBarGradientDef(gradId, color)}
+    <g class="barAnim" style="--delay:${itemDelay(index)}s">
+      ${disableShadow ? '' : `<path d="${shadowPath}" fill="#020407" opacity=".58"/>`}
+      <clipPath id="${clipId}"><path d="${path}"/></clipPath>
+      <path d="${path}" fill="url(#${gradId})" stroke="${brightenColor(color, 0.35)}" stroke-width="1"/>
+      <g clip-path="url(#${clipId})">
+        ${deterministicSparkles(index, x, barY, bw, barH, color.toLowerCase().includes('e8') || color.toLowerCase().includes('f4') ? 'pink' : 'default')}
+        <rect x="${x}" y="${barY}" width="${bw}" height="${barH}" fill="url(#${gradId}-glow)" opacity=".55"/>
+        <rect x="${x}" y="${barY}" width="${bw}" height="${barH}" fill="url(#${localId('glitter-side-shine')})" opacity=".85"/>
+        <rect x="${shineX}" y="${shineY}" width="${shineW}" height="${shineH}" rx="${barH * .08}" fill="#ffffff" opacity=".14"/>
+      </g>
+    </g>`;
+
+    out += text(x - 14, yy + labelFont * 0.34, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="800" text-anchor="end" font-family="${family}"`);
+    out += encoreIconMarkup(row, x, bw, yy, barH, index, cleanRows.length);
+    if (state.showValues) {
+      const valueText = formatValue(row.value);
+      if (state.valuePlacement === 'inside' && bw > estimateTextWidth(valueText, valueFont, 900) + 24) {
+        out += text(x + bw - 12, yy + valueFont * 0.34, valueText, `fill="#ffffff" font-size="${valueFont}" font-weight="900" text-anchor="end" font-family="${family}"`);
+      } else {
+        out += text(x + bw + 12, yy + valueFont * 0.34, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" font-family="${family}"`);
+      }
+    }
+  });
+
+  return out;
+}
 function renderLineOrArea(rows, size, colors, palette, area=false){
-  const x = Math.round(size.w * 0.11);
-  const y = Math.round(size.h * 0.24);
-  const w = Math.round(size.w * (state.showLegend ? 0.58 : 0.80));
-  const h = Math.round(size.h * 0.55);
+  const family = fontStack(state.fontFamily);
+  const labelFont = labelFontSize(size, 0.0115, 15, 24);
+  const valueFont = compactValueFontSize(size);
+  const surfaceX = Math.round(size.w * 0.10);
+  const surfaceY = Math.round(size.h * 0.24);
+  const surfaceW = Math.round(size.w * (state.showLegend ? 0.58 : 0.80));
+  const surfaceH = Math.round(size.h * 0.58);
+  const maxValueW = state.showValues
+    ? Math.max(...rows.map(row => estimateTextWidth(formatValue(row.value), valueFont, 900)), 0)
+    : 0;
+  const maxLabelW = Math.max(...rows.map(row => estimateTextWidth(row.label, labelFont, 750)), 0);
+  const denseLabels = rows.length > 4 || state.labelScale > 1.25;
+  const labelRows = denseLabels ? 2 : 1;
+  const x = surfaceX + Math.max(58, Math.round(maxValueW) + 24, Math.round(maxLabelW * 0.18));
+  const y = surfaceY + (state.showValues ? Math.max(30, Math.round(valueFont * 1.5)) : 24);
+  const bottomPad = Math.max(42, Math.round(labelFont * (labelRows === 2 ? 3.1 : 2.0)));
+  const rightPad = Math.max(54, Math.round(maxValueW) + 22, Math.round(maxLabelW * 0.16));
+  const w = Math.max(Math.round(size.w * 0.24), surfaceW - (x - surfaceX) - rightPad);
+  const h = Math.max(Math.round(size.h * 0.20), surfaceH - (y - surfaceY) - bottomPad);
   const values = rows.map(r => r.value);
   const scale = scaleInfo(values);
   const points = rows.map((row, index) => ({
@@ -1580,7 +1669,7 @@ function renderLineOrArea(rows, size, colors, palette, area=false){
     y:y + h - ((row.value - scale.min) / scale.span) * h,
     row
   }));
-  let out = plotSurface(x - 18, y - 18, w + 36, h + 36, colors);
+  let out = plotSurface(surfaceX - 18, surfaceY - 18, surfaceW + 36, surfaceH + 36, colors);
   out += axisAndGrid(x, y, w, h, scale, colors);
   const revealProgress = overallAnimationProgress();
   const clipId = localId(`line-reveal-${area ? 'area' : 'line'}`);
@@ -1596,23 +1685,46 @@ function renderLineOrArea(rows, size, colors, palette, area=false){
   out += line(points, `class="lineAnim" fill="none" stroke="${colors.accent}" stroke-width="${Math.max(4, 6 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"`);
   points.forEach((point, index) => {
     out += `<circle class="pointAnim" style="--delay:${itemDelay(index, 0.65)}s" cx="${point.x}" cy="${point.y}" r="${Math.max(6, 8 * state.weight)}" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
-    if (state.showValues) out += text(point.x, point.y - 18, formatValue(point.row.value), `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    const label = point.row.label.length > 12 ? point.row.label.slice(0, 11) + '...' : point.row.label;
-    out += text(point.x, y + h + 36, label, `fill="${colors.muted}" font-size="${labelFontSize(size, 0.0115, 15, 24)}" font-weight="750" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) {
+      const valueText = formatValue(point.row.value);
+      const valueX = textSafeX(point.x, valueText, valueFont, surfaceX + 24, surfaceX + surfaceW - 24, 900);
+      const isLowPoint = point.y > y + h - valueFont * 1.4;
+      const valueY = isLowPoint
+        ? Math.min(y + h - valueFont * 0.35, point.y - Math.max(10, valueFont * 0.28))
+        : Math.max(surfaceY + valueFont, point.y - Math.max(12, valueFont * 0.55));
+      out += text(valueX, valueY, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="${family}"`);
+    }
+    const labelWidth = rows.length > 1 ? Math.max(42, w / Math.max(1, rows.length - 1) * 0.78) : w;
+    const label = truncateText(point.row.label, labelFont, labelWidth, 750);
+    const labelX = textSafeX(point.x, label, labelFont, surfaceX + 18, surfaceX + surfaceW - 18, 750);
+    const labelRow = labelRows === 2 ? index % 2 : 0;
+    const labelY = surfaceY + surfaceH - Math.max(14, labelFont * 0.35) - labelRow * Math.max(labelFont * 1.05, 20);
+    out += text(labelX, labelY, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="750" text-anchor="middle" font-family="${family}"`);
   });
   out += '</g>';
   return out;
 }
 function renderLinearGraph(rows, size, colors, palette){
   const legend = legendLayout(size);
-  const area = chartArea(size, {leftRatio:0.08, rightRatio:state.showLegend ? 0.26 : 0.08, minTopRatio:0.24, bottomRatio:0.12, headerGapRatio:0.035});
-  const x = area.x;
-  const y = area.y;
+  const labelFont = labelFontSize(size, 0.0105, 13, 22);
+  const valueFont = compactValueFontSize(size);
+  const surface = chartArea(size, {
+    leftRatio:0.08,
+    rightRatio:state.showLegend ? 0.26 : 0.08,
+    minTopRatio:0.24,
+    bottomRatio:0.14,
+    headerGapRatio:0.035
+  });
+  const maxValueW = state.showValues
+    ? Math.max(...rows.map(row => estimateTextWidth(formatValue(row.value), valueFont, 850)), 0)
+    : 0;
+  const x = surface.x + Math.max(92, Math.round(maxValueW * 1.7) + 42);
+  const y = surface.y + (state.showValues ? Math.max(30, Math.round(valueFont * 1.35)) : 24);
   const baseW = Math.round(size.w * (state.showLegend ? 0.70 : 0.84));
   const w = state.showLegend
     ? Math.max(Math.round(size.w * 0.44), Math.min(baseW, legend.leftEdge - Math.round(size.w * 0.025) - x - 34))
-    : Math.min(baseW, area.w);
-  const h = area.h;
+    : Math.min(baseW, surface.w - (x - surface.x) - Math.max(42, Math.round(maxValueW / 2) + 16));
+  const h = Math.max(Math.round(size.h * 0.20), surface.h - (y - surface.y) - Math.max(42, Math.round(labelFont * 1.9)));
   const values = rows.map(r => Number(r.value));
   const scale = scaleInfo(values);
   const toPoint = (value, index, row) => ({
@@ -1633,12 +1745,12 @@ function renderLinearGraph(rows, size, colors, palette){
   const mainPath = smoothPath(main);
   const softPath = smoothPath(soft);
   const basePath = smoothPath(baseline);
-  let out = `<rect x="${x - 34}" y="${y - 26}" width="${w + 68}" height="${h + 76}" rx="16" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
+  let out = `<rect x="${surface.x - 34}" y="${surface.y - 26}" width="${Math.min(size.w - surface.x - 46, w + (x - surface.x) + Math.max(72, maxValueW))}" height="${surface.h + 64}" rx="16" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
   for (let i = 0; i <= 5; i++) {
     const yy = y + h - (i / 5) * h;
     const value = scale.min + (i / 5) * scale.span;
     out += `<line x1="${x}" y1="${yy}" x2="${x + w}" y2="${yy}" stroke="${colors.grid}" stroke-width="1"/>`;
-    out += text(x - 16, yy + 5, formatValue(value), `fill="${colors.muted}" font-size="${labelFontSize(size, 0.0105, 13, 22)}" font-weight="650" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    out += text(x - Math.max(34, valueFont * 1.2), yy + 5, formatValue(value), `fill="${colors.muted}" font-size="${labelFontSize(size, 0.0105, 13, 22)}" font-weight="650" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
   }
   out += `<line x1="${x}" y1="${baseY}" x2="${x + w}" y2="${baseY}" stroke="${colors.axis}" stroke-width="1.2" opacity=".42"/>`;
   if (main.length) {
@@ -1649,11 +1761,15 @@ function renderLinearGraph(rows, size, colors, palette){
     out += `<path class="lineAnim" style="--delay:.18s" d="${mainPath}" fill="none" stroke="${palette[0] || colors.accent}" stroke-width="${Math.max(3.5, 5 * state.weight)}" stroke-linecap="round" stroke-linejoin="round"/>`;
   }
   main.forEach((point, index) => {
-    const label = point.row.label.length > 9 ? point.row.label.slice(0, 8) + '...' : point.row.label;
-    out += text(point.x, y + h + 32, label || String(index + 1), `fill="${colors.muted}" font-size="${labelFontSize(size, 0.0105, 13, 22)}" font-weight="700" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    const labelWidth = rows.length > 1 ? Math.max(42, w / Math.max(1, rows.length - 1) * 0.78) : w;
+    const label = truncateText(point.row.label || String(index + 1), labelFont, labelWidth, 700);
+    out += text(point.x, surface.y + surface.h + Math.max(16, labelFont * 0.1), label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="700" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     if (state.showValues) {
       out += `<circle class="pointAnim" style="--delay:${itemDelay(index, 0.78)}s" cx="${point.x}" cy="${point.y}" r="4.5" fill="${palette[0] || colors.accent}" stroke="${colors.panel}" stroke-width="2"/>`;
-      out += text(point.x, point.y - 16, formatValue(point.value), `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="850" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+      const valueText = formatValue(point.value);
+      const valueX = textSafeX(point.x, valueText, valueFont, surface.x - 12, surface.x + surface.w + 12, 850);
+      const valueY = Math.max(surface.y + valueFont, point.y - Math.max(12, valueFont * 0.55));
+      out += text(valueX, valueY, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="850" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     }
   });
   if (state.showLegend) {
@@ -1691,8 +1807,10 @@ function renderPieOrDonut(rows, size, colors, palette, donut=false){
     start = end;
   });
   if (donut) {
-    out += text(cx, cy - 6, 'Total', `fill="${colors.muted}" font-size="18" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    out += text(cx, cy + 28, formatValue(total), `fill="${colors.text}" font-size="34" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    const totalFont = Math.max(15, Math.round(Math.min(size.w, size.h) * 0.018));
+    const totalValueFont = Math.max(28, Math.round(Math.min(size.w, size.h) * 0.034));
+    out += text(cx, cy - Math.max(18, totalValueFont * 0.70), 'Total', `fill="${colors.muted}" font-size="${totalFont}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    out += text(cx, cy + Math.max(28, totalValueFont * 0.88), formatValue(total), `fill="${colors.text}" font-size="${totalValueFont}" font-weight="900" text-anchor="middle" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
   }
   return out;
 }
@@ -1744,7 +1862,7 @@ function renderDonutTable(rows, size, colors, palette){
     const pct = Math.round(Math.abs(row.value) / total * 100);
     const label = row.label.length > 28 ? row.label.slice(0, 27) + '...' : row.label;
     out += `<circle cx="${legendX}" cy="${yy}" r="${dot / 2}" fill="${seriesFill(index)}"/>`;
-    out += text(legendX + dot + 16, yy + dot * 0.32, label || `Element ${index + 1}`, `fill="${colors.text}" font-size="${Math.max(15, Math.round(size.w * 0.014))}" font-weight="650" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
+    out += text(legendX + dot + 16, yy + dot * 0.32, label || `Element ${index + 1}`, `fill="${colors.text}" font-size="${labelFontSize(size, 0.014, 15, 42)}" font-weight="650" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
     if (state.showValues) out += text(legendX + Math.round(size.w * 0.27), yy + dot * 0.32, `${pct}%`, `fill="${colors.muted}" font-size="${compactValueFontSize(size)}" font-weight="850" text-anchor="end" font-family="Inter, Segoe UI, system-ui, Arial, sans-serif"`);
   });
   return out;
@@ -1791,11 +1909,13 @@ function renderBubble(rows, size, colors, palette){
     out += `<circle cx="${cx - radius * .28}" cy="${cy - radius * .28}" r="${radius * .28}" fill="#ffffff" opacity=".14"/>`;
     if (needsOuterText) {
       const boxW = Math.min(Math.max(textNeed + 22, radius * 1.35), w * 0.28);
-      const boxH = state.showValues ? valueFont + labelFont + 18 : labelFont + 14;
+      const boxH = state.showValues ? valueFont * 1.3 + labelFont * 1.3 + 34 : labelFont * 1.15 + 14;
       const boxY = Math.min(y + h + surfacePad - boxH, cy + radius + 10);
       out += `<rect x="${cx - boxW / 2}" y="${boxY}" width="${boxW}" height="${boxH}" rx="10" fill="${colors.panel}" stroke="${colors.surfaceStroke}" stroke-width="1" opacity=".86"/>`;
-      out += text(cx, boxY + labelFont + 3, truncateText(label, labelFont, boxW - 18, 900), `fill="${colors.text}" font-size="${labelFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-      if (state.showValues) out += text(cx, boxY + labelFont + valueFont + 8, valueText, `fill="${colors.muted}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      const labelY = boxY + labelFont * 0.90 + 9;
+      const bubbleValueY = labelY + labelFont * 1.25 + valueFont * 0.55 + 10;
+      out += text(cx, labelY, truncateText(label, labelFont, boxW - 18, 900), `fill="${colors.text}" font-size="${labelFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      if (state.showValues) out += text(cx, bubbleValueY, valueText, `fill="${colors.muted}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     } else {
       out += text(cx, cy - 4, innerLabel, `fill="#ffffff" font-size="${Math.max(15, Math.min(labelFont, radius * .27))}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
       if (state.showValues) out += text(cx, cy + Math.max(20, radius * .29), valueText, `fill="#ffffff" font-size="${Math.max(16, Math.min(valueFont, radius * .27))}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
@@ -1812,6 +1932,8 @@ function renderFunnel(rows, size, colors, palette){
   const h = Math.round(size.h * 0.58);
   const maxW = Math.round(size.w * (state.showLegend ? 0.50 : 0.66));
   const stepH = h / cleanRows.length;
+  const labelFont = Math.min(labelFontSize(size, 0.012, 16, 28), Math.max(15, stepH * 0.24));
+  const valueFont = Math.min(compactValueFontSize(size), Math.max(14, stepH * 0.22));
   let out = `<rect x="${cx - maxW / 2 - 26}" y="${top - 22}" width="${maxW + 52}" height="${h + 44}" rx="24" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
   cleanRows.forEach((row, index) => {
     const value = Math.max(0, Math.abs(row.value));
@@ -1826,10 +1948,12 @@ function renderFunnel(rows, size, colors, palette){
       {x:cx + bottomW / 2, y:y2},
       {x:cx - bottomW / 2, y:y2}
     ];
-    const label = row.label.length > 24 ? row.label.slice(0, 23) + '...' : row.label;
+    const label = truncateText(row.label || `Etape ${index + 1}`, labelFont, Math.max(80, Math.min(topW, bottomW) * 0.82), 900);
     out += polygon(points, `fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], .34)}" stroke-width="1.2" opacity=".96"`);
-    out += text(cx, y1 + stepH * .43, label || `Etape ${index + 1}`, `fill="#ffffff" font-size="${labelFontSize(size, 0.012, 16, 28)}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
-    if (state.showValues) out += text(cx, y1 + stepH * .69, formatValue(row.value), `fill="#ffffff" font-size="${compactValueFontSize(size)}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif" opacity=".88"`);
+    const labelY = state.showValues ? y1 + stepH * .34 : y1 + stepH * .54;
+    const valueY = y1 + stepH * .80;
+    out += text(cx, labelY, label, `fill="#ffffff" font-size="${labelFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    if (state.showValues) out += text(cx, valueY, formatValue(row.value), `fill="#ffffff" font-size="${valueFont}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif" opacity=".88"`);
   });
   return out;
 }
@@ -1838,9 +1962,12 @@ function renderRadar(rows, size, colors, palette){
   const max = Math.max(...values, 1);
   const cx = Math.round(size.w * (state.showLegend ? 0.39 : 0.50));
   const cy = Math.round(size.h * 0.54);
-  const r = Math.round(Math.min(size.w, size.h) * 0.25 * state.weight);
+  const labelFont = labelFontSize(size, 0.012, 15, 34);
+  const valueFont = compactValueFontSize(size);
+  const r = Math.round(Math.min(size.w, size.h) * 0.22 * state.weight);
   const count = rows.length;
-  let out = `<circle cx="${cx}" cy="${cy}" r="${r + 52}" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
+  const outerR = r + Math.max(70, labelFont * 2.2);
+  let out = `<circle cx="${cx}" cy="${cy}" r="${outerR}" fill="${colors.surface}" stroke="${colors.surfaceStroke}" stroke-width="1.2"/>`;
   for (let ring = 1; ring <= 5; ring++) {
     const rr = r * ring / 5;
     const pts = rows.map((row, index) => polar(cx, cy, rr, -Math.PI / 2 + index / count * Math.PI * 2));
@@ -1850,17 +1977,20 @@ function renderRadar(rows, size, colors, palette){
   rows.forEach((row, index) => {
     const angle = -Math.PI / 2 + index / count * Math.PI * 2;
     const end = polar(cx, cy, r, angle);
-    const label = polar(cx, cy, r + 36, angle);
+    const labelPos = polar(cx, cy, r + Math.max(54, labelFont * 1.75), angle);
+    const label = truncateText(row.label || `Axe ${index + 1}`, labelFont, Math.max(80, r * 0.68), 800);
     out += `<line x1="${cx}" y1="${cy}" x2="${end.x}" y2="${end.y}" stroke="${colors.grid}" stroke-width="1"/>`;
-    out += text(label.x, label.y + 5, row.label.length > 12 ? row.label.slice(0, 11) + '...' : row.label, `fill="${colors.muted}" font-size="15" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+    out += text(labelPos.x, labelPos.y + labelFont * 0.34, label, `fill="${colors.muted}" font-size="${labelFont}" font-weight="800" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
   });
   out += polygon(dataPoints, `fill="${colors.accent}" opacity=".25" stroke="${colors.accent}" stroke-width="${Math.max(4, 5 * state.weight)}"`);
   dataPoints.forEach((point, index) => {
     out += `<circle cx="${point.x}" cy="${point.y}" r="6" fill="${seriesFill(index)}" stroke="${colors.text}" stroke-width="2"/>`;
     if (state.showValues) {
       const angle = -Math.PI / 2 + index / count * Math.PI * 2;
-      const label = polar(point.x, point.y, 24, angle);
-      out += text(label.x, label.y + 5, formatValue(rows[index].value), `fill="${colors.text}" font-size="${compactValueFontSize(size)}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
+      const valueRadius = Math.max(18, r * Math.max(0, rows[index].value) / max - Math.max(22, valueFont * 0.9));
+      const valuePos = polar(cx, cy, valueRadius, angle);
+      const valueText = formatValue(rows[index].value);
+      out += text(valuePos.x, valuePos.y + valueFont * 0.34, valueText, `fill="${colors.text}" font-size="${valueFont}" font-weight="900" text-anchor="middle" font-family="system-ui, Arial, sans-serif"`);
     }
   });
   return out;
@@ -1879,6 +2009,8 @@ function buildSvgMarkup(){
   else if (state.chartType === 'bar') body = renderBar(rows, size, colors, palette);
   else if (state.chartType === 'glitterBar') body = renderGlitterBar(rows, size, colors, palette, 'glitterBar');
   else if (state.chartType === 'glitterBarNoShadow') body = renderGlitterBar(rows, size, colors, palette, 'glitterBar', true);
+  else if (state.chartType === 'horizontalGlitterBar') body = renderHorizontalGlitterBar(rows, size, colors, palette);
+  else if (state.chartType === 'horizontalGlitterBarNoShadow') body = renderHorizontalGlitterBar(rows, size, colors, palette, true);
   else if (state.chartType === 'horizontalBar') body = renderHorizontalBar(rows, size, colors, palette);
   else if (state.chartType === 'line') body = renderLineOrArea(rows, size, colors, palette, false);
   else if (state.chartType === 'linearGraph') body = renderLinearGraph(rows, size, colors, palette);
@@ -1890,7 +2022,7 @@ function buildSvgMarkup(){
   else if (state.chartType === 'funnel') body = renderFunnel(rows, size, colors, palette);
   else if (state.chartType === 'radar') body = renderRadar(rows, size, colors, palette);
 
-  const isGlitter = ['glitterBar','glitterBarNoShadow'].includes(state.chartType);
+  const isGlitter = isGlitterChartType() || isHorizontalGlitterChartType();
   const hasCustomChrome = ['donutTable'].includes(state.chartType);
   const chrome = isGlitter ? legendMarkup(rows, size, colors, palette) : `${hasCustomChrome ? '' : headerMarkup(size, colors)}${hasCustomChrome ? '' : legendMarkup(rows, size, colors, palette)}`;
   const defs = isGlitter ? '' : seriesDefs(palette, colors);
@@ -1968,12 +2100,11 @@ function renderControls(){
   els.cornerTools.classList.toggle('isHidden', !cornerOptionsVisible || !state.customCorners);
   els.cornerControls.classList.toggle('isHidden', !cornerOptionsVisible || !state.customCorners);
   els.sort.value = state.sort;
-  els.compareMode.checked = state.compareMode;
-  els.compareMethod.value = state.compareMethod;
   els.decimals.value = String(state.decimals);
   els.weight.value = String(state.weight);
   els.titleScale.value = String(state.titleScale);
   els.valueScale.value = String(state.valueScale);
+  els.labelScale.value = String(state.labelScale);
   els.fontFamily.value = state.fontFamily;
   els.chartStatus.textContent = TYPE_LABELS[state.chartType] || 'Graphique';
   const count = getRows().length;
@@ -2078,12 +2209,11 @@ function updateFromControls(){
   state.cornerBottomRight = clamp(els.cornerBottomRight.value, -50, 150, 100);
   state.cornerBottomLeft = clamp(els.cornerBottomLeft.value, -50, 150, 100);
   state.sort = oneOf(els.sort.value, ['none','asc','desc'], 'none');
-  state.compareMode = els.compareMode.checked;
-  state.compareMethod = oneOf(els.compareMethod.value, ['ratio','difference','evolution'], 'ratio');
   state.decimals = clamp(els.decimals.value, 0, 2, 0);
   state.weight = clamp(els.weight.value, 0.7, 1.5, 1);
   state.titleScale = clamp(els.titleScale.value, 0.7, 1.25, 1);
-  state.valueScale = clamp(els.valueScale.value, 0.7, 1.35, 1);
+  state.valueScale = clamp(els.valueScale.value, 0.7, 1.7, 1);
+  state.labelScale = clamp(els.labelScale.value, 0.7, 2, 1);
   state.fontFamily = oneOf(els.fontFamily.value, FONT_FAMILIES, 'system');
   renderCanvasClasses();
   renderControls();
@@ -2387,7 +2517,7 @@ async function exportPng(){
   img.src = url;
 }
 function bind(){
-  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.encoreIconsEnabled, els.encoreIconSource, els.encoreLang, els.encoreCharacter, els.encoreIconDelay, els.encoreIconSize, els.encoreIconOffsetY, els.transparentMode, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.customCorners, els.cornerTopLeft, els.cornerTopRight, els.cornerBottomRight, els.cornerBottomLeft, els.sort, els.compareMode, els.compareMethod, els.decimals, els.weight, els.titleScale, els.valueScale, els.fontFamily]
+  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.encoreIconsEnabled, els.encoreIconSource, els.encoreLang, els.encoreCharacter, els.encoreIconDelay, els.encoreIconSize, els.encoreIconOffsetY, els.transparentMode, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.customCorners, els.cornerTopLeft, els.cornerTopRight, els.cornerBottomRight, els.cornerBottomLeft, els.sort, els.decimals, els.weight, els.titleScale, els.valueScale, els.labelScale, els.fontFamily]
     .forEach(input => {
       input.addEventListener('input', updateFromControls);
       input.addEventListener('change', updateFromControls);

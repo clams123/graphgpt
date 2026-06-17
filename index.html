@@ -322,18 +322,6 @@
                 </select>
               </label>
             </div>
-            <label class="switchBox">
-              <input id="compareModeInput" type="checkbox">
-              <span><strong>Mode comparaison A/B</strong><small>Compare les lignes par duos.</small></span>
-            </label>
-            <label class="field">
-              <span>Calcul comparaison</span>
-              <select id="compareMethodInput">
-                <option value="ratio">Ratio A/B x 100</option>
-                <option value="difference">Ecart A - B</option>
-                <option value="evolution">Evolution % depuis B</option>
-              </select>
-            </label>
           </div>
 
           <div class="controlGroup">
@@ -349,7 +337,11 @@
               </label>
               <label class="field">
                 <span>Taille valeurs</span>
-                <input id="valueScaleInput" type="range" min="0.7" max="1.35" step="0.05">
+                <input id="valueScaleInput" type="range" min="0.7" max="1.7" step="0.05">
+              </label>
+              <label class="field">
+                <span>Taille libell&eacute;s</span>
+                <input id="labelScaleInput" type="range" min="0.7" max="2" step="0.05">
               </label>
             </div>
             <label class="field">
