@@ -133,7 +133,7 @@ const els = {
   rowsTableHeader:$('rowsTableHeader'),
   chartType:$('chartTypeInput'), theme:$('themeInput'), format:$('formatInput'), palette:$('paletteInput'),
   showValues:$('showValuesInput'), showLegend:$('showLegendInput'), showGrid:$('showGridInput'), showAxis:$('showAxisInput'), transparentMode:$('transparentModeInput'),
-  encoreIconsEnabled:$('encoreIconsEnabledInput'), encoreIconSource:$('encoreIconSourceInput'), encoreLang:$('encoreLangInput'), encoreIconDelay:$('encoreIconDelayInput'),
+  encoreIconsEnabled:$('encoreIconsEnabledInput'), encoreIconSource:$('encoreIconSourceInput'), encoreLang:$('encoreLangInput'), encoreCharacter:$('encoreCharacterInput'), encoreIconDelay:$('encoreIconDelayInput'),
   encoreIconSize:$('encoreIconSizeInput'), encoreIconOffsetY:$('encoreIconOffsetYInput'), loadEncoreIcons:$('loadEncoreIconsBtn'), encoreIconStatus:$('encoreIconStatus'), encoreIconOptions:$('encoreIconOptions'),
   enableAnimations:$('enableAnimationsInput'),
   animationDuration:$('animationDurationInput'), animationDelay:$('animationDelayInput'), animationStagger:$('animationStaggerInput'),
@@ -172,6 +172,7 @@ const DEFAULT_STATE = {
   encoreIconsEnabled:false,
   encoreIconSource:'weapon',
   encoreLang:'fr',
+  encoreCharacterFilter:'',
   encoreIconPlacement:'end',
   encoreIconSize:1,
   encoreIconOffsetX:82,
@@ -219,6 +220,9 @@ let ffmpegRuntimePromise = null;
 let encoreCatalog = [];
 let encoreCatalogKey = '';
 let encoreCatalogLoading = null;
+let encoreCharacters = [];
+let encoreCharactersKey = '';
+let encoreCharactersLoading = null;
 const iconImageCache = new Map();
 const MAX_HISTORY = 60;
 const MAX_LIBRARY_ITEMS = 60;
@@ -334,6 +338,7 @@ function normalizeState(raw){
   base.encoreIconsEnabled = !!input.encoreIconsEnabled;
   base.encoreIconSource = oneOf(input.encoreIconSource, Object.keys(ENCORE_SOURCE_LABELS), 'weapon');
   base.encoreLang = oneOf(input.encoreLang, ['fr','en','ja','ko','zh-Hans','zh-Hant','de','es','id','pt','ru','th','vi'], 'fr');
+  base.encoreCharacterFilter = input.encoreCharacterFilter == null ? '' : String(input.encoreCharacterFilter);
   base.encoreIconPlacement = oneOf(input.encoreIconPlacement, ['start','end'], 'end');
   base.encoreIconSize = clamp(input.encoreIconSize, 0.45, 1.8, 1);
   base.encoreIconOffsetX = normalizeIconXPosition(input.encoreIconOffsetX, 82);
@@ -777,6 +782,12 @@ function adobeModeHint(mode=adobeModeDetails()){
 function encoreCatalogCurrentKey(){
   return `${state.encoreLang}:${state.encoreIconSource}`;
 }
+function encoreCharactersCurrentKey(){
+  return state.encoreLang;
+}
+function comparableText(value){
+  return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().trim();
+}
 function normalizeEncoreEntry(entry, source=state.encoreIconSource){
   if (!entry || typeof entry !== 'object') return null;
   const id = entry.Id ?? entry.id;
@@ -788,7 +799,23 @@ function normalizeEncoreEntry(entry, source=state.encoreIconSource){
     name:String(name),
     icon:String(icon),
     source,
+    typeId:String(entry.Type ?? entry.type ?? entry.TypeId ?? entry.typeId ?? ''),
     typeName:String(entry.TypeName ?? entry.typeName ?? '')
+  };
+}
+function normalizeEncoreCharacter(entry){
+  if (!entry || typeof entry !== 'object') return null;
+  const id = entry.Id ?? entry.id;
+  const name = entry.Name ?? entry.name;
+  if (id == null || !name) return null;
+  const weaponType = entry.WeaponType || entry.weaponType || {};
+  const element = entry.Element || entry.element || {};
+  return {
+    id:String(id),
+    name:String(name),
+    elementName:String(element.Name ?? element.name ?? ''),
+    weaponTypeId:String(weaponType.Id ?? weaponType.id ?? ''),
+    weaponTypeName:String(weaponType.Name ?? weaponType.name ?? '')
   };
 }
 function updateEncoreStatus(message){
@@ -798,12 +825,90 @@ function encoreDisplayName(item){
   if (!item) return '';
   return item.typeName ? `${item.name} - ${item.typeName}` : item.name;
 }
+function encoreCharacterLabel(character){
+  if (!character) return '';
+  return character.elementName ? `${character.name} - ${character.elementName}` : character.name;
+}
+function selectedEncoreCharacter(){
+  const id = String(state.encoreCharacterFilter || '');
+  return id ? encoreCharacters.find(character => character.id === id) || null : null;
+}
+function filteredEncoreCatalog(){
+  const character = selectedEncoreCharacter();
+  if (!character) return encoreCatalog;
+  if (state.encoreIconSource === 'weapon') {
+    const weaponTypeId = String(character.weaponTypeId || '');
+    const weaponTypeName = comparableText(character.weaponTypeName);
+    return encoreCatalog.filter(item => (
+      (weaponTypeId && item.typeId === weaponTypeId) ||
+      (weaponTypeName && comparableText(item.typeName) === weaponTypeName)
+    ));
+  }
+  const characterName = comparableText(character.name);
+  return encoreCatalog.filter(item => comparableText(item.name).includes(characterName));
+}
+function updateEncoreFilterStatus(){
+  const label = ENCORE_SOURCE_LABELS[state.encoreIconSource]?.toLowerCase() || 'icones';
+  const character = selectedEncoreCharacter();
+  if (!encoreCatalog.length) {
+    updateEncoreStatus('Icones non chargees');
+    return;
+  }
+  if (!character) {
+    updateEncoreStatus(`${encoreCatalog.length} ${label} chargees`);
+    return;
+  }
+  updateEncoreStatus(`${filteredEncoreCatalog().length} / ${encoreCatalog.length} ${label} pour ${character.name}`);
+}
+function renderEncoreCharacterOptions(){
+  if (!els.encoreCharacter) return;
+  const currentValue = String(state.encoreCharacterFilter || '');
+  const savedOption = currentValue && !encoreCharacters.length ? `<option value="${attr(currentValue)}">Personnage sauvegarde</option>` : '';
+  els.encoreCharacter.innerHTML = `<option value="">Tous les personnages</option>${savedOption}${encoreCharacters
+    .map(character => `<option value="${attr(character.id)}">${esc(encoreCharacterLabel(character))}</option>`)
+    .join('')}`;
+  const characterExists = encoreCharacters.some(character => character.id === currentValue);
+  els.encoreCharacter.value = characterExists || (currentValue && !encoreCharacters.length) ? currentValue : '';
+  if (encoreCharacters.length && els.encoreCharacter.value !== currentValue) state.encoreCharacterFilter = '';
+}
 function renderEncoreOptions(){
   if (!els.encoreIconOptions) return;
-  els.encoreIconOptions.innerHTML = encoreCatalog
+  els.encoreIconOptions.innerHTML = filteredEncoreCatalog()
     .slice(0, 1200)
     .map(item => `<option value="${attr(encoreDisplayName(item))}"></option>`)
     .join('');
+  updateEncoreFilterStatus();
+}
+async function loadEncoreCharacters(force=false){
+  const key = encoreCharactersCurrentKey();
+  if (!force && encoreCharactersKey === key && encoreCharacters.length) return encoreCharacters;
+  if (encoreCharactersLoading) return encoreCharactersLoading;
+  const lang = state.encoreLang;
+  encoreCharactersLoading = fetch(`${ENCORE_API_BASE_URL}/${encodeURIComponent(lang)}/character`)
+    .then(response => {
+      if (!response.ok) throw new Error(`Encore characters HTTP ${response.status}`);
+      return response.json();
+    })
+    .then(data => {
+      const list = data.roleList || data.roles || data.characters || [];
+      encoreCharacters = Array.isArray(list) ? list.map(normalizeEncoreCharacter).filter(Boolean) : [];
+      encoreCharactersKey = key;
+      renderEncoreCharacterOptions();
+      renderEncoreOptions();
+      return encoreCharacters;
+    })
+    .catch(error => {
+      console.error(error);
+      encoreCharacters = [];
+      encoreCharactersKey = '';
+      renderEncoreCharacterOptions();
+      toast('Personnages Encore indisponibles pour le moment.');
+      return [];
+    })
+    .finally(() => {
+      encoreCharactersLoading = null;
+    });
+  return encoreCharactersLoading;
 }
 async function loadEncoreCatalog(force=false){
   const key = encoreCatalogCurrentKey();
@@ -823,7 +928,6 @@ async function loadEncoreCatalog(force=false){
       encoreCatalog = Array.isArray(list) ? list.map(item => normalizeEncoreEntry(item, source)).filter(Boolean) : [];
       encoreCatalogKey = key;
       renderEncoreOptions();
-      updateEncoreStatus(`${encoreCatalog.length} ${ENCORE_SOURCE_LABELS[source]?.toLowerCase() || 'icones'} chargees`);
       return encoreCatalog;
     })
     .catch(error => {
@@ -841,7 +945,7 @@ async function loadEncoreCatalog(force=false){
 function findEncoreEntryByName(name){
   const value = String(name || '').trim().toLowerCase();
   if (!value) return null;
-  return encoreCatalog.find(item => item.name.toLowerCase() === value || encoreDisplayName(item).toLowerCase() === value) || null;
+  return filteredEncoreCatalog().find(item => item.name.toLowerCase() === value || encoreDisplayName(item).toLowerCase() === value) || null;
 }
 function setRowEncoreIcon(row, entry){
   row.iconId = entry ? entry.id : '';
@@ -1834,6 +1938,8 @@ function renderControls(){
   els.encoreIconsEnabled.checked = state.encoreIconsEnabled;
   els.encoreIconSource.value = state.encoreIconSource;
   els.encoreLang.value = state.encoreLang;
+  renderEncoreCharacterOptions();
+  els.encoreCharacter.value = state.encoreCharacterFilter;
   els.encoreIconDelay.value = state.encoreIconDelay;
   els.encoreIconSize.value = String(state.encoreIconSize);
   els.encoreIconOffsetY.value = String(state.encoreIconOffsetY);
@@ -1931,10 +2037,13 @@ function updateFromControls(){
   state.showGrid = els.showGrid.checked;
   state.showAxis = els.showAxis.checked;
   const previousEncoreKey = encoreCatalogCurrentKey();
+  const previousCharactersKey = encoreCharactersCurrentKey();
   const previousEncoreEnabled = state.encoreIconsEnabled;
+  const previousEncoreCharacter = state.encoreCharacterFilter;
   state.encoreIconsEnabled = els.encoreIconsEnabled.checked;
   state.encoreIconSource = oneOf(els.encoreIconSource.value, Object.keys(ENCORE_SOURCE_LABELS), 'weapon');
   state.encoreLang = oneOf(els.encoreLang.value, ['fr','en','ja','ko','zh-Hans','zh-Hant','de','es','id','pt','ru','th','vi'], 'fr');
+  state.encoreCharacterFilter = els.encoreCharacter.value;
   state.encoreIconPlacement = 'end';
   state.encoreIconDelay = oneOf(els.encoreIconDelay.value, ['sync','0.5','1'], 'sync');
   state.encoreIconSize = clamp(els.encoreIconSize.value, 0.45, 1.8, 1);
@@ -1947,9 +2056,12 @@ function updateFromControls(){
     encoreCatalogKey = '';
     renderRowsEditor();
     loadEncoreCatalog(true);
+    if (previousCharactersKey !== encoreCharactersCurrentKey()) loadEncoreCharacters(true);
   } else if (state.encoreIconsEnabled && !encoreCatalog.length) {
     loadEncoreCatalog(false);
   }
+  if (state.encoreIconsEnabled && !encoreCharacters.length) loadEncoreCharacters(false);
+  if (previousEncoreCharacter !== state.encoreCharacterFilter) renderEncoreOptions();
   state.transparentMode = oneOf(els.transparentMode.value, Object.keys(TRANSPARENCY_LABELS), 'none');
   state.transparent = state.transparentMode !== 'none';
   state.enableAnimations = els.enableAnimations.checked;
@@ -2275,7 +2387,7 @@ async function exportPng(){
   img.src = url;
 }
 function bind(){
-  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.encoreIconsEnabled, els.encoreIconSource, els.encoreLang, els.encoreIconDelay, els.encoreIconSize, els.encoreIconOffsetY, els.transparentMode, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.customCorners, els.cornerTopLeft, els.cornerTopRight, els.cornerBottomRight, els.cornerBottomLeft, els.sort, els.compareMode, els.compareMethod, els.decimals, els.weight, els.titleScale, els.valueScale, els.fontFamily]
+  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.encoreIconsEnabled, els.encoreIconSource, els.encoreLang, els.encoreCharacter, els.encoreIconDelay, els.encoreIconSize, els.encoreIconOffsetY, els.transparentMode, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.customCorners, els.cornerTopLeft, els.cornerTopRight, els.cornerBottomRight, els.cornerBottomLeft, els.sort, els.compareMode, els.compareMethod, els.decimals, els.weight, els.titleScale, els.valueScale, els.fontFamily]
     .forEach(input => {
       input.addEventListener('input', updateFromControls);
       input.addEventListener('change', updateFromControls);
@@ -2334,4 +2446,7 @@ bind();
 renderAll();
 save(true);
 initHistory();
-if (state.encoreIconsEnabled) loadEncoreCatalog(false);
+if (state.encoreIconsEnabled) {
+  loadEncoreCharacters(false);
+  loadEncoreCatalog(false);
+}
