@@ -866,8 +866,12 @@ function closeCharacterPicker(){
 }
 function setCharacterLabel(character){
   if (activeCharacterPickerRow == null || !state.rows[activeCharacterPickerRow]) return;
-  state.rows[activeCharacterPickerRow].label = character ? character.name : '';
-  state.rows[activeCharacterPickerRow].labelCharacterId = character ? character.id : '';
+  const row = state.rows[activeCharacterPickerRow];
+  row.label = character ? character.name : '';
+  row.labelCharacterId = character ? character.id : '';
+  if (row.iconId && !encoreCatalogForCharacter(character).some(item => item.id === row.iconId)) {
+    setRowEncoreIcon(row, null);
+  }
   renderRowsEditor();
   requestAnimationFrame(renderSvg);
   scheduleSave();
@@ -877,8 +881,7 @@ function selectedEncoreCharacter(){
   const id = String(state.encoreCharacterFilter || '');
   return id ? encoreCharacters.find(character => character.id === id) || null : null;
 }
-function filteredEncoreCatalog(){
-  const character = selectedEncoreCharacter();
+function encoreCatalogForCharacter(character){
   if (!character) return encoreCatalog;
   if (state.encoreIconSource === 'weapon') {
     const weaponTypeId = String(character.weaponTypeId || '');
@@ -890,6 +893,12 @@ function filteredEncoreCatalog(){
   }
   const characterName = comparableText(character.name);
   return encoreCatalog.filter(item => comparableText(item.name).includes(characterName));
+}
+function filteredEncoreCatalog(){
+  return encoreCatalogForCharacter(selectedEncoreCharacter());
+}
+function encoreCatalogForRow(row){
+  return encoreCatalogForCharacter(rowEncoreCharacter(row) || selectedEncoreCharacter());
 }
 function updateEncoreFilterStatus(){
   const label = ENCORE_SOURCE_LABELS[state.encoreIconSource]?.toLowerCase() || 'icones';
@@ -908,7 +917,7 @@ function renderEncoreCharacterOptions(){
   if (!els.encoreCharacter) return;
   const currentValue = String(state.encoreCharacterFilter || '');
   const savedOption = currentValue && !encoreCharacters.length ? `<option value="${attr(currentValue)}">Personnage sauvegarde</option>` : '';
-  els.encoreCharacter.innerHTML = `<option value="">Tous les personnages</option>${savedOption}${encoreCharacters
+  els.encoreCharacter.innerHTML = `<option value="">Aucun filtre</option>${savedOption}${encoreCharacters
     .map(character => `<option value="${attr(character.id)}">${esc(encoreCharacterLabel(character))}</option>`)
     .join('')}`;
   const characterExists = encoreCharacters.some(character => character.id === currentValue);
@@ -974,6 +983,7 @@ async function loadEncoreCatalog(force=false){
       encoreCatalog = Array.isArray(list) ? list.map(item => normalizeEncoreEntry(item, source)).filter(Boolean) : [];
       encoreCatalogKey = key;
       renderEncoreOptions();
+      renderRowsEditor();
       return encoreCatalog;
     })
     .catch(error => {
@@ -988,10 +998,11 @@ async function loadEncoreCatalog(force=false){
     });
   return encoreCatalogLoading;
 }
-function findEncoreEntryByName(name){
+function findEncoreEntryByName(name, row=null){
   const value = String(name || '').trim().toLowerCase();
   if (!value) return null;
-  return filteredEncoreCatalog().find(item => item.name.toLowerCase() === value || encoreDisplayName(item).toLowerCase() === value) || null;
+  const catalog = row ? encoreCatalogForRow(row) : filteredEncoreCatalog();
+  return catalog.find(item => item.name.toLowerCase() === value || encoreDisplayName(item).toLowerCase() === value) || null;
 }
 function setRowEncoreIcon(row, entry){
   row.iconId = entry ? entry.id : '';
@@ -2121,6 +2132,17 @@ function renderRowsEditor(){
   els.rowsTableHeader.classList.toggle('noIconColumn', !showIconColumn);
   els.rows.innerHTML = state.rows.map((row, index) => {
     const character = rowEncoreCharacter(row);
+    const rowCatalog = encoreCatalogForRow(row);
+    const rowIconListId = character ? `encoreIconOptionsRow${index}` : 'encoreIconOptions';
+    const rowIconOptions = character
+      ? `<datalist id="${rowIconListId}">${rowCatalog
+          .slice(0, 1200)
+          .map(item => `<option value="${attr(encoreDisplayName(item))}"></option>`)
+          .join('')}</datalist>`
+      : '';
+    const iconHint = character
+      ? `${rowCatalog.length} icone${rowCatalog.length > 1 ? 's' : ''} pour ${character.name}`
+      : (encoreCatalog.length ? 'Taper pour chercher' : 'Charger puis taper');
     return `
     <div class="dataRow ${showIconColumn ? 'hasIconColumn' : 'noIconColumn'}" data-row="${index}">
       ${showIconColumn ? `
@@ -2132,7 +2154,7 @@ function renderRowsEditor(){
         </div>
       ` : `<input data-field="label" type="text" value="${attr(row.label)}" aria-label="Libelle ligne ${index + 1}">`}
       <input data-field="value" type="number" step="0.01" value="${attr(row.value)}" aria-label="Valeur ligne ${index + 1}">
-      ${showIconColumn ? `<input data-field="iconName" type="text" list="encoreIconOptions" value="" placeholder="${attr(row.iconName || (encoreCatalog.length ? 'Taper pour chercher' : 'Charger puis taper'))}" title="${attr(row.iconName || '')}" aria-label="Icone Encore ligne ${index + 1}">` : ''}
+      ${showIconColumn ? `<input data-field="iconName" type="text" list="${rowIconListId}" value="" placeholder="${attr(row.iconName || iconHint)}" title="${attr(row.iconName || iconHint)}" aria-label="Icone Encore ligne ${index + 1}">${rowIconOptions}` : ''}
       <input data-field="color" type="color" value="${attr(normalizeColor(row.color, AUTO_COLORS[index % AUTO_COLORS.length]))}" aria-label="Couleur ligne ${index + 1}">
       <button class="rowRemove" type="button" data-remove-row="${index}" aria-label="Supprimer la ligne ${index + 1}">&times;</button>
     </div>`;
@@ -2374,7 +2396,7 @@ function updateRowFromInput(input){
     state.palette = 'custom';
   }
   if (field === 'iconName') {
-    const entry = findEncoreEntryByName(input.value);
+    const entry = findEncoreEntryByName(input.value, state.rows[index]);
     if (entry) {
       setRowEncoreIcon(state.rows[index], entry);
       input.value = '';
