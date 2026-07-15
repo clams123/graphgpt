@@ -202,7 +202,7 @@
             </label>
           </div>
 
-          <div class="controlGroup advancedOnly">
+          <div class="controlGroup">
             <div class="controlGroupTitle">Animation SVG</div>
             <label class="switchBox">
               <input id="enableAnimationsInput" type="checkbox">
@@ -222,6 +222,9 @@
               <span>Progression</span>
               <input id="animationStaggerInput" type="range" min="0" max="0.35" step="0.01">
             </label>
+            <div class="quickActions quickActions--one">
+              <button class="btn btn--soft" id="replayAnimationBtn" type="button">Lancer / relancer l'animation</button>
+            </div>
           </div>
         </div>
       </details>
@@ -232,7 +235,7 @@
             <span>4</span>
             <div>
               <h2>Icones</h2>
-              <p>API Encore pour les icones en barres horizontales.</p>
+              <p>API Encore pour les icones des barres horizontales et verticales.</p>
             </div>
           </div>
         </summary>
@@ -241,7 +244,7 @@
             <div class="controlGroupTitle">Encore API</div>
             <label class="switchBox">
               <input id="encoreIconsEnabledInput" type="checkbox">
-              <span><strong>Icones barres horizontales</strong><small>Affiche le champ Icone dans les donnees.</small></span>
+              <span><strong>Icones des barres</strong><small>Affiche le champ Icone dans les donnees.</small></span>
             </label>
             <div class="grid2">
               <label class="field">

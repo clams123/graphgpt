@@ -138,7 +138,7 @@ const els = {
   showValues:$('showValuesInput'), showLegend:$('showLegendInput'), showGrid:$('showGridInput'), showAxis:$('showAxisInput'), transparentMode:$('transparentModeInput'),
   encoreIconsEnabled:$('encoreIconsEnabledInput'), encoreIconSource:$('encoreIconSourceInput'), encoreLang:$('encoreLangInput'), encoreCharacter:$('encoreCharacterInput'), encoreIconDelay:$('encoreIconDelayInput'),
   encoreIconSize:$('encoreIconSizeInput'), encoreIconOffsetY:$('encoreIconOffsetYInput'), loadEncoreIcons:$('loadEncoreIconsBtn'), encoreIconStatus:$('encoreIconStatus'), encoreIconOptions:$('encoreIconOptions'),
-  enableAnimations:$('enableAnimationsInput'),
+  enableAnimations:$('enableAnimationsInput'), replayAnimation:$('replayAnimationBtn'),
   animationDuration:$('animationDurationInput'), animationDelay:$('animationDelayInput'), animationStagger:$('animationStaggerInput'),
   valuePlacement:$('valuePlacementInput'),
   horizontalShapeField:$('horizontalShapeField'), horizontalShape:$('horizontalShapeInput'),
@@ -1438,13 +1438,11 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
   const widthFactor = 0.58;
   const barW = Math.max(28, Math.min(step * widthFactor * weight, step - 18));
   const valueFont = Math.min(valueFontSize(size, wide ? 0.021 : 0.032, 28, wide ? 56 : 68), Math.max(22, step * 0.34));
-  const labelRows = count > 6 || state.labelScale > 1.25 ? 2 : 1;
   const labelFont = Math.min(labelFontSize(size, 0.016, 18, wide ? 48 : 58), Math.max(16, step * 0.28));
   const baseY = size.h - bottom;
   const labelGap = Math.max(14, Math.min(18, size.h * 0.018));
   const labelYBase = baseY + labelFont + labelGap;
-  const labelStackH = labelRows === 2 ? Math.max(labelFont * 1.05, 18) : 0;
-  const chartH = Math.max(size.h * 0.22, labelYBase - labelStackH - top - Math.max(16, valueFont * 0.7));
+  const chartH = Math.max(size.h * 0.22, labelYBase - top - Math.max(16, valueFont * 0.7));
   let out = glitterDefs();
   if (!hasTransparentBackground()) out += `<rect width="${size.w}" height="${size.h}" fill="url(#${localId('glitter-stage-glow')})"/>`;
 
@@ -1461,7 +1459,7 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
     const color = palette[index] || colors.accent;
     const shadowDx = Math.max(12, barW * 0.14);
     const shadowDy = Math.max(12, barW * 0.15);
-    const labelY = labelYBase - (labelRows === 2 ? (index % 2) * labelStackH : 0);
+    const labelY = labelYBase;
     const shadowLimitY = labelY - Math.max(10, labelFont * 0.9);
     const shadowTopY = y + shadowDy;
     const shadowBottomY = Math.min(y + shadowDy + barH, shadowLimitY);
@@ -1481,6 +1479,7 @@ function renderGlitterBar(rows, size, colors, palette, variant='glitterBar', for
         <rect x="${x}" y="${y}" width="${barW}" height="${barH}" fill="url(#${localId('glitter-side-shine')})" opacity=".95"/>
       </g>
     </g>`;
+    out += encoreVerticalIconMarkup(row, cx, y, barW, step, index, cleanRows.length, true);
 
     if (state.showValues && valueVisible(index)) {
       const valueY = Math.max(valueFont + 8, y - Math.max(18, valueFont * 0.42));
@@ -1531,6 +1530,8 @@ function renderBar(rows, size, colors, palette){
       out += `<rect class="vBarAnim" style="--delay:${itemDelay(index)}s" x="${cx - barW / 2}" y="${top}" width="${barW}" height="${bh}" rx="${rx}" fill="${seriesFill(index)}" stroke="${brightenColor(palette[index], 0.36)}" stroke-width="1" opacity=".98"/>`;
     }
     out += `<rect x="${cx - barW / 2 + Math.max(3, barW * 0.08)}" y="${top + 4}" width="${Math.max(2, barW * 0.18)}" height="${Math.max(0, bh - 8)}" rx="${Math.max(1, rx * .55)}" fill="#ffffff" opacity=".13"/>`;
+    const iconEndpointY = targetY < baseY ? top : top + bh;
+    out += encoreVerticalIconMarkup(row, cx, iconEndpointY, barW, step, index, rows.length, targetY < baseY);
     if (state.showValues && valueVisible(index)) {
       const valueText = formatValue(row.value);
       const valueX = textSafeX(cx, valueText, valueFont, surfaceX, surfaceX + surfaceW, 900);
@@ -1558,8 +1559,20 @@ function encoreIconFrameVisible(index, rowCount){
   const start = clamp(state.animationDelay, 0, 3, 1) + graphCompleteDelay(rowCount) + (Number(state.encoreIconDelay) || 0);
   return adobeFrameTime >= start;
 }
-function encoreIconSizePx(barH){
-  return Math.max(28, Math.round(barH * 1.62 * state.encoreIconSize));
+function encoreIconSizePx(barThickness){
+  return Math.max(28, Math.round(barThickness * 1.62 * state.encoreIconSize));
+}
+function encoreVerticalIconMarkup(row, cx, endpointY, barW, slotW, index, rowCount, barExtendsDown=true){
+  if (!state.encoreIconsEnabled || !row.iconUrl) return '';
+  if (!encoreIconFrameVisible(index, rowCount)) return '';
+  const href = iconHref(row);
+  if (!href) return '';
+  const iconSize = Math.min(encoreIconSizePx(barW), Math.max(28, Math.round(slotW * 0.86)));
+  const ix = Math.round(cx - iconSize / 2);
+  const insideOffset = barExtendsDown ? iconSize * 0.12 : iconSize * 0.88;
+  const iy = Math.round(endpointY - insideOffset + state.encoreIconOffsetY);
+  const delay = encoreIconDelayCss(index, rowCount);
+  return `<image class="pointAnim" style="--delay:${delay}s" href="${attr(href)}" xlink:href="${attr(href)}" x="${ix}" y="${iy}" width="${iconSize}" height="${iconSize}" preserveAspectRatio="xMidYMid meet" opacity=".98"/>`;
 }
 function encoreIconMarkup(row, x, bw, yy, barH, index, rowCount){
   if (!state.encoreIconsEnabled || !row.iconUrl) return '';
@@ -2281,6 +2294,14 @@ function renderAll(){
     renderSvg();
   });
 }
+function replayAnimation(){
+  if (!state.enableAnimations) {
+    els.enableAnimations.checked = true;
+    updateFromControls();
+    return;
+  }
+  renderSvg();
+}
 function updateFromControls(){
   const previousTheme = state.theme;
   state.title = els.title.value;
@@ -2689,6 +2710,7 @@ function bind(){
   });
   els.characterPickerModal.addEventListener('click', (event) => { if (event.target === els.characterPickerModal) closeCharacterPicker(); });
   els.loadEncoreIcons.addEventListener('click', () => loadEncoreCatalog(true));
+  els.replayAnimation.addEventListener('click', replayAnimation);
   els.cornerPreset.addEventListener('change', applyCornerPreset);
   els.uniformCorners.addEventListener('click', uniformCorners);
   els.save.addEventListener('click', () => save(false));
