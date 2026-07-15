@@ -26,19 +26,19 @@
   </header>
 
   <main class="layout">
-    <aside class="editor" aria-label="Editeur du graphique">
+    <aside class="editor" aria-label="&Eacute;diteur du graphique">
       <div class="editorModeBar" role="group" aria-label="Niveau de reglages">
         <button class="editorModeButton" id="simpleModeBtn" type="button" aria-pressed="true">Simple</button>
-        <button class="editorModeButton" id="advancedModeBtn" type="button" aria-pressed="false">Avance</button>
+        <button class="editorModeButton" id="advancedModeBtn" type="button" aria-pressed="false">Avanc&eacute;</button>
       </div>
-      <nav class="editorNav" aria-label="Navigation des reglages">
-        <button class="editorNav__button" type="button" data-panel-target="panelInfo">Informations</button>
-        <button class="editorNav__button" type="button" data-panel-target="panelData">Donnees</button>
-        <button class="editorNav__button" type="button" data-panel-target="panelDisplay">Type &amp; Affichage</button>
-        <button class="editorNav__button" type="button" data-panel-target="panelIcons">Icones</button>
-        <button class="editorNav__button" type="button" data-panel-target="panelSettings">Reglages rapide</button>
-        <button class="editorNav__button advancedOnly" type="button" data-panel-target="panelLibrary">Bibliotheque</button>
-        <button class="editorNav__button advancedOnly" type="button" data-panel-target="panelTools">Outils</button>
+      <nav class="editorNav" aria-label="Navigation des r&eacute;glages">
+        <button class="editorNav__button" type="button" data-panel-target="panelInfo" aria-controls="panelInfo">Informations</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelData" aria-controls="panelData">Donn&eacute;es</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelDisplay" aria-controls="panelDisplay">Type &amp; affichage</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelIcons" aria-controls="panelIcons">Ic&ocirc;nes</button>
+        <button class="editorNav__button" type="button" data-panel-target="panelSettings" aria-controls="panelSettings">R&eacute;glages rapides</button>
+        <button class="editorNav__button advancedOnly" type="button" data-panel-target="panelLibrary" aria-controls="panelLibrary">Biblioth&egrave;que</button>
+        <button class="editorNav__button advancedOnly" type="button" data-panel-target="panelTools" aria-controls="panelTools">Outils</button>
       </nav>
 
       <details class="panel accordionMenu" id="panelInfo">
@@ -280,7 +280,11 @@
             <div class="controlGroupTitle">Placement</div>
             <label class="field">
               <span>Taille icone</span>
-              <input id="encoreIconSizeInput" type="range" min="0.45" max="1.8" step="0.05">
+              <input id="encoreIconSizeInput" type="range" min="0.2" max="1.8" step="0.05">
+            </label>
+            <label class="field isHidden" id="encoreIconOffsetXField">
+              <span>Decalage X (vertical)</span>
+              <input id="encoreIconOffsetXInput" type="range" min="-120" max="120" step="1">
             </label>
             <label class="field">
               <span>Decalage Y</span>
@@ -418,11 +422,11 @@
       </details>
     </aside>
 
-    <section class="preview" aria-label="Apercu du graphique">
+    <section class="preview" aria-label="Aper&ccedil;u du graphique">
       <div class="previewHeader">
         <div>
-          <strong>Apercu du graphique</strong>
-          <p>Rendu fidele a l'export SVG. Le PNG est disponible hors animation.</p>
+          <strong>Aper&ccedil;u du graphique</strong>
+          <p>Rendu fid&egrave;le &agrave; l'export SVG. Le PNG est disponible hors animation.</p>
         </div>
         <div class="statusLine">
           <span id="saveStatus">Non sauvegarde</span>
@@ -439,11 +443,11 @@
   </main>
 
   <div class="modalOverlay" id="resetModal" aria-hidden="true">
-    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle">
+    <div class="dialog" role="dialog" aria-modal="true" aria-labelledby="resetModalTitle" aria-describedby="resetModalDescription">
       <div class="dialog__head">
         <div>
-          <strong id="resetModalTitle">Reinitialiser le graphique</strong>
-          <p>Cette action remettra les donnees et reglages par defaut.</p>
+          <strong id="resetModalTitle">R&eacute;initialiser le graphique</strong>
+          <p id="resetModalDescription">Cette action remettra les donn&eacute;es et r&eacute;glages par d&eacute;faut.</p>
         </div>
         <button class="modalClose" id="resetCancelBtn" type="button" aria-label="Fermer">&times;</button>
       </div>
@@ -453,7 +457,7 @@
       </div>
       <div class="dialogActions">
         <button class="btn btn--ghost" id="resetKeepBtn" type="button">Annuler</button>
-        <button class="btn btn--danger" id="resetConfirmBtn" type="button">Oui, reinitialiser</button>
+        <button class="btn btn--danger" id="resetConfirmBtn" type="button">Oui, r&eacute;initialiser</button>
       </div>
     </div>
   </div>
@@ -473,8 +477,8 @@
     </div>
   </div>
 
-  <div class="toastContainer" id="toastContainer" aria-live="polite"></div>
+  <div class="toastContainer" id="toastContainer" role="status" aria-live="polite" aria-atomic="true"></div>
   <datalist id="encoreIconOptions"></datalist>
-  <script src="script.js?v=20260618-row-icon-filter"></script>
+  <script src="script.js?v=20260715-vertical-icon-position"></script>
 </body>
 </html>

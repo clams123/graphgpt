@@ -35,6 +35,11 @@ body{
 button,input,select,textarea{font:inherit}
 button{cursor:pointer}
 code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
+:where(button,input,select,textarea,summary):focus-visible{
+  outline:3px solid #7dd3fc;
+  outline-offset:2px;
+}
+body.hasModal{overflow:hidden}
 
 .topbar{
   flex:0 0 auto;
@@ -190,6 +195,7 @@ code{font-family:ui-monospace,SFMono-Regular,Consolas,monospace;color:#bfdbfe}
   box-shadow:0 12px 34px rgba(0,0,0,.20);
   overflow:hidden;
 }
+.panel,.preview{scroll-margin-top:12px}
 .accordionMenu>summary{
   list-style:none;
   cursor:pointer;
@@ -571,9 +577,9 @@ body::-webkit-scrollbar-thumb:hover,.editor::-webkit-scrollbar-thumb:hover{backg
   .topbar{align-items:flex-start;flex-direction:column}
   .topActions{justify-content:flex-start}
   .layout{grid-template-columns:1fr;height:auto;overflow:visible;gap:12px}
-  .preview{order:1;min-height:560px}
+  .preview{order:2;min-height:520px}
   .editor{
-    order:2;
+    order:1;
     display:grid;
     grid-template-columns:repeat(2,minmax(0,1fr));
     align-items:start;
@@ -590,11 +596,16 @@ body::-webkit-scrollbar-thumb:hover,.editor::-webkit-scrollbar-thumb:hover{backg
 }
 @media (max-width:760px){
   .layout,.topbar{padding:9px}
+  .topbar{gap:9px}
   .editor{display:flex;flex-direction:column;gap:10px}
   .grid2,.quickActions,.quickActions--two{grid-template-columns:1fr}
   .editorNav{display:flex;flex-wrap:wrap}
-  .brand{align-items:flex-start;flex-direction:column;min-width:0}
-  .topActions .btn{flex:1 1 auto}
+  .brand{align-items:center;flex-direction:row;min-width:0;gap:9px}
+  .brand__mark{min-height:28px;padding:0 9px;font-size:10px}
+  .brand h1{font-size:16px}
+  .brand p{font-size:10px}
+  .topActions{width:100%;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+  .topActions .btn{min-width:0;padding:5px 4px;font-size:11px;line-height:1.15}
   .tableHeader{display:none}
   .dataRow{grid-template-columns:minmax(0,1fr) 72px 42px 34px}
   .dataRow.hasIconColumn{grid-template-columns:minmax(0,1fr) 64px 42px 32px}
@@ -602,7 +613,11 @@ body::-webkit-scrollbar-thumb:hover,.editor::-webkit-scrollbar-thumb:hover{backg
   .dataRow input[data-field="color"]{grid-column:3;grid-row:1}
   .dataRow .rowRemove{grid-column:4;grid-row:1}
   .characterPickerList{grid-template-columns:1fr}
-  .preview{min-height:460px}
+  .preview{min-height:360px}
+  .previewHeader{align-items:flex-start;flex-direction:column;padding:10px 12px}
+  .statusLine{justify-content:flex-start}
+  .previewFrame{min-height:250px;padding:10px}
+  .dialog{max-height:calc(100vh - 24px);overflow:auto;padding:12px;border-radius:14px}
 }
 
 /* Styles des graphiques glitter : le theme actif reste prioritaire */

@@ -137,7 +137,7 @@ const els = {
   chartType:$('chartTypeInput'), theme:$('themeInput'), format:$('formatInput'), palette:$('paletteInput'),
   showValues:$('showValuesInput'), showLegend:$('showLegendInput'), showGrid:$('showGridInput'), showAxis:$('showAxisInput'), transparentMode:$('transparentModeInput'),
   encoreIconsEnabled:$('encoreIconsEnabledInput'), encoreIconSource:$('encoreIconSourceInput'), encoreLang:$('encoreLangInput'), encoreCharacter:$('encoreCharacterInput'), encoreIconDelay:$('encoreIconDelayInput'),
-  encoreIconSize:$('encoreIconSizeInput'), encoreIconOffsetY:$('encoreIconOffsetYInput'), loadEncoreIcons:$('loadEncoreIconsBtn'), encoreIconStatus:$('encoreIconStatus'), encoreIconOptions:$('encoreIconOptions'),
+  encoreIconSize:$('encoreIconSizeInput'), encoreIconOffsetXField:$('encoreIconOffsetXField'), encoreIconOffsetX:$('encoreIconOffsetXInput'), encoreIconOffsetY:$('encoreIconOffsetYInput'), loadEncoreIcons:$('loadEncoreIconsBtn'), encoreIconStatus:$('encoreIconStatus'), encoreIconOptions:$('encoreIconOptions'),
   enableAnimations:$('enableAnimationsInput'), replayAnimation:$('replayAnimationBtn'),
   animationDuration:$('animationDurationInput'), animationDelay:$('animationDelayInput'), animationStagger:$('animationStaggerInput'),
   valuePlacement:$('valuePlacementInput'),
@@ -180,6 +180,7 @@ const DEFAULT_STATE = {
   encoreIconPlacement:'end',
   encoreIconSize:1,
   encoreIconOffsetX:82,
+  encoreVerticalIconOffsetX:0,
   encoreIconOffsetY:0,
   encoreIconDelay:'sync',
   transparent:false,
@@ -347,8 +348,9 @@ function normalizeState(raw){
   base.encoreLang = oneOf(input.encoreLang, ['fr','en','ja','ko','zh-Hans','zh-Hant','de','es','id','pt','ru','th','vi'], 'fr');
   base.encoreCharacterFilter = input.encoreCharacterFilter == null ? '' : String(input.encoreCharacterFilter);
   base.encoreIconPlacement = oneOf(input.encoreIconPlacement, ['start','end'], 'end');
-  base.encoreIconSize = clamp(input.encoreIconSize, 0.45, 1.8, 1);
+  base.encoreIconSize = clamp(input.encoreIconSize, 0.2, 1.8, 1);
   base.encoreIconOffsetX = normalizeIconXPosition(input.encoreIconOffsetX, 82);
+  base.encoreVerticalIconOffsetX = clamp(input.encoreVerticalIconOffsetX, -120, 120, 0);
   base.encoreIconOffsetY = clamp(input.encoreIconOffsetY, -60, 60, 0);
   base.encoreIconDelay = oneOf(String(input.encoreIconDelay ?? 'sync'), ['sync','0.5','1'], 'sync');
   base.transparentMode = oneOf(input.transparentMode, Object.keys(TRANSPARENCY_LABELS), input.transparent ? 'background' : 'none');
@@ -768,7 +770,7 @@ function adobeModeDetails(){
 function adobeModeHint(mode=adobeModeDetails()){
   if (mode.ready && mode.sharedArrayBuffer) return 'Mode video OK : export rapide disponible.';
   if (mode.ready) return 'Mode video OK : export compatible GitHub Pages, plus lent.';
-  if (mode.isLocalFile) return 'Ouvre la page via GitHub Pages HTTPS ou via Lancer_GraphiquesGPT_Adobe.bat.';
+  if (mode.isLocalFile) return 'Ouvre la page via GitHub Pages HTTPS ou avec un serveur local sur localhost.';
   if (!mode.isSecureHost) return 'L export video demande HTTPS, localhost, ou 127.0.0.1.';
   return 'Mode video indisponible.';
 }
@@ -849,20 +851,56 @@ function renderCharacterPicker(){
       </button>`).join('')
     : '<p class="characterPickerEmpty">Aucun personnage trouve.</p>';
 }
+const modalOpeners = new WeakMap();
+function modalFocusableElements(modal){
+  if (!modal) return [];
+  return [...modal.querySelectorAll('button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')]
+    .filter(element => element.getClientRects().length > 0);
+}
+function visibleModal(){
+  return [els.characterPickerModal, els.resetModal].find(modal => modal?.classList.contains('isVisible')) || null;
+}
+function setPageInert(isInert){
+  [document.querySelector('.topbar'), document.querySelector('.layout')].forEach(element => {
+    if (element) element.toggleAttribute('inert', isInert);
+  });
+  document.body.classList.toggle('hasModal', isInert);
+}
+function openModal(modal, initialFocus){
+  if (!modal) return;
+  modalOpeners.set(modal, document.activeElement);
+  modal.classList.add('isVisible');
+  modal.setAttribute('aria-hidden','false');
+  setPageInert(true);
+  requestAnimationFrame(() => (initialFocus || modalFocusableElements(modal)[0])?.focus());
+}
+function closeModal(modal, fallbackFocus){
+  if (!modal?.classList.contains('isVisible')) return;
+  const opener = modalOpeners.get(modal);
+  modal.classList.remove('isVisible');
+  modal.setAttribute('aria-hidden','true');
+  modalOpeners.delete(modal);
+  if (!visibleModal()) setPageInert(false);
+  requestAnimationFrame(() => {
+    const target = opener?.isConnected ? opener : fallbackFocus;
+    if (target?.isConnected) target.focus();
+  });
+}
 function openCharacterPicker(index){
   activeCharacterPickerRow = Number(index);
   if (!state.rows[activeCharacterPickerRow]) return;
-  els.characterPickerModal.classList.add('isVisible');
-  els.characterPickerModal.setAttribute('aria-hidden','false');
   els.characterPickerSearch.value = '';
   renderCharacterPicker();
-  els.characterPickerSearch.focus();
+  openModal(els.characterPickerModal, els.characterPickerSearch);
   if (!encoreCharacters.length) loadEncoreCharacters(false);
 }
 function closeCharacterPicker(){
+  const rowIndex = activeCharacterPickerRow;
   activeCharacterPickerRow = null;
-  els.characterPickerModal.classList.remove('isVisible');
-  els.characterPickerModal.setAttribute('aria-hidden','true');
+  const fallback = rowIndex == null
+    ? document.querySelector('[data-panel-target="panelData"]')
+    : els.rows.querySelector(`[data-character-row="${rowIndex}"]`) || document.querySelector('[data-panel-target="panelData"]');
+  closeModal(els.characterPickerModal, fallback);
 }
 function setCharacterLabel(character){
   if (activeCharacterPickerRow == null || !state.rows[activeCharacterPickerRow]) return;
@@ -1231,6 +1269,9 @@ function glitterDefs(){
 function isGlitterChartType(type=state.chartType){
   return ['glitterBar','glitterBarNoShadow'].includes(type);
 }
+function isVerticalBarChartType(type=state.chartType){
+  return type === 'bar' || isGlitterChartType(type);
+}
 function isHorizontalGlitterChartType(type=state.chartType){
   return ['horizontalGlitterBar','horizontalGlitterBarNoShadow'].includes(type);
 }
@@ -1562,13 +1603,18 @@ function encoreIconFrameVisible(index, rowCount){
 function encoreIconSizePx(barThickness){
   return Math.max(28, Math.round(barThickness * 1.62 * state.encoreIconSize));
 }
+function encoreVerticalIconSizePx(barW, slotW){
+  const scaledSize = Math.max(28, Math.round(barW * 0.72 * state.encoreIconSize));
+  const slotLimit = Math.max(28, Math.round(slotW * 0.58));
+  return Math.min(scaledSize, slotLimit);
+}
 function encoreVerticalIconMarkup(row, cx, endpointY, barW, slotW, index, rowCount, barExtendsDown=true){
   if (!state.encoreIconsEnabled || !row.iconUrl) return '';
   if (!encoreIconFrameVisible(index, rowCount)) return '';
   const href = iconHref(row);
   if (!href) return '';
-  const iconSize = Math.min(encoreIconSizePx(barW), Math.max(28, Math.round(slotW * 0.86)));
-  const ix = Math.round(cx - iconSize / 2);
+  const iconSize = encoreVerticalIconSizePx(barW, slotW);
+  const ix = Math.round(cx - iconSize / 2 + state.encoreVerticalIconOffsetX);
   const insideOffset = barExtendsDown ? iconSize * 0.12 : iconSize * 0.88;
   const iy = Math.round(endpointY - insideOffset + state.encoreIconOffsetY);
   const delay = encoreIconDelayCss(index, rowCount);
@@ -2198,6 +2244,7 @@ function renderControls(){
   els.encoreCharacter.value = state.encoreCharacterFilter;
   els.encoreIconDelay.value = state.encoreIconDelay;
   els.encoreIconSize.value = String(state.encoreIconSize);
+  els.encoreIconOffsetX.value = String(state.encoreVerticalIconOffsetX);
   els.encoreIconOffsetY.value = String(state.encoreIconOffsetY);
   els.transparentMode.value = transparencyMode();
   els.enableAnimations.checked = state.enableAnimations;
@@ -2218,6 +2265,7 @@ function renderControls(){
   els.cornerBottomLeftValue.value = percentLabel(state.cornerBottomLeft);
   els.cornerPreset.value = oneOf(state.cornerPreset, ['custom', ...Object.keys(CORNER_PRESETS)], 'custom');
   const cornerOptionsVisible = isCornerShapeChart();
+  els.encoreIconOffsetXField.classList.toggle('isHidden', !isVerticalBarChartType());
   els.horizontalShapeField.classList.toggle('isHidden', state.chartType !== 'horizontalBar');
   els.glitterRoundnessField.classList.toggle('isHidden', !shouldShowGlitterRoundness());
   els.customCornersField.classList.toggle('isHidden', !cornerOptionsVisible);
@@ -2326,8 +2374,9 @@ function updateFromControls(){
   state.encoreCharacterFilter = els.encoreCharacter.value;
   state.encoreIconPlacement = 'end';
   state.encoreIconDelay = oneOf(els.encoreIconDelay.value, ['sync','0.5','1'], 'sync');
-  state.encoreIconSize = clamp(els.encoreIconSize.value, 0.45, 1.8, 1);
+  state.encoreIconSize = clamp(els.encoreIconSize.value, 0.2, 1.8, 1);
   state.encoreIconOffsetX = 82;
+  state.encoreVerticalIconOffsetX = clamp(els.encoreIconOffsetX.value, -120, 120, 0);
   state.encoreIconOffsetY = clamp(els.encoreIconOffsetY.value, -60, 60, 0);
   const nextEncoreKey = encoreCatalogCurrentKey();
   if (previousEncoreEnabled !== state.encoreIconsEnabled) renderRowsEditor();
@@ -2442,13 +2491,10 @@ function removeRow(index){
   scheduleSave();
 }
 function openResetModal(){
-  els.resetModal.classList.add('isVisible');
-  els.resetModal.setAttribute('aria-hidden','false');
-  els.resetConfirm.focus();
+  openModal(els.resetModal, els.resetConfirm);
 }
 function closeResetModal(){
-  els.resetModal.classList.remove('isVisible');
-  els.resetModal.setAttribute('aria-hidden','true');
+  closeModal(els.resetModal, els.reset);
 }
 function confirmReset(){
   flushHistory();
@@ -2674,7 +2720,7 @@ async function exportPng(){
   img.src = url;
 }
 function bind(){
-  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.encoreIconsEnabled, els.encoreIconSource, els.encoreLang, els.encoreCharacter, els.encoreIconDelay, els.encoreIconSize, els.encoreIconOffsetY, els.transparentMode, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.customCorners, els.cornerTopLeft, els.cornerTopRight, els.cornerBottomRight, els.cornerBottomLeft, els.sort, els.decimals, els.weight, els.titleScale, els.valueScale, els.labelScale, els.fontFamily]
+  [els.title, els.subtitle, els.source, els.chartType, els.theme, els.format, els.palette, els.showValues, els.showLegend, els.showGrid, els.showAxis, els.encoreIconsEnabled, els.encoreIconSource, els.encoreLang, els.encoreCharacter, els.encoreIconDelay, els.encoreIconSize, els.encoreIconOffsetX, els.encoreIconOffsetY, els.transparentMode, els.enableAnimations, els.animationDuration, els.animationDelay, els.animationStagger, els.valuePlacement, els.horizontalShape, els.glitterRoundness, els.customCorners, els.cornerTopLeft, els.cornerTopRight, els.cornerBottomRight, els.cornerBottomLeft, els.sort, els.decimals, els.weight, els.titleScale, els.valueScale, els.labelScale, els.fontFamily]
     .forEach(input => {
       input.addEventListener('input', updateFromControls);
       input.addEventListener('change', updateFromControls);
@@ -2740,9 +2786,31 @@ function bind(){
   });
   window.addEventListener('resize', fitPreview);
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape') {
-      closeResetModal();
-      closeCharacterPicker();
+    const modal = visibleModal();
+    if (modal) {
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        if (modal === els.resetModal) closeResetModal();
+        if (modal === els.characterPickerModal) closeCharacterPicker();
+        return;
+      }
+      if (event.key === 'Tab') {
+        const focusable = modalFocusableElements(modal);
+        if (!focusable.length) {
+          event.preventDefault();
+          return;
+        }
+        const first = focusable[0];
+        const last = focusable[focusable.length - 1];
+        if (event.shiftKey && (document.activeElement === first || !modal.contains(document.activeElement))) {
+          event.preventDefault();
+          last.focus();
+        } else if (!event.shiftKey && document.activeElement === last) {
+          event.preventDefault();
+          first.focus();
+        }
+      }
+      return;
     }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'z') { event.preventDefault(); undo(); }
     if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'y') { event.preventDefault(); redo(); }

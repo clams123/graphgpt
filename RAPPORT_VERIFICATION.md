@@ -1,6 +1,6 @@
 # Rapport de verification
 
-Derniere verification : 2026-06-17
+Derniere verification : 2026-07-15
 
 ## Points controles
 
@@ -15,7 +15,9 @@ Derniere verification : 2026-06-17
 - Verification des references locales `style.css`, `script.js` et `vendor/ffmpeg/core/ffmpeg-core.wasm`.
 - Verification des endpoints Encore `character`, `weapon` et `item`.
 - Verification du filtre Encore par personnage pour les armes et items.
-- Ajout du lanceur local `Lancer_GraphiquesGPT_Adobe.bat` mentionne par l'application.
+- Verification du parcours clavier des fenetres modales : focus contenu, boucle de tabulation, touche Echap et retour au bouton d'origine.
+- Verification responsive : reglages places avant l'apercu sur tablette et mobile, actions compactes sur petit ecran.
+- Verification de non-regression : les blocs de rendu SVG et d'export SVG/PNG/MOV restent inchanges.
 
 ## Points a surveiller
 

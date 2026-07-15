@@ -10,7 +10,7 @@ L'application fonctionne en local et sauvegarde l'etat dans `localStorage`.
 
 Pour utiliser `Export Adobe MOV`, ouvrir l'application en HTTPS, par exemple via GitHub Pages. Le statut en haut doit afficher `Adobe : pret`.
 
-En ouverture directe `file://`, l'export video est bloque par le navigateur. `Lancer_GraphiquesGPT_Adobe.bat` reste disponible uniquement comme fallback local.
+En ouverture directe `file://`, l'export video est bloque par le navigateur. Pour un usage local, servir ce dossier via `localhost` ou `127.0.0.1` avec un serveur HTTP local.
 
 ## Exports
 
@@ -63,3 +63,5 @@ Les valeurs negatives creusent le coin vers l'interieur pour obtenir des formes 
 - Les listes de types, themes, formats, polices et presets sont generees depuis `script.js`.
 - Les IDs internes du SVG sont prefixes a chaque rendu pour limiter les collisions quand plusieurs SVG sont integres dans un meme document.
 - Les anciens graphes sauvegardes avec `glitterBar2` ou `glitterBar2NoShadow` sont migres vers les styles actuels.
+- Sur tablette et mobile, les reglages sont affiches avant l'apercu pour accelerer la saisie.
+- Les fenetres modales bloquent l'arriere-plan, conservent le focus clavier et rendent le focus au bouton d'origine apres fermeture.
