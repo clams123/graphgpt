@@ -78,7 +78,8 @@ const HORIZONTAL_SHAPE_LABELS = {
 };
 const ENCORE_SOURCE_LABELS = {
   weapon:'Armes',
-  item:'Items'
+  item:'Items',
+  character:'Avatars'
 };
 const VALUE_PLACEMENT_LABELS = {
   outside:"A l'exterieur",
@@ -828,13 +829,23 @@ function encoreCharacterLabel(character){
 function rowEncoreCharacter(row){
   if (!row) return null;
   const id = String(row.labelCharacterId || '');
-  if (id) return encoreCharacters.find(character => character.id === id) || null;
-  const label = comparableText(row.label);
-  return label ? encoreCharacters.find(character => comparableText(character.name) === label) || null : null;
+  return id ? encoreCharacters.find(character => character.id === id) || null : null;
 }
 function characterAvatarMarkup(character){
   if (!character?.icon) return '<span aria-hidden="true">&#128100;</span>';
   return `<img src="${attr(character.icon)}" alt="">`;
+}
+function characterAvatarEntry(character){
+  if (!character?.id || !character.icon) return null;
+  return {
+    id:`character-avatar-${character.id}`,
+    name:`Avatar - ${character.name}`,
+    icon:character.icon,
+    source:'character',
+    characterId:String(character.id),
+    typeId:'',
+    typeName:''
+  };
 }
 function renderCharacterPicker(){
   if (!els.characterPickerList) return;
@@ -902,10 +913,10 @@ function closeCharacterPicker(){
     : els.rows.querySelector(`[data-character-row="${rowIndex}"]`) || document.querySelector('[data-panel-target="panelData"]');
   closeModal(els.characterPickerModal, fallback);
 }
-function setCharacterLabel(character){
+function setCharacterFilter(character){
   if (activeCharacterPickerRow == null || !state.rows[activeCharacterPickerRow]) return;
   const row = state.rows[activeCharacterPickerRow];
-  row.label = character ? character.name : '';
+  if (character) row.label = character.name;
   row.labelCharacterId = character ? character.id : '';
   if (row.iconId && !encoreCatalogForCharacter(character).some(item => item.id === row.iconId)) {
     setRowEncoreIcon(row, null);
@@ -921,6 +932,9 @@ function selectedEncoreCharacter(){
 }
 function encoreCatalogForCharacter(character){
   if (!character) return encoreCatalog;
+  if (state.encoreIconSource === 'character') {
+    return encoreCatalog.filter(item => item.characterId === String(character.id));
+  }
   if (state.encoreIconSource === 'weapon') {
     const weaponTypeId = String(character.weaponTypeId || '');
     const weaponTypeName = comparableText(character.weaponTypeName);
@@ -1009,16 +1023,23 @@ async function loadEncoreCatalog(force=false){
   if (encoreCatalogLoading) return encoreCatalogLoading;
   const source = state.encoreIconSource;
   const lang = state.encoreLang;
+  const endpoint = source === 'character' ? 'character' : source;
   updateEncoreStatus(`Chargement ${ENCORE_SOURCE_LABELS[source] || 'icones'}...`);
   if (els.loadEncoreIcons) els.loadEncoreIcons.disabled = true;
-  encoreCatalogLoading = fetch(`${ENCORE_API_BASE_URL}/${encodeURIComponent(lang)}/${source}`)
+  encoreCatalogLoading = fetch(`${ENCORE_API_BASE_URL}/${encodeURIComponent(lang)}/${endpoint}`)
     .then(response => {
       if (!response.ok) throw new Error(`Encore HTTP ${response.status}`);
       return response.json();
     })
     .then(data => {
-      const list = source === 'weapon' ? data.weapons : data.itemList;
-      encoreCatalog = Array.isArray(list) ? list.map(item => normalizeEncoreEntry(item, source)).filter(Boolean) : [];
+      const list = source === 'weapon'
+        ? data.weapons
+        : source === 'item'
+          ? data.itemList
+          : data.roleList || data.roles || data.characters || [];
+      encoreCatalog = source === 'character'
+        ? (Array.isArray(list) ? list.map(normalizeEncoreCharacter).map(characterAvatarEntry).filter(Boolean) : [])
+        : (Array.isArray(list) ? list.map(item => normalizeEncoreEntry(item, source)).filter(Boolean) : []);
       encoreCatalogKey = key;
       renderEncoreOptions();
       renderRowsEditor();
@@ -2453,12 +2474,6 @@ function updateRowFromInput(input){
   const field = input.dataset.field;
   if (field === 'label') {
     state.rows[index].label = input.value;
-    state.rows[index].labelCharacterId = '';
-    const characterButton = rowNode.querySelector('[data-character-row]');
-    if (characterButton) {
-      characterButton.classList.remove('hasCharacter');
-      characterButton.innerHTML = '<span aria-hidden="true">&#128100;</span>';
-    }
   }
   if (field === 'value') state.rows[index].value = clamp(input.value, -999999999, 999999999, 0);
   if (field === 'color') {
@@ -2746,13 +2761,13 @@ function bind(){
   els.simpleMode.addEventListener('click', () => setEditorMode('simple'));
   els.advancedMode.addEventListener('click', () => setEditorMode('advanced'));
   els.characterPickerClose.addEventListener('click', closeCharacterPicker);
-  els.characterPickerClear.addEventListener('click', () => setCharacterLabel(null));
+  els.characterPickerClear.addEventListener('click', () => setCharacterFilter(null));
   els.characterPickerSearch.addEventListener('input', renderCharacterPicker);
   els.characterPickerList.addEventListener('click', (event) => {
     const button = event.target.closest('[data-character-id]');
     if (!button) return;
     const character = encoreCharacters.find(item => item.id === button.dataset.characterId);
-    if (character) setCharacterLabel(character);
+    if (character) setCharacterFilter(character);
   });
   els.characterPickerModal.addEventListener('click', (event) => { if (event.target === els.characterPickerModal) closeCharacterPicker(); });
   els.loadEncoreIcons.addEventListener('click', () => loadEncoreCatalog(true));

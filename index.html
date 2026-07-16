@@ -252,6 +252,7 @@
                 <select id="encoreIconSourceInput">
                   <option value="weapon">Armes</option>
                   <option value="item">Items</option>
+                  <option value="character">Avatars</option>
                 </select>
               </label>
               <label class="field">
@@ -308,12 +309,12 @@
             <span>5</span>
             <div>
               <h2>Reglages rapides</h2>
-              <p>Taille, tri et precision des valeurs.</p>
+              <p>Typographie et taille des textes.</p>
             </div>
           </div>
         </summary>
         <div class="panelBody">
-          <div class="controlGroup">
+          <div class="controlGroup advancedOnly">
             <div class="controlGroupTitle">Donnees</div>
             <div class="grid2">
               <label class="field">
@@ -467,18 +468,18 @@
       <div class="dialog__head">
         <div>
           <strong id="characterPickerTitle">Choisir un personnage</strong>
-          <p>Le nom remplacera le libelle de cette ligne.</p>
+          <p>Le personnage filtre les icones. Le libelle reste libre et modifiable.</p>
         </div>
         <button class="modalClose" id="characterPickerCloseBtn" type="button" aria-label="Fermer">&times;</button>
       </div>
       <input id="characterPickerSearchInput" class="characterSearch" type="search" placeholder="Rechercher un personnage" autocomplete="off">
-      <button class="characterClearButton" id="characterPickerClearBtn" type="button">Effacer le libelle</button>
+      <button class="characterClearButton" id="characterPickerClearBtn" type="button">Retirer le filtre personnage</button>
       <div class="characterPickerList" id="characterPickerList"></div>
     </div>
   </div>
 
   <div class="toastContainer" id="toastContainer" role="status" aria-live="polite" aria-atomic="true"></div>
   <datalist id="encoreIconOptions"></datalist>
-  <script src="script.js?v=20260715-vertical-icon-position"></script>
+  <script src="script.js?v=20260716-independent-character-filter"></script>
 </body>
 </html>
