@@ -128,7 +128,8 @@
     .tag-close{border:1px solid var(--line);border-radius:5px;background:transparent;color:var(--text);width:32px;height:32px}
     .tag-form{padding:20px;display:grid;gap:18px}
     .tag-target select,.tag-custom input{margin-top:7px}
-    .tag-group h3{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
+    .tag-group h3{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 4px}
+    .tag-group-note{color:var(--muted);font-size:10px;line-height:1.45;margin:0 0 9px}
     .tag-options{display:flex;flex-wrap:wrap;gap:7px}
     .tag-option{position:relative}.tag-option input{position:absolute;opacity:0;pointer-events:none}
     .tag-option span{display:block;border:1px solid var(--line);border-radius:18px;color:var(--muted);padding:7px 10px;font-size:10px;cursor:pointer}
@@ -330,10 +331,16 @@
     const targets = {self:"Lui-même",next:"Entrant",team:"Équipe",enemy:"Ennemi",unknown:"À vérifier"};
     const kindLabels = {buff:"effets",attack:"attaques",sequence:"séquences",weapon:"armes",echo:"Échos",sonata:"Sonatas",classify:"attaques à classer"};
     const tagGroups = {
-      "Nature de la fiche":["Attaque","Buff","Soin","Bouclier","Debuff","Dégâts coordonnés"],
-      "Statistique augmentée":["ATQ","DEF","PV","Taux CRIT","DGT CRIT","Énergie","DGT Aero","DGT Fusion","DGT Glacio","DGT Electro","DGT Spectro","DGT Havoc","Tous les DGT"],
-      "Type de dégâts augmenté":["DGT Attaque normale","DGT Attaque lourde","DGT Compétence de résonance","DGT Libération de résonance","DGT Intro","DGT Outro","DGT Écho"],
-      "Déclencheur":["Attaque normale","Attaque lourde","Compétence de résonance","Libération de résonance","Intro","Outro","Après avoir touché","Après un changement","Avec des stacks"]
+      "Nature de l'effet":["Attaque","Buff","Soin","Bouclier","Debuff","Dégâts coordonnés"],
+      "Statistique ou élément affecté":["ATQ","DEF","PV","Taux CRIT","DGT CRIT","Énergie","DGT Aero","DGT Fusion","DGT Glacio","DGT Electro","DGT Spectro","DGT Havoc","Tous les DGT"],
+      "Catégorie des dégâts infligés ou améliorés":["DGT Attaque normale","DGT Attaque lourde","DGT Compétence de résonance","DGT Libération de résonance","DGT Intro","DGT Outro","DGT Écho"],
+      "Action ou condition de déclenchement":["Attaque normale","Attaque lourde","Compétence de résonance","Libération de résonance","Intro","Outro","Après avoir touché","Après un changement","Avec des stacks"]
+    };
+    const tagGroupNotes = {
+      "Nature de l'effet":"Ce que fait réellement la fiche : attaquer, renforcer, soigner, protéger…",
+      "Statistique ou élément affecté":"La statistique ou l'élément modifié par l'effet.",
+      "Catégorie des dégâts infligés ou améliorés":"Comment le jeu classe les dégâts finaux, indépendamment de la touche ou de l'action utilisée.",
+      "Action ou condition de déclenchement":"Ce qui lance l'effet. Ne pas utiliser cette section pour indiquer la catégorie des dégâts."
     };
     const seed = [
       {id:"aalto-outro",character:"Aalto",element:"Aero",rarity:4,portrait:"https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead150/T_IconRoleHead150_12.webp",source:"Outro Skill",skillName:"Dissolving Mist",text:"The incoming Resonator has their Aero DMG Amplified by 23% for 14s or until they are switched out.",target:"next",tags:["Aero","DMG Amplification"]},
@@ -1132,6 +1139,7 @@
       $("tagGroups").innerHTML = Object.entries(tagGroups).map(([group,tags])=>`
         <section class="tag-group">
           <h3>${escapeHtml(group)}</h3>
+          <p class="tag-group-note">${escapeHtml(tagGroupNotes[group] || "")}</p>
           <div class="tag-options">${tags.map(tag=>`
             <label class="tag-option">
               <input type="checkbox" name="manualTag" value="${escapeHtml(tag)}" ${selected.has(tag) ? "checked" : ""}>
