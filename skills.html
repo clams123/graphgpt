@@ -6,6 +6,7 @@
   <title>WuWa Buff Skill Finder — Ealya_</title>
   <style>
     :root{--bg:#090d12;--panel:#111820;--line:#26333d;--text:#edf5f5;--muted:#87969e;--cyan:#70e6dc;--violet:#ad91ff}
+    html[data-theme="light"]{--bg:#eef2f3;--panel:#ffffff;--line:#c4d0d5;--text:#172126;--muted:#5d6b72;--cyan:#007d78;--violet:#6847bd}
     *{box-sizing:border-box}
     body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif}
     button,input,select,textarea{font:inherit}
@@ -17,6 +18,7 @@
     .language-control{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:10px}
     .language-control select{width:auto;padding:9px 10px}
     .api-button,.main-button{border:1px solid var(--cyan);background:#102825;color:var(--cyan);padding:11px 15px;border-radius:5px}
+    .theme-button{border:1px solid var(--line);background:var(--panel);color:var(--text);padding:10px 12px;border-radius:5px}
     .api-button:disabled{opacity:.55;cursor:wait}
     .hero{text-align:center;max-width:850px;margin:0 auto 40px}
     h1{font:400 clamp(40px,6vw,68px)/1.03 Georgia,serif;margin:0 0 18px}
@@ -34,7 +36,8 @@
     .mode-buttons{display:flex;gap:4px;flex-wrap:wrap}.mode-buttons button{border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);padding:12px 13px}
     .mode-buttons button.active{color:var(--cyan);border-bottom-color:var(--cyan)}
     .level-control{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}.level-control select{width:auto;padding:7px 10px}
-    .controls{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:10px;margin-bottom:22px}
+    .controls{display:grid;grid-template-columns:repeat(4,1fr) auto auto;gap:10px;margin-bottom:22px}
+    .controls.classification-controls{grid-template-columns:minmax(260px,1fr) auto auto}
     select,.field{width:100%;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:11px;border-radius:5px}
     .count{display:flex;align-items:center;justify-content:flex-end;color:var(--muted);font-size:13px;white-space:nowrap}
     .count strong{font-size:22px;color:var(--text);margin-right:5px}
@@ -47,19 +50,27 @@
     .name{font:24px Georgia,serif}.element{color:var(--cyan);font-size:10px;text-transform:uppercase;margin-left:9px}
     .source{border:1px solid var(--line);color:var(--muted);padding:5px 7px;font-size:9px;text-transform:uppercase}
     .card-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .card-icon-actions{display:flex;gap:5px}
     .copy-description{width:30px;height:28px;display:grid;place-items:center;border:1px solid var(--line);border-radius:5px;background:#0c1218;color:#9cabb1;font-size:15px;line-height:1;padding:0}
     .copy-description:hover{color:var(--cyan);border-color:var(--cyan)}
     .copy-description.copied{color:#07110f;background:var(--cyan);border-color:var(--cyan);font-size:12px;font-weight:700}
+    .tag-description{width:30px;height:28px;display:grid;place-items:center;border:1px solid var(--line);border-radius:5px;background:#0c1218;color:#9cabb1;font-size:14px;line-height:1;padding:0}
+    .tag-description:hover,.tag-description.has-tags{color:var(--violet);border-color:var(--violet)}
+    .tag-description svg{width:14px;height:14px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
     .skill{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px}
-    .description{color:#b0bdc2;font-size:13px;line-height:1.55;margin:0;white-space:pre-line}
+    .description{color:#b0bdc2;font-size:14px;line-height:1.6;margin:0;white-space:pre-line}
     .description .desc-value{color:#f4f8f8;font-weight:750}
     .long-description{margin:10px 0 0;border:0;background:#0c1218}
     .long-description summary{padding:10px 12px;color:var(--cyan);font-size:10px;font-weight:600;border:1px solid #26333d}
     .long-description[open] summary{border-bottom:0}
     .long-description .description{padding:12px;border:1px solid #26333d;border-top:0}
     .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}
-    .tags span{border:1px solid #2e3b45;color:#85949b;padding:4px 7px;font-size:9px}
+    .tags span,.tags button{border:1px solid #2e3b45;background:transparent;color:#85949b;padding:4px 7px;font-size:9px}
+    .tags button:hover{color:var(--cyan);border-color:var(--cyan)}
     .tags .team{color:var(--violet);border-color:#554579}.tags .next{color:var(--cyan);border-color:#315953}
+    .tags .manual-tag{color:var(--violet);border-color:#66528e;background:rgba(173,145,255,.06)}
+    .tags .suggested-tag{color:#cfb55f;border-color:#6d6034;background:rgba(207,181,95,.06)}
+    .tags .verified-tag{color:var(--cyan);border-color:#39746e}
     .multipliers{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:6px;margin-top:12px}
     .multiplier{display:flex;justify-content:space-between;gap:12px;background:#0c1218;border:1px solid #26333d;padding:7px 9px;font-size:10px;color:#84939a}
     .multiplier strong{color:#d8e5e5;font-family:Consolas,monospace;font-weight:500;white-space:nowrap}
@@ -86,6 +97,35 @@
     .buff-metric small{display:block;color:var(--muted);font-size:9px;margin-top:6px}
     .estimate-warning{grid-column:1/-1;border:1px solid #4f472d;background:#1a1810;color:#bdb38a;padding:11px;font-size:10px;line-height:1.5}
     .empty{text-align:center;padding:70px 20px;border:1px dashed var(--line);color:var(--muted)}
+    .classification-dashboard{display:grid;grid-template-columns:minmax(220px,1fr) auto auto;align-items:center;gap:12px;border:1px solid var(--line);border-radius:9px;background:var(--panel);padding:14px;margin-bottom:12px}
+    .classification-progress strong{display:block;font-size:14px}.classification-progress small{color:var(--muted)}
+    .progress-track{height:5px;background:#26313a;border-radius:8px;overflow:hidden;margin-top:8px}.progress-track i{display:block;height:100%;background:var(--cyan)}
+    .classification-dashboard select{width:auto;min-width:150px}
+    .classification-list{display:grid;gap:7px}
+    .classification-head,.classification-row{display:grid;grid-template-columns:minmax(170px,1.25fr) minmax(120px,.8fr) minmax(170px,1.15fr) minmax(170px,1.15fr) 92px 92px;align-items:center;gap:12px}
+    .classification-head{padding:7px 14px;color:var(--muted);font-size:9px;text-transform:uppercase;letter-spacing:.07em}
+    .classification-row{border:1px solid var(--line);border-radius:8px;background:var(--panel);padding:12px 14px}
+    .classification-row h3{font:17px Georgia,serif;margin:0}.classification-row small{display:block;color:var(--muted);margin-top:4px}
+    .classification-tags{display:flex;flex-wrap:wrap;gap:4px}.classification-tags span{border:1px solid #66528e;color:var(--violet);padding:4px 6px;font-size:8px}
+    .classification-tags.auto span{color:var(--muted);border-color:var(--line)}
+    .classification-row .tag-description{width:auto;padding:0 10px;font-size:10px;display:flex;align-items:center;justify-content:center;gap:6px}
+    .classification-status{display:inline-flex;justify-content:center;border:1px solid var(--line);border-radius:15px;padding:5px 7px;font-size:8px;text-transform:uppercase}
+    .classification-status.verified{color:var(--cyan);border-color:#39746e}.classification-status.suggested{color:#cfb55f;border-color:#6d6034}.classification-status.partial{color:var(--violet);border-color:#66528e}
+    .tag-modal{position:fixed;z-index:50;inset:0;background:rgba(2,7,10,.76);display:grid;place-items:center;padding:20px}
+    .tag-modal[hidden]{display:none}
+    .tag-dialog{width:min(720px,100%);max-height:min(820px,calc(100vh - 40px));overflow:auto;border:1px solid var(--line);border-radius:12px;background:var(--panel);box-shadow:0 24px 80px rgba(0,0,0,.45)}
+    .tag-dialog-header{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;padding:20px;border-bottom:1px solid var(--line);margin:0}
+    .tag-dialog-header h2{font:25px Georgia,serif;margin:0}.tag-dialog-header p{color:var(--muted);font-size:11px;margin:5px 0 0}
+    .tag-close{border:1px solid var(--line);border-radius:5px;background:transparent;color:var(--text);width:32px;height:32px}
+    .tag-form{padding:20px;display:grid;gap:18px}
+    .tag-target select,.tag-custom input{margin-top:7px}
+    .tag-group h3{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:0 0 8px}
+    .tag-options{display:flex;flex-wrap:wrap;gap:7px}
+    .tag-option{position:relative}.tag-option input{position:absolute;opacity:0;pointer-events:none}
+    .tag-option span{display:block;border:1px solid var(--line);border-radius:18px;color:var(--muted);padding:7px 10px;font-size:10px;cursor:pointer}
+    .tag-option input:checked + span{color:var(--violet);border-color:var(--violet);background:rgba(173,145,255,.1)}
+    .verified-check{display:flex;align-items:center;gap:9px;color:var(--text);font-size:12px}.verified-check input{accent-color:var(--cyan)}
+    .tag-form-actions{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line);padding-top:16px}
     details{margin-top:35px;border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden}
     summary{padding:16px 18px;cursor:pointer;color:var(--cyan);font-weight:600}
     .editor{border-top:1px solid var(--line);padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
@@ -94,10 +134,36 @@
     .editor-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
     .soft-button{border:1px solid var(--line);background:#151e26;color:#b7c2c6;padding:10px 13px;border-radius:4px}
     footer{margin-top:35px;padding-top:20px;border-top:1px solid var(--line);color:#52616a;font-size:10px;display:flex;justify-content:space-between}
+    html[data-theme="light"] .api-button,html[data-theme="light"] .main-button{background:#e2f4f1}
+    html[data-theme="light"] .message{background:#e4f4f1;border-color:#9cc8c2;color:#285b56}
+    html[data-theme="light"] .card{border-color:#cbd5da;box-shadow:0 2px 8px rgba(30,52,60,.06)}
+    html[data-theme="light"] .portrait{background:linear-gradient(145deg,#dce8eb,#f7f9fa)}
+    html[data-theme="light"] .description{color:#34464e}
+    html[data-theme="light"] .description .desc-value,
+    html[data-theme="light"] .multiplier strong{color:#102a30}
+    html[data-theme="light"] .copy-description{color:#53676f}
+    html[data-theme="light"] .tag-description{background:#f5f8f9}
+    html[data-theme="light"] .tag-modal{background:rgba(49,63,70,.42)}
+    html[data-theme="light"] .tag-dialog{box-shadow:0 24px 70px rgba(29,44,50,.22)}
+    html[data-theme="light"] .progress-track{background:#d7e1e4}
+    html[data-theme="light"] .copy-description,
+    html[data-theme="light"] .long-description,
+    html[data-theme="light"] .multiplier,
+    html[data-theme="light"] .compare-tools,
+    html[data-theme="light"] .rotation-row input{background:#f5f8f9}
+    html[data-theme="light"] .long-description summary,
+    html[data-theme="light"] .long-description .description,
+    html[data-theme="light"] .tags span,html[data-theme="light"] .tags button,
+    html[data-theme="light"] .multiplier{border-color:#c8d3d7}
+    html[data-theme="light"] .total-box{background:#e9f5f3;border-color:#9dc9c3}
+    html[data-theme="light"] .estimate-warning{background:#fff8df;border-color:#d4c074;color:#6b5c29}
+    html[data-theme="light"] .soft-button{background:#edf2f4;color:#33454d}
     @media(max-width:700px){
       .page{width:min(100% - 20px,1180px)}header{align-items:flex-start;margin-bottom:35px}.header-actions{align-items:flex-end;flex-direction:column}.api-button{font-size:10px;padding:9px}
       .modes{align-items:flex-end}.mode-buttons{max-width:calc(100% - 76px)}.mode-buttons button{padding:10px 7px;font-size:10px}.controls{grid-template-columns:1fr 1fr}.count{grid-column:1/-1;justify-content:flex-start}
       .card{grid-template-columns:75px 1fr}.card-body{padding:14px}.topline{align-items:flex-start}.source{display:none}
+      .classification-dashboard{grid-template-columns:1fr}.classification-dashboard select{width:100%}
+      .classification-head{display:none}.classification-row{grid-template-columns:1fr}.classification-row .tag-description{justify-self:start}
       .editor{grid-template-columns:1fr}.wide,.editor-actions{grid-column:auto}.comparison{grid-template-columns:1fr}.compare-selects{grid-template-columns:1fr}.versus{text-align:center}.compare-tools{align-items:stretch;flex-direction:column}.compare-tabs{display:grid;grid-template-columns:repeat(3,1fr)}footer{flex-direction:column;gap:7px}
     }
   </style>
@@ -107,18 +173,19 @@
     <header>
       <div class="logo">WUWA <span>BUFF SKILL FINDER</span></div>
       <div class="header-actions">
-        <label class="language-control">Données
+        <label class="language-control">
           <select id="dataLanguage" aria-label="Langue des données">
             <option value="en">English</option>
             <option value="fr">Français</option>
           </select>
         </label>
-        <button class="api-button" id="syncButton">↻ Tout actualiser avec Encore</button>
+		<button class="theme-button" id="themeButton" type="button">☀ Mode clair</button>
+        <button class="api-button" id="syncButton">↻ Actualisation API</button>
       </div>
     </header>
 
     <section class="hero">
-      <h1>Ceci est un test <em>pour Ealya_</em></h1>
+      <h1>Voila <em>Ealya_</em></h1>
       <p>Recherche les personnages de Wuthering Waves par buff, cible ou type de compétence. Tout reste enregistré en local.</p>
       <div class="search">
         <span>⌕</span>
@@ -142,6 +209,7 @@
         <button data-mode="weapon">Armes</button>
         <button data-mode="echo">Échos</button>
         <button data-mode="sonata">Sonatas</button>
+        <button data-mode="classify">Classifier</button>
         <button data-mode="compare">Comparer</button>
       </div>
       <label class="level-control">Niveau de compétence
@@ -165,6 +233,7 @@
         <option>Aero</option><option>Fusion</option><option>Glacio</option>
         <option>Electro</option><option>Spectro</option><option>Havoc</option>
       </select>
+      <button class="soft-button" id="resetFilters" type="button">↺</button>
       <div class="count"><strong id="count">0</strong> <span id="countLabel">effets</span></div>
     </section>
 
@@ -197,6 +266,39 @@
       </form>
     </details>
 
+    <div class="tag-modal" id="tagModal" hidden>
+      <section class="tag-dialog" role="dialog" aria-modal="true" aria-labelledby="tagDialogTitle">
+        <header class="tag-dialog-header">
+          <div>
+            <h2 id="tagDialogTitle">Classifier la fiche</h2>
+            <p id="tagDialogSubtitle"></p>
+          </div>
+          <button class="tag-close" id="tagClose" type="button" aria-label="Fermer">×</button>
+        </header>
+        <form class="tag-form" id="tagForm">
+          <label class="tag-target"><span>Bénéficiaire vérifié</span>
+            <select id="tagTarget">
+              <option value="">Conserver la détection automatique</option>
+              <option value="self">Personnel uniquement</option>
+              <option value="next">Prochain personnage uniquement</option>
+              <option value="team">Toute l’équipe</option>
+              <option value="enemy">Ennemi</option>
+              <option value="unknown">À vérifier</option>
+            </select>
+          </label>
+          <div id="tagGroups"></div>
+          <label class="tag-custom"><span>Tags personnalisés, séparés par des virgules</span>
+            <input class="field" id="customTags" placeholder="Ex. Réponse instantanée, Mode Mécha">
+          </label>
+          <label class="verified-check"><input id="tagVerified" type="checkbox"> Classification vérifiée manuellement</label>
+          <div class="tag-form-actions">
+            <button class="soft-button" id="clearTags" type="button">Effacer mes tags</button>
+            <button class="main-button" type="submit">Enregistrer</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
     <footer>
       <span>Outil local non officiel pour Wuthering Waves</span>
       <span>Source facultative : api-v2.encore.moe</span>
@@ -206,11 +308,20 @@
   <script>
     const STORE = "wuwa-buff-finder-v1";
     const LANGUAGE_STORE = "wuwa-buff-finder-language";
+    const THEME_STORE = "wuwa-buff-finder-theme";
+    const TAG_STORE = "wuwa-buff-finder-manual-tags";
     const DB_NAME = "wuwa-buff-skill-finder";
     const DB_STORE = "records";
     const API_ROOT = "https://api-v2.encore.moe/api";
+    const editIconSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="m15 5 3 3"/></svg>';
     const targets = {self:"Lui-même",next:"Entrant",team:"Équipe",enemy:"Ennemi",unknown:"À vérifier"};
-    const kindLabels = {buff:"effets",attack:"attaques",sequence:"séquences",weapon:"armes",echo:"Échos",sonata:"Sonatas"};
+    const kindLabels = {buff:"effets",attack:"attaques",sequence:"séquences",weapon:"armes",echo:"Échos",sonata:"Sonatas",classify:"attaques à classer"};
+    const tagGroups = {
+      "Nature de la fiche":["Attaque simple","Attaque","Buff","Soin","Bouclier","Debuff","Dégâts coordonnés"],
+      "Statistique augmentée":["ATQ","DEF","PV","Taux CRIT","DGT CRIT","Énergie","DGT Aero","DGT Fusion","DGT Glacio","DGT Electro","DGT Spectro","DGT Havoc","Tous les DGT"],
+      "Type de dégâts augmenté":["DGT Attaque normale","DGT Attaque lourde","DGT Compétence de résonance","DGT Libération de résonance","DGT Intro","DGT Outro","DGT Écho"],
+      "Déclencheur":["Attaque normale","Attaque lourde","Compétence de résonance","Libération de résonance","Intro","Outro","Après avoir touché","Après un changement","Avec des stacks"]
+    };
     const seed = [
       {id:"aalto-outro",character:"Aalto",element:"Aero",rarity:4,portrait:"https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead150/T_IconRoleHead150_12.webp",source:"Outro Skill",skillName:"Dissolving Mist",text:"The incoming Resonator has their Aero DMG Amplified by 23% for 14s or until they are switched out.",target:"next",tags:["Aero","DMG Amplification"]},
       {id:"verina-outro",character:"Verina",element:"Spectro",rarity:5,portrait:"https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead150/T_IconRoleHead150_3.webp",source:"Outro Skill",skillName:"Blossom",text:"Heal the incoming Resonator by 19% of Verina's ATK per second for 6s. All Resonators on nearby teams have their DMG Amplified by 15% for 30s.",target:"team",tags:["Heal","All DMG","DMG Amplification"]},
@@ -268,6 +379,12 @@
     try { data = JSON.parse(localStorage.getItem(STORE)) || seed; } catch { data = seed; }
     data = data.map(item => ({...item,kind:item.kind || "buff",text:cleanGameText(item.text),tags:Array.isArray(item.tags)?item.tags:[],translations:item.translations || {}}));
     let uiLanguage = localStorage.getItem(LANGUAGE_STORE) === "fr" ? "fr" : "en";
+    let uiTheme = localStorage.getItem(THEME_STORE) === "light" ? "light" : "dark";
+    document.documentElement.dataset.theme = uiTheme;
+    let tagOverrides;
+    try { tagOverrides = JSON.parse(localStorage.getItem(TAG_STORE)) || {}; } catch { tagOverrides = {}; }
+    let editingItemId = "";
+    let classificationStatus = "all";
     let mode = "buff";
     let compareA = "";
     let compareB = "";
@@ -275,6 +392,29 @@
     let rotationWindow = 20;
     let testedElement = "Tous";
     const rotationUses = {};
+
+    function itemOverride(item) {
+      return tagOverrides[String(item?.id)] || {};
+    }
+
+    function effectiveTarget(item) {
+      const override = itemOverride(item);
+      return (!override.autofilled && override.target) || item.target || "unknown";
+    }
+
+    function effectiveTags(item) {
+      const override = itemOverride(item);
+      return [...new Set([...(item.tags || []),...(override.autofilled ? [] : override.tags || [])])];
+    }
+
+    function manualTags(item) {
+      return itemOverride(item).tags || [];
+    }
+
+    function saveTagOverrides() {
+      localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
+      render();
+    }
 
     function itemValue(item, key) {
       if (uiLanguage === "en") return item?.[key] ?? "";
@@ -347,13 +487,103 @@
       return [...new Set(found)];
     }
 
+    function inferBoostedStats(text) {
+      const n = clean(text), found = [];
+      const boosted = stat => new RegExp(`\\b${stat}\\b.{0,32}\\b(?:amplif\\w*|increas\\w*|boost\\w*|bonus)\\b|\\b(?:amplif\\w*|increas\\w*|boost\\w*|gain\\w*|grant\\w*)\\b.{0,55}\\b${stat}\\b`);
+      const rules = [
+        ["Aero",boosted("aero dmg")],
+        ["Fusion",boosted("fusion dmg")],
+        ["Glacio",boosted("glacio dmg")],
+        ["Electro",boosted("electro dmg")],
+        ["Spectro",boosted("spectro dmg")],
+        ["Havoc",boosted("havoc dmg")],
+        ["ATK",boosted("atk")],
+        ["DEF",boosted("def")],
+        ["HP",boosted("hp")],
+        ["CRIT Rate",boosted("crit rate")],
+        ["CRIT DMG",boosted("crit dmg")],
+        ["Energy",boosted("energy regen")],
+        ["All DMG",boosted("all dmg")],
+        ["Basic Attack",boosted("basic attack dmg")],
+        ["Heavy Attack",boosted("heavy attack dmg")],
+        ["Resonance Skill",boosted("resonance skill dmg")],
+        ["Resonance Liberation",boosted("resonance liberation dmg")]
+      ];
+      rules.forEach(([tag,regex])=>regex.test(n) && found.push(tag));
+      return found;
+    }
+
+    function manualBoostedStats(item) {
+      const map = {
+        "DGT Aero":"Aero","DGT Fusion":"Fusion","DGT Glacio":"Glacio",
+        "DGT Electro":"Electro","DGT Spectro":"Spectro","DGT Havoc":"Havoc",
+        "ATQ":"ATK","DEF":"DEF","PV":"HP","Taux CRIT":"CRIT Rate","DGT CRIT":"CRIT DMG","Énergie":"Energy","Tous les DGT":"All DMG",
+        "DGT Attaque normale":"Basic Attack","DGT Attaque lourde":"Heavy Attack",
+        "DGT Compétence de résonance":"Resonance Skill","DGT Libération de résonance":"Resonance Liberation"
+      };
+      return (itemOverride(item).autofilled ? [] : manualTags(item)).map(tag=>map[tag]).filter(Boolean);
+    }
+
+    function manualSearchAliases(item) {
+      if (itemOverride(item).autofilled) return [];
+      const aliases = {"Soin":"Heal","Bouclier":"Shield","Énergie":"Energy"};
+      return manualTags(item).map(tag=>aliases[tag]).filter(Boolean);
+    }
+
+    function suggestedTarget(item) {
+      const n = clean(item.text);
+      if (/all resonators|resonators in the team|party members|nearby teams/.test(n)) return "team";
+      if (/incoming resonator|next resonator/.test(n)) return "next";
+      if (/self|own dmg|this resonator|current character|active resonator|wearer|wielder/.test(n)) return "self";
+      if (hasBuffEffect(item.text,item.source)) return "self";
+      return item.target || "enemy";
+    }
+
+    function suggestedTags(item) {
+      const text = clean(item.text), tags = [];
+      const add = tag=>tags.includes(tag) || tags.push(tag);
+      const boosts = inferBoostedStats(item.text);
+      const boostMap = {
+        Aero:"DGT Aero",Fusion:"DGT Fusion",Glacio:"DGT Glacio",Electro:"DGT Electro",Spectro:"DGT Spectro",Havoc:"DGT Havoc",
+        ATK:"ATQ",DEF:"DEF",HP:"PV","CRIT Rate":"Taux CRIT","CRIT DMG":"DGT CRIT",Energy:"Énergie","All DMG":"Tous les DGT",
+        "Basic Attack":"DGT Attaque normale","Heavy Attack":"DGT Attaque lourde",
+        "Resonance Skill":"DGT Compétence de résonance","Resonance Liberation":"DGT Libération de résonance"
+      };
+      add("Attaque");
+      if (hasBuffEffect(item.text,item.source) || boosts.length) add("Buff");
+      else add("Attaque simple");
+      if (/\bheal|healing|recover hp|restore hp\b/.test(text)) add("Soin");
+      if (/\bshield\b/.test(text)) add("Bouclier");
+      if (/\bdebuff|reduce.{0,25}(?:def|resistance)|damage taken\b/.test(text)) add("Debuff");
+      boosts.forEach(boost=>boostMap[boost] && add(boostMap[boost]));
+      if (/normal attack|basic attack/i.test(item.source)) add("Attaque normale");
+      if (/heavy attack/i.test(item.source)) add("Attaque lourde");
+      if (/resonance skill/i.test(item.source)) add("Compétence de résonance");
+      if (/resonance liberation/i.test(item.source)) add("Libération de résonance");
+      if (/intro skill/i.test(item.source)) add("Intro");
+      if (/outro skill/i.test(item.source)) add("Outro");
+      if (/after (?:dealing|hitting)|upon (?:dealing|hitting)|when .* hits?/.test(text)) add("Après avoir touché");
+      if (/switch|switched|incoming resonator/.test(text)) add("Après un changement");
+      if (/stack/.test(text)) add("Avec des stacks");
+      return tags;
+    }
+
+    function classificationState(item) {
+      const override = itemOverride(item);
+      if (override.verified) return "verified";
+      if (override.autofilled) return "suggested";
+      if ((override.tags || []).length || override.target) return "partial";
+      return "untagged";
+    }
+
     function queryIntent(query) {
       const n = clean(query), tags = [];
-      const map = [[/\baero\b/,"Aero"],[/\bfusion\b/,"Fusion"],[/\bglacio\b/,"Glacio"],[/\belectro\b/,"Electro"],[/\bspectro\b/,"Spectro"],[/\bhavoc\b/,"Havoc"],[/\b(atq|atk)\b/,"ATK"],[/attaque normale|basic attack/,"Basic Attack"],[/attaque lourde|heavy attack/,"Heavy Attack"],[/competence de resonance|resonance skill/,"Resonance Skill"],[/liberation|ultime|resonance liberation/,"Resonance Liberation"],[/bouclier|shield/,"Shield"],[/soin|heal/,"Heal"],[/energie|energy/,"Energy"]];
+      const map = [[/\baero\b/,"Aero"],[/\bfusion\b/,"Fusion"],[/\bglacio\b/,"Glacio"],[/\belectro\b/,"Electro"],[/\bspectro\b/,"Spectro"],[/\bhavoc\b/,"Havoc"],[/\b(atq|atk)\b/,"ATK"],[/\bdef\b|defense/,"DEF"],[/\b(pv|hp)\b/,"HP"],[/degats crit|crit dmg/,"CRIT DMG"],[/taux crit|crit rate/,"CRIT Rate"],[/tous les degats|all dmg/,"All DMG"],[/attaque normale|basic attack/,"Basic Attack"],[/attaque lourde|heavy attack/,"Heavy Attack"],[/competence de resonance|resonance skill/,"Resonance Skill"],[/liberation|ultime|resonance liberation/,"Resonance Liberation"],[/bouclier|shield/,"Shield"],[/soin|heal/,"Heal"],[/energie|energy/,"Energy"]];
       map.forEach(([regex,tag]) => regex.test(n) && tags.push(tag));
       return {
         source:/\boutro\b/.test(n) ? "Outro Skill" : "",
         tags,
+        target:/\b(personnel|personnelle|self|lui meme)\b/.test(n) ? "self" : /\b(prochain personnage|personnage entrant|incoming|next resonator)\b/.test(n) ? "next" : /\b(equipe|team|tous les allies)\b/.test(n) ? "team" : "",
         external:/pas seulement|autre que lui|allie|equipe|pour tous|not self/.test(n),
         persistent:/reste|persiste|apres un changement|apres switch/.test(n),
         words:n.split(" ").filter(word => word.length > 3)
@@ -363,14 +593,19 @@
     function matches(item, query) {
       if (!query.trim()) return true;
       const intent = queryIntent(query);
-      if (intent.source && item.source !== intent.source) return false;
-      if (intent.tags.some(tag => !(item.tags || []).includes(tag))) return false;
-      if (intent.external && !["next","team"].includes(item.target)) return false;
+      const allTags = effectiveTags(item);
+      const searchableTags = [...new Set([...allTags,...manualSearchAliases(item)])];
+      if (intent.source && item.source !== intent.source && !searchableTags.includes("Outro")) return false;
+      const boostedStats = [...new Set([...(item.kind === "buff" ? inferBoostedStats(item.text) : []),...manualBoostedStats(item)])];
+      const boostableTags = ["Aero","Fusion","Glacio","Electro","Spectro","Havoc","ATK","DEF","HP","CRIT Rate","CRIT DMG","Energy","All DMG","Basic Attack","Heavy Attack","Resonance Skill","Resonance Liberation"];
+      if (intent.tags.some(tag => (item.kind === "buff" || manualBoostedStats(item).length) && boostableTags.includes(tag) ? !boostedStats.includes(tag) : !searchableTags.includes(tag))) return false;
+      if (intent.target && effectiveTarget(item)!==intent.target) return false;
+      if (intent.external && !["next","team"].includes(effectiveTarget(item))) return false;
       if (intent.persistent && /until (they are )?switched out/i.test(item.text)) return false;
-      if (intent.source || intent.tags.length || intent.external || intent.persistent) return true;
+      if (intent.source || intent.tags.length || intent.target || intent.external || intent.persistent) return true;
       const attributeText = (item.attributes || []).map(row => `${row.name} ${(row.values || []).join(" ")}`).join(" ");
       const translated = item.translations?.[uiLanguage] || {};
-      const haystack = clean([item.character,item.element,item.source,item.skillName,item.text,translated.character,translated.element,translated.source,translated.skillName,translated.text,...(item.tags || []),attributeText].join(" "));
+      const haystack = clean([item.character,item.element,item.source,item.skillName,item.text,translated.character,translated.element,translated.source,translated.skillName,translated.text,...searchableTags,targets[effectiveTarget(item)],attributeText].join(" "));
       return intent.words.every(word => haystack.includes(word));
     }
 
@@ -384,8 +619,9 @@
 
     function updateCharacters() {
       const current = $("characterFilter").value;
-      const relevant = data.filter(item=>item.kind===mode);
-      const labels = {buff:"Tous les personnages",attack:"Tous les personnages",sequence:"Tous les personnages",weapon:"Toutes les armes",echo:"Tous les Échos",sonata:"Toutes les Sonatas"};
+      const relevantKind = mode === "classify" ? "attack" : mode;
+      const relevant = data.filter(item=>item.kind===relevantKind);
+      const labels = {buff:"Tous les personnages",attack:"Tous les personnages",sequence:"Tous les personnages",weapon:"Toutes les armes",echo:"Tous les Échos",sonata:"Toutes les Sonatas",classify:"Choisir un personnage"};
       const names = [...new Set(relevant.map(item=>item.character))].sort((a,b)=>{
         const itemA = relevant.find(item=>item.character===a);
         const itemB = relevant.find(item=>item.character===b);
@@ -399,7 +635,7 @@
 
     function updateSources() {
       const current = $("sourceFilter").value;
-      const relevant = data.filter(item => item.kind === mode || mode === "compare" && item.kind === "attack");
+      const relevant = data.filter(item => item.kind === mode || ["compare","classify"].includes(mode) && item.kind === "attack");
       const sources = [...new Set(relevant.map(item => item.source))].sort();
       $("sourceFilter").innerHTML = '<option value="">Toutes les sources</option>' + sources.map(source => {
         const sample = relevant.find(item=>item.source===source);
@@ -445,6 +681,10 @@
       const element = itemValue(item,"element");
       const source = itemValue(item,"source");
       const skillName = itemValue(item,"skillName");
+      const override = itemOverride(item);
+      const userTags = manualTags(item);
+      const displayedTags = [...new Set([...effectiveTags(item),...(override.autofilled ? userTags : [])])];
+      const target = effectiveTarget(item);
       const long = text.length > 260 || text.split("\n").length > 4;
       return `
         <article class="card" data-card-id="${escapeHtml(item.id)}">
@@ -454,7 +694,10 @@
               <div><span class="name">${escapeHtml(title)}</span><span class="element">${escapeHtml(element)}</span></div>
               <div class="card-actions">
                 <span class="source">${escapeHtml(source)}</span>
-                <button class="copy-description" type="button" data-copy-id="${escapeHtml(item.id)}" title="Copier la description" aria-label="Copier la description de ${escapeHtml(title)}">⧉</button>
+                <div class="card-icon-actions">
+                  <button class="copy-description" type="button" data-copy-id="${escapeHtml(item.id)}" title="Copier la description" aria-label="Copier la description de ${escapeHtml(title)}">⧉</button>
+                  <button class="tag-description ${userTags.length || override.target || override.verified ? "has-tags" : ""}" type="button" data-tag-id="${escapeHtml(item.id)}" title="Modifier les tags" aria-label="Modifier les tags de ${escapeHtml(title)}">${editIconSvg}</button>
+                </div>
               </div>
             </div>
             <div class="skill">${escapeHtml(skillName || source)}</div>
@@ -462,7 +705,7 @@
               ? `<details class="long-description"><summary>Description complète — cliquer pour ouvrir</summary><p class="description">${formatDescription(text)}</p></details>`
               : `<p class="description">${formatDescription(text)}</p>`}
             ${item.kind === "attack" ? multiplierHtml(item) : ""}
-            <div class="tags">${["buff","sequence","weapon","echo","sonata"].includes(item.kind) && item.target ? `<span class="${item.target}">${translatedTarget(item)}</span>` : ""}${(item.tags || []).map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}</div>
+            <div class="tags">${["buff","sequence","weapon","echo","sonata","attack"].includes(item.kind) && target ? `<button type="button" class="${target}" data-target-tag="${target}">${targets[target] || "À vérifier"}</button>` : ""}${displayedTags.map(tag=>override.autofilled && userTags.includes(tag) ? `<span class="suggested-tag">${escapeHtml(tag)}</span>` : `<button type="button" data-search-tag="${escapeHtml(tag)}" class="${userTags.includes(tag) ? "manual-tag" : ""}">${escapeHtml(tag)}</button>`).join("")}${override.autofilled ? '<span class="suggested-tag">Auto — à vérifier</span>' : ""}${override.verified ? '<span class="verified-tag">✓ Vérifié</span>' : ""}</div>
           </div>
         </article>`;
     }
@@ -554,7 +797,7 @@
 
     function teamMetrics(character) {
       return data
-        .filter(item=>item.kind==="buff" && item.character===character && ["next","team"].includes(item.target))
+        .filter(item=>item.kind==="buff" && item.character===character && ["next","team"].includes(effectiveTarget(item)))
         .flatMap(extractBuffMetrics)
         .filter(metric=>testedElement==="Tous" || metric.element==="Tous" || clean(metric.element)===clean(testedElement));
     }
@@ -613,11 +856,64 @@
         ${body}`;
     }
 
+    function renderClassification() {
+      const character = $("characterFilter").value;
+      const query = $("search").value;
+      const allItems = data.filter(item=>item.kind==="attack" && (!character || item.character===character));
+      const verified = allItems.filter(item=>classificationState(item)==="verified").length;
+      const items = allItems
+        .filter(item=>(classificationStatus==="all" || classificationState(item)===classificationStatus) && matches(item,query))
+        .sort((a,b)=>itemValue(a,"source").localeCompare(itemValue(b,"source")) || itemValue(a,"skillName").localeCompare(itemValue(b,"skillName")));
+      $("count").textContent = items.length;
+      $("countLabel").textContent = "attaques à classer";
+      if (!character) {
+        $("results").innerHTML = '<div class="empty">Choisis un personnage pour classer ses attaques.</div>';
+        return;
+      }
+      const progress = allItems.length ? Math.round(verified/allItems.length*100) : 0;
+      const statusOptions = [
+        ["all","Toutes les fiches"],["untagged","À classer"],["suggested","Proposées automatiquement"],["partial","Classées non vérifiées"],["verified","Vérifiées"]
+      ];
+      const dashboard = `<div class="classification-dashboard">
+        <div class="classification-progress"><strong>${verified} / ${allItems.length} fiches vérifiées</strong><small>${progress}% du personnage terminé</small><div class="progress-track"><i style="width:${progress}%"></i></div></div>
+        <select id="classificationStatusFilter" aria-label="Statut de classification">${statusOptions.map(([value,label])=>`<option value="${value}" ${classificationStatus===value?"selected":""}>${label}</option>`).join("")}</select>
+        <button class="soft-button" type="button" data-autofill-character="${escapeHtml(character)}">✨ Préremplir les fiches vides</button>
+      </div>`;
+      if (!items.length) {
+        $("results").innerHTML = dashboard + '<div class="empty">Aucune fiche ne correspond à cette vue.</div>';
+        return;
+      }
+      const stateLabels = {untagged:"À classer",suggested:"Auto proposé",partial:"À vérifier",verified:"Vérifié"};
+      $("results").innerHTML = dashboard + `<div class="classification-head"><span>Compétence</span><span>Source</span><span>Suggestions</span><span>Classification retenue</span><span>Statut</span><span>Action</span></div><div class="classification-list">${items.map(item=>{
+        const override = itemOverride(item);
+        const tags = manualTags(item);
+        const suggestions = suggestedTags(item);
+        const state = classificationState(item);
+        const shownSuggestions = suggestions.slice(0,5);
+        const shownTags = tags.slice(0,5);
+        return `<article class="classification-row">
+          <div><h3>${escapeHtml(itemValue(item,"skillName"))}</h3><small>${escapeHtml(itemValue(item,"character"))}</small></div>
+          <div><small>${escapeHtml(itemValue(item,"source"))}</small></div>
+          <div class="classification-tags auto">${shownSuggestions.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}${suggestions.length>shownSuggestions.length?`<span>+${suggestions.length-shownSuggestions.length}</span>`:""}</div>
+          <div class="classification-tags">${shownTags.length ? shownTags.map(tag=>`<span>${escapeHtml(tag)}</span>`).join("") : "<small>Aucun tag retenu</small>"}${tags.length>shownTags.length?`<span>+${tags.length-shownTags.length}</span>`:""}${override.target ? `<span>${escapeHtml(targets[override.target] || override.target)}</span>` : ""}</div>
+          <span class="classification-status ${state}">${stateLabels[state]}</span>
+          <button class="tag-description ${state!=="untagged" ? "has-tags" : ""}" type="button" data-tag-id="${escapeHtml(item.id)}">${editIconSvg} Vérifier</button>
+        </article>`;
+      }).join("")}</div>`;
+    }
+
     function render() {
       document.querySelector(".controls").style.display = mode === "compare" ? "none" : "";
-      $("targetFilter").style.display = ["attack"].includes(mode) ? "none" : "";
+      document.querySelector(".controls").classList.toggle("classification-controls",mode === "classify");
+      $("sourceFilter").style.display = mode === "classify" ? "none" : "";
+      $("targetFilter").style.display = mode === "classify" ? "none" : "";
+      $("elementFilter").style.display = mode === "classify" ? "none" : "";
       if (mode === "compare") {
         renderComparison();
+        return;
+      }
+      if (mode === "classify") {
+        renderClassification();
         return;
       }
       const query = $("search").value;
@@ -625,7 +921,7 @@
       const source = $("sourceFilter").value;
       const target = $("targetFilter").value;
       const element = $("elementFilter").value;
-      const filtered = data.filter(item => item.kind === mode && matches(item,query) && (!character || item.character===character) && (!source || item.source===source) && (mode === "attack" || !target || item.target===target) && (!element || item.element===element)).sort((a,b)=>itemValue(a,"character").localeCompare(itemValue(b,"character")) || itemValue(a,"source").localeCompare(itemValue(b,"source")));
+      const filtered = data.filter(item => item.kind === mode && matches(item,query) && (!character || item.character===character) && (!source || item.source===source) && (!target || effectiveTarget(item)===target) && (!element || item.element===element)).sort((a,b)=>itemValue(a,"character").localeCompare(itemValue(b,"character")) || itemValue(a,"source").localeCompare(itemValue(b,"source")));
       $("count").textContent = filtered.length;
       $("countLabel").textContent = kindLabels[mode] || "fiches";
       $("results").innerHTML = filtered.length ? filtered.map(cardHtml).join("") : `<div class="empty">Aucun résultat dans « ${escapeHtml(kindLabels[mode] || mode)} ». Actualise avec Encore ou retire un filtre.</div>`;
@@ -665,6 +961,41 @@
       } catch {
         message("La copie automatique a été refusée par le navigateur. Sélectionne le texte manuellement.");
       }
+    }
+
+    function presetTags() {
+      return Object.values(tagGroups).flat();
+    }
+
+    function openTagEditor(itemId) {
+      const item = data.find(candidate=>String(candidate.id)===String(itemId));
+      if (!item) return;
+      editingItemId = String(item.id);
+      const override = itemOverride(item);
+      const hasClassification = (override.tags || []).length || override.target || override.verified || override.autofilled;
+      const selected = new Set(hasClassification ? override.tags || [] : suggestedTags(item));
+      $("tagDialogTitle").textContent = itemValue(item,"character");
+      $("tagDialogSubtitle").textContent = `${itemValue(item,"source")} · ${itemValue(item,"skillName")}${hasClassification ? "" : " · Suggestions automatiques préremplies"}`;
+      $("tagTarget").value = override.target || (hasClassification ? "" : suggestedTarget(item));
+      $("tagVerified").checked = Boolean(override.verified);
+      $("tagGroups").innerHTML = Object.entries(tagGroups).map(([group,tags])=>`
+        <section class="tag-group">
+          <h3>${escapeHtml(group)}</h3>
+          <div class="tag-options">${tags.map(tag=>`
+            <label class="tag-option">
+              <input type="checkbox" name="manualTag" value="${escapeHtml(tag)}" ${selected.has(tag) ? "checked" : ""}>
+              <span>${escapeHtml(tag)}</span>
+            </label>`).join("")}
+          </div>
+        </section>`).join("");
+      const presets = new Set(presetTags());
+      $("customTags").value = [...selected].filter(tag=>!presets.has(tag)).join(", ");
+      $("tagModal").hidden = false;
+    }
+
+    function closeTagEditor() {
+      $("tagModal").hidden = true;
+      editingItemId = "";
     }
 
     async function apiJson(language,path,required=true) {
@@ -912,7 +1243,30 @@
 
     $("search").addEventListener("input",render);
     ["characterFilter","sourceFilter","targetFilter","elementFilter"].forEach(id => $(id).addEventListener("change",render));
+    $("resetFilters").addEventListener("click",()=>{
+      $("search").value = "";
+      if (mode !== "classify") $("characterFilter").value = "";
+      $("sourceFilter").value = "";
+      $("targetFilter").value = "";
+      $("elementFilter").value = "";
+      classificationStatus = "all";
+      updateCharacters();
+      updateSources();
+      render();
+      message("Recherche et filtres réinitialisés.");
+    });
     $("skillLevel").addEventListener("change",render);
+    function updateThemeButton() {
+      $("themeButton").textContent = uiTheme === "light" ? "☾ Mode sombre" : "☀ Mode clair";
+      $("themeButton").setAttribute("aria-pressed",String(uiTheme === "light"));
+    }
+    updateThemeButton();
+    $("themeButton").addEventListener("click",()=>{
+      uiTheme = uiTheme === "light" ? "dark" : "light";
+      document.documentElement.dataset.theme = uiTheme;
+      localStorage.setItem(THEME_STORE,uiTheme);
+      updateThemeButton();
+    });
     $("dataLanguage").value = uiLanguage;
     $("dataLanguage").addEventListener("change",event=>{
       uiLanguage = event.target.value === "fr" ? "fr" : "en";
@@ -931,10 +1285,18 @@
       $("elementFilter").value = "";
       document.querySelectorAll("[data-mode]").forEach(item => item.classList.toggle("active",item===button));
       updateCharacters();
+      if (mode === "classify" && !$("characterFilter").value && $("characterFilter").options.length > 1) {
+        $("characterFilter").selectedIndex = 1;
+      }
       updateSources();
       render();
     }));
     $("results").addEventListener("change",event=>{
+      if (event.target.id === "classificationStatusFilter") {
+        classificationStatus = event.target.value;
+        renderClassification();
+        return;
+      }
       if (event.target.id === "compareA") compareA = event.target.value;
       if (event.target.id === "compareB") compareB = event.target.value;
       if (event.target.id === "rotationWindow") rotationWindow = Math.max(1,Number(event.target.value) || 20);
@@ -947,15 +1309,79 @@
       if (event.target.id === "compareA" || event.target.id === "compareB" || event.target.id === "rotationWindow" || event.target.id === "testedElement" || event.target.matches("[data-rotation-id]")) renderComparison();
     });
     $("results").addEventListener("click",event=>{
+      const searchTag = event.target.closest("[data-search-tag]");
+      if (searchTag) {
+        $("search").value = searchTag.dataset.searchTag;
+        render();
+        return;
+      }
+      const targetTag = event.target.closest("[data-target-tag]");
+      if (targetTag) {
+        $("targetFilter").value = targetTag.dataset.targetTag;
+        render();
+        return;
+      }
+      const autofillButton = event.target.closest("[data-autofill-character]");
+      if (autofillButton) {
+        const character = autofillButton.dataset.autofillCharacter;
+        const candidates = data.filter(item=>item.kind==="attack" && item.character===character && classificationState(item)==="untagged");
+        candidates.forEach(item=>{
+          tagOverrides[String(item.id)] = {
+            tags:suggestedTags(item),
+            target:suggestedTarget(item),
+            verified:false,
+            autofilled:true
+          };
+        });
+        localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
+        classificationStatus = candidates.length ? "suggested" : classificationStatus;
+        renderClassification();
+        message(`${candidates.length} fiches préremplies automatiquement pour ${character}. Elles restent à vérifier.`);
+        return;
+      }
       const viewButton = event.target.closest("[data-compare-view]");
       if (viewButton) {
         compareView = viewButton.dataset.compareView;
         renderComparison();
         return;
       }
+      const tagButton = event.target.closest("[data-tag-id]");
+      if (tagButton) {
+        openTagEditor(tagButton.dataset.tagId);
+        return;
+      }
       const button = event.target.closest(".copy-description");
       if (!button) return;
       copyDescription(data.find(item => String(item.id) === button.dataset.copyId),button);
+    });
+    $("tagClose").addEventListener("click",closeTagEditor);
+    $("tagModal").addEventListener("click",event=>{if(event.target===$("tagModal")) closeTagEditor();});
+    document.addEventListener("keydown",event=>{if(event.key==="Escape" && !$("tagModal").hidden) closeTagEditor();});
+    $("tagForm").addEventListener("submit",event=>{
+      event.preventDefault();
+      const item = data.find(candidate=>String(candidate.id)===editingItemId);
+      if (!item) return closeTagEditor();
+      const selected = [...$("tagForm").querySelectorAll('input[name="manualTag"]:checked')].map(input=>input.value);
+      const custom = String($("customTags").value || "").split(",").map(tag=>tag.trim()).filter(Boolean);
+      const override = {
+        tags:[...new Set([...selected,...custom])],
+        target:$("tagTarget").value,
+        verified:$("tagVerified").checked,
+        autofilled:false
+      };
+      if (!override.tags.length && !override.target && !override.verified) delete tagOverrides[editingItemId];
+      else tagOverrides[editingItemId] = override;
+      localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
+      closeTagEditor();
+      render();
+      message("Classification enregistrée localement. Elle sera conservée après les actualisations Encore.");
+    });
+    $("clearTags").addEventListener("click",()=>{
+      if (editingItemId) delete tagOverrides[editingItemId];
+      localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
+      closeTagEditor();
+      render();
+      message("Tes tags manuels ont été supprimés pour cette fiche.");
     });
     document.querySelectorAll("[data-query]").forEach(button => button.addEventListener("click",()=>{$("search").value=button.dataset.query;render()}));
     $("syncButton").addEventListener("click",syncEncore);
@@ -974,13 +1400,24 @@
       message("Fiche ajoutée à la base locale.");
     });
     $("exportButton").addEventListener("click",()=>{
-      const url = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+      const backup = {version:3,data,tagOverrides};
+      const url = URL.createObjectURL(new Blob([JSON.stringify(backup,null,2)],{type:"application/json"}));
       const link = document.createElement("a"); link.href=url; link.download="wuwa-kits.json"; link.click(); URL.revokeObjectURL(url);
     });
     $("importButton").addEventListener("click",()=>$("fileInput").click());
     $("fileInput").addEventListener("change",event=>{
       const reader = new FileReader();
-      reader.onload=()=>{try{const parsed=JSON.parse(reader.result);data=(Array.isArray(parsed)?parsed:[parsed]).map(item=>({...item,kind:item.kind||"buff",text:cleanGameText(item.text),tags:item.tags||[]}));save();message("Base JSON importée.");}catch{message("Ce fichier JSON n'est pas valide.");}};
+      reader.onload=()=>{try{
+        const parsed=JSON.parse(reader.result);
+        const records = Array.isArray(parsed) ? parsed : Array.isArray(parsed.data) ? parsed.data : [parsed];
+        data=records.map(item=>({...item,kind:item.kind||"buff",text:cleanGameText(item.text),tags:item.tags||[],translations:item.translations||{}}));
+        if (parsed.tagOverrides && typeof parsed.tagOverrides === "object") {
+          tagOverrides=parsed.tagOverrides;
+          localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
+        }
+        save();
+        message("Base JSON et classifications importées.");
+      }catch{message("Ce fichier JSON n'est pas valide.");}};
       if(event.target.files[0]) reader.readAsText(event.target.files[0]);
     });
 
