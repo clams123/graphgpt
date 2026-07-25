@@ -1,0 +1,996 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>WuWa Buff Skill Finder — Ealya_</title>
+  <style>
+    :root{--bg:#090d12;--panel:#111820;--line:#26333d;--text:#edf5f5;--muted:#87969e;--cyan:#70e6dc;--violet:#ad91ff}
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--bg);color:var(--text);font-family:Segoe UI,Arial,sans-serif}
+    button,input,select,textarea{font:inherit}
+    button{cursor:pointer}
+    .page{width:min(1180px,calc(100% - 32px));margin:auto;padding:32px 0 60px}
+    header{display:flex;align-items:center;justify-content:space-between;gap:20px;margin-bottom:48px}
+    .logo{font-weight:800;letter-spacing:.14em}.logo span{color:var(--cyan)}
+    .header-actions{display:flex;align-items:center;gap:10px}
+    .language-control{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:10px}
+    .language-control select{width:auto;padding:9px 10px}
+    .api-button,.main-button{border:1px solid var(--cyan);background:#102825;color:var(--cyan);padding:11px 15px;border-radius:5px}
+    .api-button:disabled{opacity:.55;cursor:wait}
+    .hero{text-align:center;max-width:850px;margin:0 auto 40px}
+    h1{font:400 clamp(40px,6vw,68px)/1.03 Georgia,serif;margin:0 0 18px}
+    h1 em{color:var(--cyan);font-weight:400}
+    .hero p{color:var(--muted);line-height:1.7}
+    .search{display:flex;align-items:center;background:var(--panel);border:1px solid #384852;border-radius:7px;padding:0 18px;height:64px;margin-top:28px}
+    .search:focus-within{border-color:var(--cyan)}
+    .search span{font-size:27px;color:var(--cyan);margin-right:13px}
+    .search input{width:100%;border:0;outline:0;background:transparent;color:var(--text);font-size:17px}
+    .examples{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;margin-top:12px}
+    .examples button{border:1px solid var(--line);background:transparent;color:var(--muted);padding:6px 10px;border-radius:20px;font-size:11px}
+    .examples button:hover{color:var(--cyan);border-color:var(--cyan)}
+    .message{display:none;margin:0 0 22px;padding:12px 15px;background:#102825;border:1px solid #27534f;color:#b9ded9;font-size:13px}
+    .modes{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 18px;border-bottom:1px solid var(--line)}
+    .mode-buttons{display:flex;gap:4px;flex-wrap:wrap}.mode-buttons button{border:0;border-bottom:2px solid transparent;background:transparent;color:var(--muted);padding:12px 13px}
+    .mode-buttons button.active{color:var(--cyan);border-bottom-color:var(--cyan)}
+    .level-control{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:11px}.level-control select{width:auto;padding:7px 10px}
+    .controls{display:grid;grid-template-columns:repeat(4,1fr) auto;gap:10px;margin-bottom:22px}
+    select,.field{width:100%;border:1px solid var(--line);background:var(--panel);color:var(--text);padding:11px;border-radius:5px}
+    .count{display:flex;align-items:center;justify-content:flex-end;color:var(--muted);font-size:13px;white-space:nowrap}
+    .count strong{font-size:22px;color:var(--text);margin-right:5px}
+    .results{display:grid;gap:10px}
+    .card{display:grid;grid-template-columns:105px 1fr;background:var(--panel);border:1px solid #202c35;border-radius:8px;min-height:145px;overflow:hidden}
+    .portrait{position:relative;height:145px;align-self:start;background:linear-gradient(145deg,#15232a,#090d12);display:grid;place-items:center;color:var(--cyan);font:28px Georgia,serif}
+    .portrait img{width:100%;height:100%;object-fit:cover;object-position:center top}
+    .card-body{padding:17px 20px}
+    .topline{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .name{font:24px Georgia,serif}.element{color:var(--cyan);font-size:10px;text-transform:uppercase;margin-left:9px}
+    .source{border:1px solid var(--line);color:var(--muted);padding:5px 7px;font-size:9px;text-transform:uppercase}
+    .card-actions{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+    .copy-description{width:30px;height:28px;display:grid;place-items:center;border:1px solid var(--line);border-radius:5px;background:#0c1218;color:#9cabb1;font-size:15px;line-height:1;padding:0}
+    .copy-description:hover{color:var(--cyan);border-color:var(--cyan)}
+    .copy-description.copied{color:#07110f;background:var(--cyan);border-color:var(--cyan);font-size:12px;font-weight:700}
+    .skill{color:var(--cyan);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin:14px 0 6px}
+    .description{color:#b0bdc2;font-size:13px;line-height:1.55;margin:0;white-space:pre-line}
+    .description .desc-value{color:#f4f8f8;font-weight:750}
+    .long-description{margin:10px 0 0;border:0;background:#0c1218}
+    .long-description summary{padding:10px 12px;color:var(--cyan);font-size:10px;font-weight:600;border:1px solid #26333d}
+    .long-description[open] summary{border-bottom:0}
+    .long-description .description{padding:12px;border:1px solid #26333d;border-top:0}
+    .tags{display:flex;gap:5px;flex-wrap:wrap;margin-top:12px}
+    .tags span{border:1px solid #2e3b45;color:#85949b;padding:4px 7px;font-size:9px}
+    .tags .team{color:var(--violet);border-color:#554579}.tags .next{color:var(--cyan);border-color:#315953}
+    .multipliers{display:grid;grid-template-columns:repeat(auto-fit,minmax(205px,1fr));gap:6px;margin-top:12px}
+    .multiplier{display:flex;justify-content:space-between;gap:12px;background:#0c1218;border:1px solid #26333d;padding:7px 9px;font-size:10px;color:#84939a}
+    .multiplier strong{color:#d8e5e5;font-family:Consolas,monospace;font-weight:500;white-space:nowrap}
+    .compare-selects{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:12px;margin-bottom:18px}
+    .versus{color:var(--cyan);font:18px Georgia,serif}
+    .comparison{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+    .fighter{border:1px solid var(--line);background:var(--panel);padding:18px}.fighter h2{font:26px Georgia,serif;margin:0 0 15px}
+    .skill-table{border-top:1px solid var(--line);padding:13px 0}.skill-table h3{color:var(--cyan);font-size:11px;text-transform:uppercase;margin:0 0 9px}
+    .compare-note{color:var(--muted);font-size:11px;margin:0 0 18px}
+    .compare-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0c1218}
+    .compare-tabs{display:flex;gap:5px}.compare-tabs button{border:1px solid transparent;background:transparent;color:var(--muted);padding:8px 11px;border-radius:5px;font-size:11px}
+    .compare-tabs button.active{color:var(--cyan);border-color:#36534f;background:#10211f}
+    .compare-setting{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:10px}.compare-setting input,.compare-setting select{width:auto;min-width:68px;padding:7px;background:var(--panel);border:1px solid var(--line);border-radius:4px;color:var(--text)}
+    .skill-title-line{display:flex;justify-content:space-between;align-items:center;gap:8px}
+    .skill-total{color:var(--text);font:600 11px Consolas,monospace;white-space:nowrap}
+    .total-box{margin-top:14px;padding:14px;border:1px solid #36534f;border-radius:7px;background:#10211f;display:flex;justify-content:space-between;align-items:end;gap:12px}
+    .total-box span{color:var(--muted);font-size:10px}.total-box strong{display:block;color:var(--cyan);font:28px Georgia,serif;margin-top:3px}
+    .rotation-row{display:grid;grid-template-columns:minmax(0,1fr) 78px;gap:10px;align-items:center;padding:9px 0;border-top:1px solid var(--line)}
+    .rotation-row span{font-size:11px}.rotation-row small{display:block;color:var(--muted);margin-top:3px}
+    .rotation-row input{width:100%;padding:7px;background:#0b1117;border:1px solid var(--line);border-radius:4px;color:var(--text)}
+    .buff-metric{border-top:1px solid var(--line);padding:11px 0}.buff-metric:first-of-type{border-top:0}
+    .buff-metric-head{display:flex;justify-content:space-between;gap:10px}.buff-metric-head strong{color:var(--cyan);font-size:12px}.buff-metric-head span{font:600 13px Consolas,monospace}
+    .uptime{height:3px;background:#26313a;margin-top:8px}.uptime i{display:block;height:100%;background:var(--violet)}
+    .buff-metric small{display:block;color:var(--muted);font-size:9px;margin-top:6px}
+    .estimate-warning{grid-column:1/-1;border:1px solid #4f472d;background:#1a1810;color:#bdb38a;padding:11px;font-size:10px;line-height:1.5}
+    .empty{text-align:center;padding:70px 20px;border:1px dashed var(--line);color:var(--muted)}
+    details{margin-top:35px;border:1px solid var(--line);border-radius:8px;background:var(--panel);overflow:hidden}
+    summary{padding:16px 18px;cursor:pointer;color:var(--cyan);font-weight:600}
+    .editor{border-top:1px solid var(--line);padding:20px;display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    label{color:var(--muted);font-size:11px}label span{display:block;margin-bottom:6px}
+    textarea{min-height:95px;resize:vertical}.wide{grid-column:1/-1}
+    .editor-actions{grid-column:1/-1;display:flex;gap:8px;flex-wrap:wrap}
+    .soft-button{border:1px solid var(--line);background:#151e26;color:#b7c2c6;padding:10px 13px;border-radius:4px}
+    footer{margin-top:35px;padding-top:20px;border-top:1px solid var(--line);color:#52616a;font-size:10px;display:flex;justify-content:space-between}
+    @media(max-width:700px){
+      .page{width:min(100% - 20px,1180px)}header{align-items:flex-start;margin-bottom:35px}.header-actions{align-items:flex-end;flex-direction:column}.api-button{font-size:10px;padding:9px}
+      .modes{align-items:flex-end}.mode-buttons{max-width:calc(100% - 76px)}.mode-buttons button{padding:10px 7px;font-size:10px}.controls{grid-template-columns:1fr 1fr}.count{grid-column:1/-1;justify-content:flex-start}
+      .card{grid-template-columns:75px 1fr}.card-body{padding:14px}.topline{align-items:flex-start}.source{display:none}
+      .editor{grid-template-columns:1fr}.wide,.editor-actions{grid-column:auto}.comparison{grid-template-columns:1fr}.compare-selects{grid-template-columns:1fr}.versus{text-align:center}.compare-tools{align-items:stretch;flex-direction:column}.compare-tabs{display:grid;grid-template-columns:repeat(3,1fr)}footer{flex-direction:column;gap:7px}
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <header>
+      <div class="logo">WUWA <span>BUFF SKILL FINDER</span></div>
+      <div class="header-actions">
+        <label class="language-control">Données
+          <select id="dataLanguage" aria-label="Langue des données">
+            <option value="en">English</option>
+            <option value="fr">Français</option>
+          </select>
+        </label>
+        <button class="api-button" id="syncButton">↻ Tout actualiser avec Encore</button>
+      </div>
+    </header>
+
+    <section class="hero">
+      <h1>Ceci est un test <em>pour Ealya_</em></h1>
+      <p>Recherche les personnages de Wuthering Waves par buff, cible ou type de compétence. Tout reste enregistré en local.</p>
+      <div class="search">
+        <span>⌕</span>
+        <input id="search" autofocus placeholder="Ex. qui booste l'ATQ de l'équipe ?">
+      </div>
+      <div class="examples">
+        <button data-query="Outro qui booste les dégâts Aero">Outro + dégâts Aero</button>
+        <button data-query="boost ATQ pas seulement pour lui-même">ATQ pour un allié ou l'équipe</button>
+        <button data-query="amplification attaque normale">Attaque normale</button>
+        <button data-query="buff qui reste après un changement">Reste après changement</button>
+      </div>
+    </section>
+
+    <div class="message" id="message"></div>
+
+    <nav class="modes" aria-label="Type de données">
+      <div class="mode-buttons">
+        <button class="active" data-mode="buff">Buffs</button>
+        <button data-mode="attack">Attaques</button>
+        <button data-mode="sequence">Séquences</button>
+        <button data-mode="weapon">Armes</button>
+        <button data-mode="echo">Échos</button>
+        <button data-mode="sonata">Sonatas</button>
+        <button data-mode="compare">Comparer</button>
+      </div>
+      <label class="level-control">Niveau de compétence
+        <select id="skillLevel"><option>1</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option selected>10</option></select>
+      </label>
+    </nav>
+
+    <section class="controls">
+      <select id="characterFilter" aria-label="Personnage"><option value="">Tous les personnages</option></select>
+      <select id="sourceFilter" aria-label="Source"><option value="">Toutes les sources</option></select>
+      <select id="targetFilter" aria-label="Bénéficiaire">
+        <option value="">Tous les bénéficiaires</option>
+        <option value="self">Lui-même</option>
+        <option value="next">Personnage entrant</option>
+        <option value="team">Toute l'équipe</option>
+        <option value="enemy">Ennemi</option>
+        <option value="unknown">À vérifier</option>
+      </select>
+      <select id="elementFilter" aria-label="Élément">
+        <option value="">Tous les éléments</option>
+        <option>Aero</option><option>Fusion</option><option>Glacio</option>
+        <option>Electro</option><option>Spectro</option><option>Havoc</option>
+      </select>
+      <div class="count"><strong id="count">0</strong> <span id="countLabel">effets</span></div>
+    </section>
+
+    <section class="results" id="results"></section>
+
+    <details>
+      <summary>＋ Nourrir la base avec une fiche</summary>
+      <form class="editor" id="addForm">
+        <label><span>Type de fiche</span><select name="kind"><option value="buff">Buff / effet</option><option value="attack">Attaque / multiplicateur</option><option value="sequence">Séquence</option><option value="weapon">Arme</option><option value="echo">Écho</option><option value="sonata">Sonata</option></select></label>
+        <label><span>Personnage</span><input class="field" name="character" required placeholder="Aalto"></label>
+        <label><span>Élément</span>
+          <select name="element"><option>Aero</option><option>Fusion</option><option>Glacio</option><option>Electro</option><option>Spectro</option><option>Havoc</option></select>
+        </label>
+        <label><span>Source</span>
+          <select name="source"><option>Outro Skill</option><option>Inherent Skill</option><option>Resonance Skill</option><option>Resonance Liberation</option><option>Resonant Chain</option><option>Arme / Echo</option></select>
+        </label>
+        <label><span>Nom de la compétence</span><input class="field" name="skillName" placeholder="Dissolving Mist"></label>
+        <label class="wide"><span>Texte complet de l'effet</span><textarea class="field" name="text" required placeholder="Le personnage entrant obtient..."></textarea></label>
+        <label><span>Bénéficiaire</span>
+          <select name="target"><option value="auto">Détection automatique</option><option value="self">Lui-même</option><option value="next">Personnage entrant</option><option value="team">Toute l'équipe</option><option value="enemy">Ennemi</option></select>
+        </label>
+        <label><span>Tags supplémentaires</span><input class="field" name="extraTags" placeholder="ATQ, Aero, CRIT..."></label>
+        <label class="wide"><span>Multiplicateurs facultatifs — une ligne par attaque : Nom = niv.1 | niv.2 | ...</span><textarea class="field" name="multipliers" placeholder="Attaque normale 1 = 45.00% | 49.00% | 53.00%"></textarea></label>
+        <div class="editor-actions">
+          <button class="main-button" type="submit">Ajouter la fiche</button>
+          <button class="soft-button" type="button" id="exportButton">Exporter la base JSON</button>
+          <button class="soft-button" type="button" id="importButton">Importer un JSON</button>
+          <input type="file" id="fileInput" accept=".json" hidden>
+        </div>
+      </form>
+    </details>
+
+    <footer>
+      <span>Outil local non officiel pour Wuthering Waves</span>
+      <span>Source facultative : api-v2.encore.moe</span>
+    </footer>
+  </main>
+
+  <script>
+    const STORE = "wuwa-buff-finder-v1";
+    const LANGUAGE_STORE = "wuwa-buff-finder-language";
+    const DB_NAME = "wuwa-buff-skill-finder";
+    const DB_STORE = "records";
+    const API_ROOT = "https://api-v2.encore.moe/api";
+    const targets = {self:"Lui-même",next:"Entrant",team:"Équipe",enemy:"Ennemi",unknown:"À vérifier"};
+    const kindLabels = {buff:"effets",attack:"attaques",sequence:"séquences",weapon:"armes",echo:"Échos",sonata:"Sonatas"};
+    const seed = [
+      {id:"aalto-outro",character:"Aalto",element:"Aero",rarity:4,portrait:"https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead150/T_IconRoleHead150_12.webp",source:"Outro Skill",skillName:"Dissolving Mist",text:"The incoming Resonator has their Aero DMG Amplified by 23% for 14s or until they are switched out.",target:"next",tags:["Aero","DMG Amplification"]},
+      {id:"verina-outro",character:"Verina",element:"Spectro",rarity:5,portrait:"https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead150/T_IconRoleHead150_3.webp",source:"Outro Skill",skillName:"Blossom",text:"Heal the incoming Resonator by 19% of Verina's ATK per second for 6s. All Resonators on nearby teams have their DMG Amplified by 15% for 30s.",target:"team",tags:["Heal","All DMG","DMG Amplification"]},
+      {id:"verina-inherent",character:"Verina",element:"Spectro",rarity:5,portrait:"https://api.encore.moe/resource/Data/Game/Aki/UI/UIResources/Common/Image/IconRoleHead150/T_IconRoleHead150_3.webp",source:"Inherent Skill",skillName:"Gift of Nature",text:"ATK of all team members is increased by 20% for 20s.",target:"team",tags:["ATK","DMG Bonus"]},
+      {id:"mornye-outro",character:"Mornye",element:"Fusion",rarity:5,source:"Outro Skill",skillName:"Recursion",text:"Resonators in the team gain 25% All DMG Amplification for 30s.",target:"team",tags:["All DMG","DMG Amplification"]},
+      {id:"sanhua-outro",character:"Sanhua",element:"Glacio",rarity:4,source:"Outro Skill",skillName:"Silversnow",text:"The incoming Resonator has their Basic Attack DMG Amplified by 38% for 14s or until they are switched out.",target:"next",tags:["Basic Attack","DMG Amplification"]},
+      {id:"mortefi-outro",character:"Mortefi",element:"Fusion",rarity:4,source:"Outro Skill",skillName:"Rage Transposition",text:"The incoming Resonator has their Heavy Attack DMG Amplified by 38% for 14s or until they are switched out.",target:"next",tags:["Heavy Attack","DMG Amplification"]},
+      {id:"taoqi-outro",character:"Taoqi",element:"Havoc",rarity:4,source:"Outro Skill",skillName:"Iron Will",text:"The incoming Resonator has their Resonance Skill DMG Amplified by 38% for 14s or until they are switched out.",target:"next",tags:["Resonance Skill","DMG Amplification"]},
+      {id:"danjin-outro",character:"Danjin",element:"Havoc",rarity:4,source:"Outro Skill",skillName:"Duality",text:"The incoming Resonator has their Havoc DMG Amplified by 23% for 14s or until they are switched out.",target:"next",tags:["Havoc","DMG Amplification"]},
+      {id:"yinlin-outro",character:"Yinlin",element:"Electro",rarity:5,source:"Outro Skill",skillName:"Strategist",text:"The incoming Resonator has their Electro DMG Amplified by 20% and Resonance Liberation DMG Amplified by 25% for 14s or until switched out.",target:"next",tags:["Electro","Resonance Liberation","DMG Amplification"]},
+      {id:"zhezhi-outro",character:"Zhezhi",element:"Glacio",rarity:5,source:"Outro Skill",skillName:"Carve and Draw",text:"The incoming Resonator has their Glacio DMG Amplified by 20% and Resonance Skill DMG Amplified by 25% for 14s or until switched out.",target:"next",tags:["Glacio","Resonance Skill","DMG Amplification"]}
+    ];
+
+    const $ = id => document.getElementById(id);
+    const clean = value => String(value || "").normalize("NFD").replace(/[\u0300-\u036f]/g,"").toLowerCase().replace(/[’']/g," ").replace(/[^a-z0-9%]+/g," ").trim();
+    const escapeHtml = value => String(value ?? "").replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+
+    function cleanGameText(value) {
+      return String(value || "")
+        .replace(/<br\s*\/?>/gi,"\n")
+        .replace(/<\/?size(?:=[^>]*)?>/gi,"")
+        .replace(/<[^>]*>/g,"")
+        .replace(/&nbsp;/gi," ")
+        .replace(/&amp;/gi,"&")
+        .replace(/&lt;/gi,"<")
+        .replace(/&gt;/gi,">")
+        .replace(/&quot;/gi,'"')
+        .replace(/&apos;|&#39;|&#x27;/gi,"'")
+        .replace(/&#x([0-9a-f]+);/gi,(_,code)=>{
+          try { return String.fromCodePoint(parseInt(code,16)); } catch { return ""; }
+        })
+        .replace(/&#(\d+);/g,(_,code)=>{
+          try { return String.fromCodePoint(Number(code)); } catch { return ""; }
+        })
+        .replace(/\n[ \t]+/g,"\n")
+        .replace(/[ \t]{2,}/g," ")
+        .replace(/\n{3,}/g,"\n\n")
+        .trim();
+    }
+
+    function formatDescription(value) {
+      const text = cleanGameText(value);
+      const quantity = /(\b(?:DMG|ATK|HP|DEF)\s*[+:x×-]?\s*[+-]?\d+(?:[.,]\d+)?%?|\b[+-]?\d+(?:[.,]\d+)?\s*(?:%|s\b|stacks?\b|points?\b|times?\b|hits?\b|(?:Resonance\s+)?Energy\b)|\b[+-]?\d+(?:[.,]\d+)?\b)/gi;
+      let html = "", cursor = 0;
+      for (const match of text.matchAll(quantity)) {
+        html += escapeHtml(text.slice(cursor,match.index));
+        html += `<strong class="desc-value">${escapeHtml(match[0])}</strong>`;
+        cursor = match.index + match[0].length;
+      }
+      return html + escapeHtml(text.slice(cursor));
+    }
+
+    seed.forEach(item => item.kind = "buff");
+    let data;
+    try { data = JSON.parse(localStorage.getItem(STORE)) || seed; } catch { data = seed; }
+    data = data.map(item => ({...item,kind:item.kind || "buff",text:cleanGameText(item.text),tags:Array.isArray(item.tags)?item.tags:[],translations:item.translations || {}}));
+    let uiLanguage = localStorage.getItem(LANGUAGE_STORE) === "fr" ? "fr" : "en";
+    let mode = "buff";
+    let compareA = "";
+    let compareB = "";
+    let compareView = "skills";
+    let rotationWindow = 20;
+    let testedElement = "Tous";
+    const rotationUses = {};
+
+    function itemValue(item, key) {
+      if (uiLanguage === "en") return item?.[key] ?? "";
+      return item?.translations?.[uiLanguage]?.[key] || item?.[key] || "";
+    }
+
+    function translatedTarget(item) {
+      return targets[item.target] || "À vérifier";
+    }
+
+    function openDatabase() {
+      return new Promise((resolve,reject)=>{
+        const request = indexedDB.open(DB_NAME,1);
+        request.onupgradeneeded = ()=>request.result.createObjectStore(DB_STORE);
+        request.onsuccess = ()=>resolve(request.result);
+        request.onerror = ()=>reject(request.error);
+      });
+    }
+
+    async function persistData() {
+      const db = await openDatabase();
+      await new Promise((resolve,reject)=>{
+        const transaction = db.transaction(DB_STORE,"readwrite");
+        transaction.objectStore(DB_STORE).put(data,"data");
+        transaction.oncomplete = resolve;
+        transaction.onerror = ()=>reject(transaction.error);
+      });
+      db.close();
+    }
+
+    async function hydrateData() {
+      try {
+        const db = await openDatabase();
+        const stored = await new Promise((resolve,reject)=>{
+          const request = db.transaction(DB_STORE).objectStore(DB_STORE).get("data");
+          request.onsuccess = ()=>resolve(request.result);
+          request.onerror = ()=>reject(request.error);
+        });
+        db.close();
+        if (Array.isArray(stored) && stored.length) {
+          data = stored.map(item=>({...item,text:cleanGameText(item.text),tags:Array.isArray(item.tags)?item.tags:[],translations:item.translations || {}}));
+          updateCharacters();
+          updateSources();
+          render();
+        }
+      } catch {
+        message("Le cache étendu n'est pas disponible dans ce navigateur. La base légère reste utilisable.");
+      }
+    }
+
+    function inferTarget(text) {
+      const n = clean(text);
+      if (/all resonators|resonators in the team|party members|nearby teams|toute l equipe|les allies/.test(n)) return "team";
+      if (/incoming resonator|next resonator|resonateur entrant|prochain resonateur/.test(n)) return "next";
+      if (/enemy|enemies|ennemi/.test(n)) return "enemy";
+      if (/self|own dmg|this resonator|current character|active resonator|equipped resonator|wearer|wielder|lui meme|personnage actuel|resonateur actif|personnel/.test(n)) return "self";
+      return "unknown";
+    }
+
+    function inferTags(text) {
+      const n = clean(text), found = [];
+      const rules = [
+        [/\baero\b/,"Aero"],[/\bfusion\b/,"Fusion"],[/\bglacio\b/,"Glacio"],[/\belectro\b/,"Electro"],[/\bspectro\b/,"Spectro"],[/\bhavoc\b/,"Havoc"],
+        [/\b(increase|increased|boost|gain|grant|bonus|augmente).{0,34}\b(atk|atq|attaque)\b|\b(atk|atq|attaque)\b.{0,28}\b(increase|increased|boost|bonus|augmente)\b/,"ATK"],
+        [/basic attack|attaque normale/,"Basic Attack"],[/heavy attack|attaque lourde/,"Heavy Attack"],
+        [/resonance skill|competence resonance/,"Resonance Skill"],[/resonance liberation|liberation resonance|ultime/,"Resonance Liberation"],
+        [/all dmg|tous les degats/,"All DMG"],[/amplif|deepen/,"DMG Amplification"],[/heal|soin/,"Heal"],[/shield|bouclier/,"Shield"],[/energy|energie/,"Energy"]
+      ];
+      rules.forEach(([regex,tag]) => regex.test(n) && found.push(tag));
+      return [...new Set(found)];
+    }
+
+    function queryIntent(query) {
+      const n = clean(query), tags = [];
+      const map = [[/\baero\b/,"Aero"],[/\bfusion\b/,"Fusion"],[/\bglacio\b/,"Glacio"],[/\belectro\b/,"Electro"],[/\bspectro\b/,"Spectro"],[/\bhavoc\b/,"Havoc"],[/\b(atq|atk)\b/,"ATK"],[/attaque normale|basic attack/,"Basic Attack"],[/attaque lourde|heavy attack/,"Heavy Attack"],[/competence de resonance|resonance skill/,"Resonance Skill"],[/liberation|ultime|resonance liberation/,"Resonance Liberation"],[/bouclier|shield/,"Shield"],[/soin|heal/,"Heal"],[/energie|energy/,"Energy"]];
+      map.forEach(([regex,tag]) => regex.test(n) && tags.push(tag));
+      return {
+        source:/\boutro\b/.test(n) ? "Outro Skill" : "",
+        tags,
+        external:/pas seulement|autre que lui|allie|equipe|pour tous|not self/.test(n),
+        persistent:/reste|persiste|apres un changement|apres switch/.test(n),
+        words:n.split(" ").filter(word => word.length > 3)
+      };
+    }
+
+    function matches(item, query) {
+      if (!query.trim()) return true;
+      const intent = queryIntent(query);
+      if (intent.source && item.source !== intent.source) return false;
+      if (intent.tags.some(tag => !(item.tags || []).includes(tag))) return false;
+      if (intent.external && !["next","team"].includes(item.target)) return false;
+      if (intent.persistent && /until (they are )?switched out/i.test(item.text)) return false;
+      if (intent.source || intent.tags.length || intent.external || intent.persistent) return true;
+      const attributeText = (item.attributes || []).map(row => `${row.name} ${(row.values || []).join(" ")}`).join(" ");
+      const translated = item.translations?.[uiLanguage] || {};
+      const haystack = clean([item.character,item.element,item.source,item.skillName,item.text,translated.character,translated.element,translated.source,translated.skillName,translated.text,...(item.tags || []),attributeText].join(" "));
+      return intent.words.every(word => haystack.includes(word));
+    }
+
+    function save() {
+      localStorage.setItem(STORE, JSON.stringify(data.filter(item=>item.manual)));
+      persistData().catch(()=>message("La base est affichée, mais son cache étendu n'a pas pu être enregistré."));
+      updateCharacters();
+      updateSources();
+      render();
+    }
+
+    function updateCharacters() {
+      const current = $("characterFilter").value;
+      const relevant = data.filter(item=>item.kind===mode);
+      const labels = {buff:"Tous les personnages",attack:"Tous les personnages",sequence:"Tous les personnages",weapon:"Toutes les armes",echo:"Tous les Échos",sonata:"Toutes les Sonatas"};
+      const names = [...new Set(relevant.map(item=>item.character))].sort((a,b)=>{
+        const itemA = relevant.find(item=>item.character===a);
+        const itemB = relevant.find(item=>item.character===b);
+        return itemValue(itemA,"character").localeCompare(itemValue(itemB,"character"));
+      });
+      $("characterFilter").innerHTML = `<option value="">${labels[mode] || "Tous les noms"}</option>` + names.map(name=>{
+        const sample = relevant.find(item=>item.character===name);
+        return `<option value="${escapeHtml(name)}" ${name===current?"selected":""}>${escapeHtml(itemValue(sample,"character") || name)}</option>`;
+      }).join("");
+    }
+
+    function updateSources() {
+      const current = $("sourceFilter").value;
+      const relevant = data.filter(item => item.kind === mode || mode === "compare" && item.kind === "attack");
+      const sources = [...new Set(relevant.map(item => item.source))].sort();
+      $("sourceFilter").innerHTML = '<option value="">Toutes les sources</option>' + sources.map(source => {
+        const sample = relevant.find(item=>item.source===source);
+        return `<option value="${escapeHtml(source)}" ${source===current?"selected":""}>${escapeHtml(itemValue(sample,"source") || source)}</option>`;
+      }).join("");
+    }
+
+    function multiplierHtml(item, limit = 8) {
+      const level = Number($("skillLevel").value) - 1;
+      const rows = (item.attributes || []).slice(0,limit);
+      if (!rows.length) return "";
+      return `<div class="multipliers">${rows.map(row => {
+        const value = row.values?.[level] ?? row.values?.at(-1) ?? "—";
+        const name = uiLanguage === "fr" && row.frName ? row.frName : row.name;
+        return `<div class="multiplier"><span>${escapeHtml(name)}</span><strong>${escapeHtml(value)}${escapeHtml(row.unit || "")}</strong></div>`;
+      }).join("")}</div>`;
+    }
+
+    function parseMultiplier(value) {
+      const expression = String(value || "").replace(/,/g,".").replace(/%/g,"").replace(/[x×]/gi,"*").replace(/\s+/g,"");
+      if (!expression || !/^[\d.+*()-]+$/.test(expression)) return 0;
+      return expression.split("+").reduce((sum,term)=>{
+        const factors = term.replace(/[()]/g,"").split("*").map(Number);
+        return factors.every(Number.isFinite) ? sum + factors.reduce((total,factor)=>total*factor,1) : sum;
+      },0);
+    }
+
+    function skillTotal(item) {
+      const level = Number($("skillLevel").value) - 1;
+      return (item.attributes || []).reduce((total,row)=>{
+        const value = row.values?.[level] ?? row.values?.at(-1);
+        return total + parseMultiplier(value);
+      },0);
+    }
+
+    function percent(value, digits = 1) {
+      return Number(value || 0).toLocaleString("fr-FR",{maximumFractionDigits:digits});
+    }
+
+    function cardHtml(item) {
+      const text = cleanGameText(itemValue(item,"text"));
+      const title = itemValue(item,"character");
+      const element = itemValue(item,"element");
+      const source = itemValue(item,"source");
+      const skillName = itemValue(item,"skillName");
+      const long = text.length > 260 || text.split("\n").length > 4;
+      return `
+        <article class="card" data-card-id="${escapeHtml(item.id)}">
+          <div class="portrait">${item.portrait ? `<img src="${escapeHtml(item.portrait)}" alt="">` : escapeHtml(title.slice(0,2).toUpperCase())}</div>
+          <div class="card-body">
+            <div class="topline">
+              <div><span class="name">${escapeHtml(title)}</span><span class="element">${escapeHtml(element)}</span></div>
+              <div class="card-actions">
+                <span class="source">${escapeHtml(source)}</span>
+                <button class="copy-description" type="button" data-copy-id="${escapeHtml(item.id)}" title="Copier la description" aria-label="Copier la description de ${escapeHtml(title)}">⧉</button>
+              </div>
+            </div>
+            <div class="skill">${escapeHtml(skillName || source)}</div>
+            ${long
+              ? `<details class="long-description"><summary>Description complète — cliquer pour ouvrir</summary><p class="description">${formatDescription(text)}</p></details>`
+              : `<p class="description">${formatDescription(text)}</p>`}
+            ${item.kind === "attack" ? multiplierHtml(item) : ""}
+            <div class="tags">${["buff","sequence","weapon","echo","sonata"].includes(item.kind) && item.target ? `<span class="${item.target}">${translatedTarget(item)}</span>` : ""}${(item.tags || []).map(tag=>`<span>${escapeHtml(tag)}</span>`).join("")}</div>
+          </div>
+        </article>`;
+    }
+
+    function fighterHtml(character) {
+      const items = data.filter(item => item.kind === "attack" && item.character === character);
+      const first = items[0] || {};
+      return `<section class="fighter">
+        <h2>${escapeHtml(itemValue(first,"character") || character || "—")} <span class="element">${escapeHtml(itemValue(first,"element") || "")}</span></h2>
+        ${items.length ? items.map(item => `<div class="skill-table">
+          <div class="skill-title-line"><h3>${escapeHtml(itemValue(item,"source"))} · ${escapeHtml(itemValue(item,"skillName"))}</h3><span class="skill-total">Σ ${percent(skillTotal(item))}%</span></div>
+          ${multiplierHtml(item,12)}
+        </div>`).join("") : "<p>Aucune attaque importée.</p>"}
+      </section>`;
+    }
+
+    function defaultUses(item) {
+      if (/Normal Attack/i.test(item.source)) return 1;
+      if (/Resonance Skill/i.test(item.source)) return 1;
+      if (/Resonance Liberation/i.test(item.source)) return 1;
+      if (/Forte Circuit|Intro Skill/i.test(item.source)) return 1;
+      return 0;
+    }
+
+    function rotationUse(character,item) {
+      rotationUses[character] ||= {};
+      if (rotationUses[character][item.id] === undefined) rotationUses[character][item.id] = defaultUses(item);
+      return rotationUses[character][item.id];
+    }
+
+    function rotationFighterHtml(character) {
+      const items = data.filter(item => item.kind === "attack" && item.character === character);
+      const first = items[0] || {};
+      const total = items.reduce((sum,item)=>sum + skillTotal(item) * rotationUse(character,item),0);
+      return `<section class="fighter">
+        <h2>${escapeHtml(itemValue(first,"character") || character || "—")} <span class="element">${escapeHtml(itemValue(first,"element") || "")}</span></h2>
+        ${items.map(item=>{
+          const raw = skillTotal(item);
+          const uses = rotationUse(character,item);
+          return `<label class="rotation-row">
+            <span>${escapeHtml(itemValue(item,"source"))} · ${escapeHtml(itemValue(item,"skillName"))}<small>${percent(raw)}% par utilisation · ${percent(raw*uses)}% dans la rotation</small></span>
+            <input type="number" min="0" max="99" step="1" value="${uses}" data-rotation-character="${escapeHtml(character)}" data-rotation-id="${escapeHtml(item.id)}" aria-label="Nombre d'utilisations de ${escapeHtml(item.skillName)}">
+          </label>`;
+        }).join("")}
+        <div class="total-box"><div><span>Scaling cumulé</span><strong>${percent(total)}%</strong></div><div><span>Indice par seconde</span><strong>${percent(total/Math.max(1,rotationWindow))}</strong></div></div>
+      </section>`;
+    }
+
+    function durationNear(text,index) {
+      const nearby = text.slice(index,index+180).match(/(?:for|pendant)\s+(\d+(?:[.,]\d+)?)\s*s\b/i);
+      if (nearby) return Number(nearby[1].replace(",","."));
+      const durations = [...text.matchAll(/(\d+(?:[.,]\d+)?)\s*s\b/gi)].map(match=>Number(match[1].replace(",",".")));
+      return durations.length ? Math.max(...durations) : rotationWindow;
+    }
+
+    function extractBuffMetrics(item) {
+      const text = cleanGameText(item.text);
+      const metrics = [];
+      const add = (label,value,index,layer,element="Tous") => {
+        const number = Number(String(value).replace(",","."));
+        if (!Number.isFinite(number)) return;
+        const duration = durationNear(text,index);
+        const key = `${label}-${number}-${duration}`;
+        if (!metrics.some(metric=>metric.key===key)) metrics.push({key,label,value:number,duration,layer,element,source:item.skillName});
+      };
+      const elements = "Aero|Fusion|Glacio|Electro|Spectro|Havoc|All";
+      for (const match of text.matchAll(new RegExp(`((?:${elements})\\s+DMG)\\s+(?:is\\s+|are\\s+|has\\s+their\\s+)?Amplified by\\s+(\\d+(?:[.,]\\d+)?)%`,"gi"))) {
+        const element = /^(Aero|Fusion|Glacio|Electro|Spectro|Havoc)/i.exec(match[1])?.[1] || "Tous";
+        add(`${match[1]} Amplification`,match[2],match.index,"amplification",element);
+      }
+      for (const match of text.matchAll(new RegExp(`(?:gain|gains|grant|grants)\\s+(\\d+(?:[.,]\\d+)?)%\\s+((?:${elements})\\s+DMG Amplification)`,"gi"))) {
+        const element = /^(Aero|Fusion|Glacio|Electro|Spectro|Havoc)/i.exec(match[2])?.[1] || "Tous";
+        add(match[2],match[1],match.index,"amplification",element);
+      }
+      for (const match of text.matchAll(/(?:DMG|damage)\s+(?:is\s+|are\s+)?Amplified by\s+(\d+(?:[.,]\d+)?)%/gi)) {
+        const prefix = text.slice(Math.max(0,match.index-16),match.index);
+        if (!/(?:Aero|Fusion|Glacio|Electro|Spectro|Havoc|All)\s+$/i.test(prefix)) add("All DMG Amplification",match[1],match.index,"amplification");
+      }
+      for (const match of text.matchAll(/ATK(?:\s+of[^.]{0,70})?\s+(?:is\s+)?(?:increased|boosted) by\s+(\d+(?:[.,]\d+)?)%/gi)) add("ATK",match[1],match.index,"atk");
+      for (const match of text.matchAll(/(?:gain|gains|grant|grants)\s+(\d+(?:[.,]\d+)?)%\s+ATK\b/gi)) add("ATK",match[1],match.index,"atk");
+      for (const match of text.matchAll(/(?:DMG Bonus|Damage Bonus)(?:\s+is)?\s+(?:increased by\s+)?(\d+(?:[.,]\d+)?)%/gi)) add("DMG Bonus",match[1],match.index,"bonus");
+      for (const match of text.matchAll(new RegExp(`(?:gain|gains|grant|grants)\\s+(\\d+(?:[.,]\\d+)?)%\\s+((?:${elements})\\s+DMG Bonus)`,"gi"))) {
+        const element = /^(Aero|Fusion|Glacio|Electro|Spectro|Havoc)/i.exec(match[2])?.[1] || "Tous";
+        add(match[2],match[1],match.index,"bonus",element);
+      }
+      for (const match of text.matchAll(/Crit\.?\s*Rate(?:\s+is)?\s+(?:increased by\s+)?(\d+(?:[.,]\d+)?)%/gi)) add("CRIT Rate",match[1],match.index,"crit");
+      return metrics;
+    }
+
+    function teamMetrics(character) {
+      return data
+        .filter(item=>item.kind==="buff" && item.character===character && ["next","team"].includes(item.target))
+        .flatMap(extractBuffMetrics)
+        .filter(metric=>testedElement==="Tous" || metric.element==="Tous" || clean(metric.element)===clean(testedElement));
+    }
+
+    function teamFighterHtml(character) {
+      const metrics = teamMetrics(character);
+      const sample = data.find(item=>item.character===character) || {};
+      const effective = metrics.map(metric=>({...metric,uptime:Math.min(1,metric.duration/Math.max(1,rotationWindow))}));
+      const layers = {atk:0,bonus:0,amplification:0};
+      effective.forEach(metric=>{ if (layers[metric.layer] !== undefined) layers[metric.layer] += metric.value * metric.uptime; });
+      const factor = (1+layers.atk/100)*(1+layers.bonus/100)*(1+layers.amplification/100);
+      return `<section class="fighter">
+        <h2>${escapeHtml(itemValue(sample,"character") || character || "—")}</h2>
+        ${effective.length ? effective.map(metric=>`<div class="buff-metric">
+          <div class="buff-metric-head"><strong>${escapeHtml(metric.label)}</strong><span>+${percent(metric.value)}%</span></div>
+          <div class="uptime"><i style="width:${Math.round(metric.uptime*100)}%"></i></div>
+          <small>${escapeHtml(metric.source)} · ${percent(metric.duration)}s · couverture ${Math.round(metric.uptime*100)}%</small>
+        </div>`).join("") : "<p class='compare-note'>Aucun buff externe chiffré détecté pour ce filtre.</p>"}
+        <div class="total-box"><div><span>Gain d'équipe normalisé</span><strong>+${percent((factor-1)*100)}%</strong></div><div><span>Facteur estimé</span><strong>×${factor.toFixed(2)}</strong></div></div>
+      </section>`;
+    }
+
+    function renderComparison() {
+      const characters = [...new Set(data.filter(item => item.kind === "attack").map(item => item.character))].sort();
+      if (!compareA || !characters.includes(compareA)) compareA = characters[0] || "";
+      if (!compareB || !characters.includes(compareB) || compareB === compareA) compareB = characters.find(name => name !== compareA) || compareA;
+      const options = selected => characters.map(name => {
+        const sample = data.find(item=>item.kind==="attack" && item.character===name);
+        return `<option value="${escapeHtml(name)}" ${name===selected?"selected":""}>${escapeHtml(itemValue(sample,"character") || name)}</option>`;
+      }).join("");
+      const elements = ["Tous","Aero","Fusion","Glacio","Electro","Spectro","Havoc"];
+      $("count").textContent = characters.length;
+      $("countLabel").textContent = "personnages";
+      const body = compareView === "rotation"
+        ? `<div class="comparison">${rotationFighterHtml(compareA)}${rotationFighterHtml(compareB)}</div>`
+        : compareView === "team"
+          ? `<div class="comparison"><div class="estimate-warning">Estimation normalisée : les bonus ATK, DMG Bonus et Amplification sont placés dans trois couches multiplicatives. Le calcul suppose que tous les buffs détectés peuvent être actifs ensemble et ne remplace pas une simulation complète du jeu.</div>${teamFighterHtml(compareA)}${teamFighterHtml(compareB)}</div>`
+          : `<div class="comparison">${fighterHtml(compareA)}${fighterHtml(compareB)}</div>`;
+      $("results").innerHTML = `
+        <div class="compare-selects">
+          <select id="compareA">${options(compareA)}</select><span class="versus">VS</span><select id="compareB">${options(compareB)}</select>
+        </div>
+        <div class="compare-tools">
+          <div class="compare-tabs">
+            <button data-compare-view="skills" class="${compareView==="skills"?"active":""}">1. Compétences</button>
+            <button data-compare-view="rotation" class="${compareView==="rotation"?"active":""}">2. Rotation</button>
+            <button data-compare-view="team" class="${compareView==="team"?"active":""}">3. Équipe</button>
+          </div>
+          ${compareView === "team"
+            ? `<label class="compare-setting">Dégâts testés <select id="testedElement">${elements.map(element=>`<option ${element===testedElement?"selected":""}>${element}</option>`).join("")}</select></label>`
+            : compareView === "rotation"
+              ? `<label class="compare-setting">Fenêtre <input id="rotationWindow" type="number" min="1" max="120" value="${rotationWindow}"> secondes</label>`
+              : ""}
+        </div>
+        <p class="compare-note">${compareView === "skills" ? "Sommes indicatives des lignes de multiplicateurs au niveau sélectionné. Certaines lignes peuvent représenter des variantes alternatives d'une même attaque." : compareView === "rotation" ? "Règle le nombre d'utilisations de chaque compétence. L'indice additionne les multiplicateurs bruts sur la fenêtre choisie." : "Compare les buffs externes détectés et leur couverture sur la même fenêtre que la rotation."}</p>
+        ${body}`;
+    }
+
+    function render() {
+      document.querySelector(".controls").style.display = mode === "compare" ? "none" : "";
+      $("targetFilter").style.display = ["attack"].includes(mode) ? "none" : "";
+      if (mode === "compare") {
+        renderComparison();
+        return;
+      }
+      const query = $("search").value;
+      const character = $("characterFilter").value;
+      const source = $("sourceFilter").value;
+      const target = $("targetFilter").value;
+      const element = $("elementFilter").value;
+      const filtered = data.filter(item => item.kind === mode && matches(item,query) && (!character || item.character===character) && (!source || item.source===source) && (mode === "attack" || !target || item.target===target) && (!element || item.element===element)).sort((a,b)=>itemValue(a,"character").localeCompare(itemValue(b,"character")) || itemValue(a,"source").localeCompare(itemValue(b,"source")));
+      $("count").textContent = filtered.length;
+      $("countLabel").textContent = kindLabels[mode] || "fiches";
+      $("results").innerHTML = filtered.length ? filtered.map(cardHtml).join("") : `<div class="empty">Aucun résultat dans « ${escapeHtml(kindLabels[mode] || mode)} ». Actualise avec Encore ou retire un filtre.</div>`;
+    }
+
+    function message(text) {
+      $("message").textContent = text;
+      $("message").style.display = "block";
+    }
+
+    async function copyDescription(item, button) {
+      const text = cleanGameText(itemValue(item,"text"));
+      if (!text) return;
+      try {
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(text);
+        } else {
+          const area = document.createElement("textarea");
+          area.value = text;
+          area.setAttribute("readonly","");
+          area.style.cssText = "position:fixed;left:-9999px;top:0;opacity:0";
+          document.body.appendChild(area);
+          area.select();
+          const copied = document.execCommand("copy");
+          area.remove();
+          if (!copied) throw new Error("Copie refusée");
+        }
+        const previous = button.textContent;
+        button.textContent = "✓";
+        button.classList.add("copied");
+        button.title = "Description copiée";
+        setTimeout(()=>{
+          button.textContent = previous;
+          button.classList.remove("copied");
+          button.title = "Copier la description";
+        },1400);
+      } catch {
+        message("La copie automatique a été refusée par le navigateur. Sélectionne le texte manuellement.");
+      }
+    }
+
+    async function apiJson(language,path,required=true) {
+      try {
+        const response = await fetch(`${API_ROOT}/${language}/${path}`);
+        if (!response.ok) throw new Error(`${response.status} ${response.statusText}`);
+        return await response.json();
+      } catch(error) {
+        if (required) throw error;
+        return null;
+      }
+    }
+
+    async function processChunks(items,label,button,worker,size=10) {
+      const output = [];
+      for (let index=0; index<items.length; index+=size) {
+        button.textContent = `${label} ${Math.min(index+size,items.length)} / ${items.length}`;
+        const chunk = items.slice(index,index+size);
+        output.push(...await Promise.all(chunk.map(worker)));
+      }
+      return output;
+    }
+
+    function translatedFields(character,element,source,skillName,text) {
+      if (!character && !element && !source && !skillName && !text) return {};
+      return {fr:{character,element,source,skillName,text}};
+    }
+
+    function damageAttributes(skill,translatedSkill) {
+      const displayRows = (skill?.SkillAttributes || [])
+        .filter(row => Array.isArray(row.values) && /\b(DMG|Damage|Healing|Shield|HP Recovery)\b/i.test(row.attributeName || ""));
+      if (displayRows.length) {
+        const frenchRows = translatedSkill?.SkillAttributes || [];
+        return displayRows.map((row,index)=>({
+          name:cleanGameText(row.attributeName),
+          frName:cleanGameText(frenchRows[index]?.attributeName || ""),
+          values:row.values.slice(0,10).map(String),
+          unit:row.Description || ""
+        }));
+      }
+      return (skill?.DamageList || []).filter(row=>Array.isArray(row.RateLv) && row.RateLv.length).map((row,index)=>({
+        name:`${row.Type || "Damage"} ${row.EntryNumber || index+1}`,
+        frName:`Dégâts ${row.EntryNumber || index+1}`,
+        values:row.RateLv.slice(0,10).map(String),
+        unit:""
+      }));
+    }
+
+    function echoDamageAttributes(skill) {
+      return (skill?.DamageList || []).filter(row=>Array.isArray(row.RateLv) && row.RateLv.length).map((row,index)=>({
+        name:`${row.Type || "Echo Skill"} ${row.EntryNumber || index+1}`,
+        frName:`Dégâts ${row.EntryNumber || index+1}`,
+        values:row.RateLv.map(String),
+        unit:""
+      }));
+    }
+
+    function hasBuffEffect(text,source="") {
+      return /outro/i.test(source) || /\b(amplif|increase|decrease|bonus|boost|gain|grant|restore|heal|shield|reduce|resistance|immune|immunity|regen|recover|cooldown|crit|stack|buff|debuff|stun|slow|pull|interrupt|energy|forte|damage taken|dmg taken)\b/i.test(text);
+    }
+
+    async function syncCharacters(imported,button) {
+      const [englishList,frenchList] = await Promise.all([apiJson("en","character"),apiJson("fr","character",false)]);
+      const roles = englishList.roleList || [];
+      const frenchRoles = new Map((frenchList?.roleList || []).map(role=>[String(role.Id),role]));
+      const pairs = await processChunks(roles,"Personnages",button,async role=>{
+        const [english,french] = await Promise.all([apiJson("en",`character/${role.Id}`),apiJson("fr",`character/${role.Id}`,false)]);
+        return {role,frenchRole:frenchRoles.get(String(role.Id)),english,french};
+      },8);
+
+      pairs.forEach(({role,frenchRole,english,french})=>{
+        if (!english) return;
+        const frenchSkills = new Map((french?.Skills || []).map(skill=>[String(skill.SkillId),skill]));
+        (english.Skills || []).forEach(skill=>{
+          const frenchSkill = frenchSkills.get(String(skill.SkillId));
+          const text = cleanGameText(skill.SkillDescribe || "");
+          const source = cleanGameText(skill.SkillType || "Character Skill");
+          const character = english.Name?.Content || role.Name;
+          const element = english.ElementName || role.Element?.Name || "Unknown";
+          const skillName = cleanGameText(skill.SkillName || source);
+          const common = {
+            character,element,rarity:role.QualityId || 5,
+            portrait:english.RoleHeadIconBig || role.RoleHeadIcon,
+            source,skillName,text,
+            translations:translatedFields(
+              french?.Name?.Content || frenchRole?.Name || "",
+              french?.ElementName || frenchRole?.Element?.Name || "",
+              cleanGameText(frenchSkill?.SkillType || ""),
+              cleanGameText(frenchSkill?.SkillName || ""),
+              cleanGameText(frenchSkill?.SkillDescribe || "")
+            )
+          };
+          const attributes = damageAttributes(skill,frenchSkill);
+          if (attributes.length) {
+            imported.push({...common,id:`encore-character-${role.Id}-${skill.SkillId || source}-attack`,kind:"attack",target:"enemy",tags:[source,element].filter(Boolean),attributes});
+          }
+          if (text && hasBuffEffect(text,source)) {
+            imported.push({...common,id:`encore-character-${role.Id}-${skill.SkillId || source}-buff`,kind:"buff",target:inferTarget(text),tags:inferTags(text)});
+          }
+        });
+
+        const frenchChains = new Map((french?.ResonantChain || []).map(chain=>[String(chain.GroupIndex ?? chain.Id),chain]));
+        (english.ResonantChain || []).forEach(chain=>{
+          const frenchChain = frenchChains.get(String(chain.GroupIndex ?? chain.Id));
+          const text = cleanGameText(chain.AttributesDescription || "");
+          const source = `Resonant Chain S${chain.GroupIndex || "?"}`;
+          const target = inferTarget(text);
+          imported.push({
+            id:`encore-character-${role.Id}-sequence-${chain.GroupIndex || chain.Id}`,
+            kind:"sequence",character:english.Name?.Content || role.Name,
+            element:english.ElementName || role.Element?.Name || "Unknown",
+            rarity:role.QualityId || 5,portrait:english.RoleHeadIconBig || role.RoleHeadIcon,
+            source,skillName:cleanGameText(chain.NodeName || source),text,
+            target:target === "unknown" ? "self" : target,tags:inferTags(text),
+            translations:translatedFields(
+              french?.Name?.Content || frenchRole?.Name || "",
+              french?.ElementName || frenchRole?.Element?.Name || "",
+              `Séquence S${chain.GroupIndex || "?"}`,
+              cleanGameText(frenchChain?.NodeName || ""),
+              cleanGameText(frenchChain?.AttributesDescription || "")
+            )
+          });
+        });
+      });
+    }
+
+    async function syncWeapons(imported,button) {
+      const [englishList,frenchList] = await Promise.all([apiJson("en","weapon"),apiJson("fr","weapon",false)]);
+      const weapons = englishList.weapons || [];
+      const frenchWeapons = new Map((frenchList?.weapons || []).map(weapon=>[String(weapon.Id),weapon]));
+      const pairs = await processChunks(weapons,"Armes",button,async weapon=>{
+        const [english,french] = await Promise.all([apiJson("en",`weapon/${weapon.Id}`),apiJson("fr",`weapon/${weapon.Id}`,false)]);
+        return {weapon,frenchWeapon:frenchWeapons.get(String(weapon.Id)),english,french};
+      },10);
+      pairs.forEach(({weapon,frenchWeapon,english,french})=>{
+        if (!english) return;
+        const text = cleanGameText(english.Desc || "");
+        const target = inferTarget(text);
+        imported.push({
+          id:`encore-weapon-${weapon.Id}`,kind:"weapon",
+          character:english.WeaponName || weapon.Name,element:english.WeaponTypeName || weapon.TypeName || "Weapon",
+          rarity:english.QualityId || weapon.QualityId || 1,portrait:weapon.Icon,
+          source:english.WeaponTypeName || weapon.TypeName || "Weapon",
+          skillName:cleanGameText(english.ResonName || "Weapon Effect"),text,
+          target:target === "unknown" ? "self" : target,tags:[english.WeaponTypeName,...inferTags(text)].filter(Boolean),
+          translations:translatedFields(
+            french?.WeaponName || frenchWeapon?.Name || "",
+            french?.WeaponTypeName || frenchWeapon?.TypeName || "",
+            french?.WeaponTypeName || frenchWeapon?.TypeName || "",
+            cleanGameText(french?.ResonName || ""),
+            cleanGameText(french?.Desc || "")
+          )
+        });
+      });
+    }
+
+    async function syncEchoes(imported,button) {
+      const [englishList,frenchList] = await Promise.all([apiJson("en","echo"),apiJson("fr","echo",false)]);
+      const echoes = englishList.Echo || [];
+      const frenchEchoes = new Map((frenchList?.Echo || []).map(echo=>[String(echo.Id),echo]));
+      const sonatas = new Map();
+      const pairs = await processChunks(echoes,"Échos",button,async echo=>{
+        const [english,french] = await Promise.all([apiJson("en",`echo/${echo.Id}`),apiJson("fr",`echo/${echo.Id}`,false)]);
+        return {echo,frenchEcho:frenchEchoes.get(String(echo.Id)),english,french};
+      },10);
+
+      pairs.forEach(({echo,frenchEcho,english,french})=>{
+        if (!english) return;
+        const text = cleanGameText(english.Skill?.DescriptionEx || english.Skill?.SimplyDescription || "");
+        const frenchText = cleanGameText(french?.Skill?.DescriptionEx || french?.Skill?.SimplyDescription || "");
+        const element = english.Element?.Name || echo.Element?.Name || "Unknown";
+        const target = inferTarget(text);
+        imported.push({
+          id:`encore-echo-${echo.Id}`,kind:"echo",
+          character:english.MonsterName || echo.Name,element,
+          rarity:english.QualityId || echo.Rarity || 1,portrait:echo.Icon,
+          source:"Echo Skill",skillName:"Echo Skill",text,
+          target:target === "unknown" ? "self" : target,tags:[element,...inferTags(text)].filter(Boolean),
+          attributes:echoDamageAttributes(english.Skill),
+          translations:translatedFields(
+            french?.MonsterName || frenchEcho?.Name || "",
+            french?.Element?.Name || frenchEcho?.Element?.Name || "",
+            "Compétence d'Écho","Compétence d'Écho",frenchText
+          )
+        });
+
+        const frenchGroups = new Map((frenchEcho?.FetterGroups || []).map(group=>[String(group.Id),group]));
+        (echo.FetterGroups || []).forEach(group=>{
+          if (sonatas.has(String(group.Id))) return;
+          const frenchGroup = frenchGroups.get(String(group.Id));
+          const englishResolved = english.FetterDetails?.[group.Name]?.EffectDescriptions;
+          const frenchResolved = french?.FetterDetails?.[frenchGroup?.Name]?.EffectDescriptions;
+          const englishFetters = Array.isArray(group.Fetters) ? group.Fetters : group.Fetters ? [group.Fetters] : [];
+          const frenchFetters = Array.isArray(frenchGroup?.Fetters) ? frenchGroup.Fetters : frenchGroup?.Fetters ? [frenchGroup.Fetters] : [];
+          const englishLines = englishFetters.map((fetter,index)=>`${fetter.Key}-Piece: ${cleanGameText(englishResolved?.[index] || fetter.EffectDescription || "")}`);
+          const frenchLines = frenchFetters.map((fetter,index)=>`${fetter.Key} pièces : ${cleanGameText(frenchResolved?.[index] || fetter.EffectDescription || "")}`);
+          sonatas.set(String(group.Id),{
+            group,frenchGroup,
+            text:englishLines.join("\n"),
+            frenchText:frenchLines.join("\n")
+          });
+        });
+      });
+
+      sonatas.forEach(({group,frenchGroup,text,frenchText},id)=>{
+        const tags = inferTags(text);
+        const element = tags.find(tag=>["Aero","Fusion","Glacio","Electro","Spectro","Havoc"].includes(tag)) || "All";
+        const target = inferTarget(text);
+        imported.push({
+          id:`encore-sonata-${id}`,kind:"sonata",character:group.Name,element,
+          rarity:5,portrait:group.Icon,source:"Sonata Effect",skillName:group.Name,text,
+          target:target === "unknown" ? "self" : target,tags,
+          translations:translatedFields(
+            frenchGroup?.Name || "",element,"Effet de Sonata",
+            frenchGroup?.Name || "",frenchText
+          )
+        });
+      });
+    }
+
+    async function syncEncore() {
+      const button = $("syncButton");
+      button.disabled = true;
+      try {
+        const imported = [];
+        await syncCharacters(imported,button);
+        await syncWeapons(imported,button);
+        await syncEchoes(imported,button);
+        const manual = data.filter(item => item.manual);
+        data = [...manual,...imported];
+        localStorage.setItem(STORE,JSON.stringify(manual));
+        await persistData();
+        updateCharacters();
+        updateSources();
+        render();
+        const counts = Object.fromEntries(Object.keys(kindLabels).map(kind=>[kind,imported.filter(item=>item.kind===kind).length]));
+        message(`${counts.buff} buffs, ${counts.attack} attaques, ${counts.sequence} séquences, ${counts.weapon} armes, ${counts.echo} Échos et ${counts.sonata} Sonatas importés en anglais et en français.`);
+      } catch(error) {
+        message(`Import Encore interrompu : ${error.message}. Les données déjà enregistrées restent disponibles.`);
+      } finally {
+        button.disabled = false;
+        button.textContent = "↻ Tout actualiser avec Encore";
+      }
+    }
+
+    $("search").addEventListener("input",render);
+    ["characterFilter","sourceFilter","targetFilter","elementFilter"].forEach(id => $(id).addEventListener("change",render));
+    $("skillLevel").addEventListener("change",render);
+    $("dataLanguage").value = uiLanguage;
+    $("dataLanguage").addEventListener("change",event=>{
+      uiLanguage = event.target.value === "fr" ? "fr" : "en";
+      localStorage.setItem(LANGUAGE_STORE,uiLanguage);
+      updateCharacters();
+      updateSources();
+      render();
+      message(uiLanguage === "fr" ? "Descriptions françaises activées. L'anglais reste utilisé si une traduction manque." : "Descriptions anglaises activées.");
+    });
+    document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click",()=>{
+      mode = button.dataset.mode;
+      $("search").value = "";
+      $("characterFilter").value = "";
+      $("sourceFilter").value = "";
+      $("targetFilter").value = "";
+      $("elementFilter").value = "";
+      document.querySelectorAll("[data-mode]").forEach(item => item.classList.toggle("active",item===button));
+      updateCharacters();
+      updateSources();
+      render();
+    }));
+    $("results").addEventListener("change",event=>{
+      if (event.target.id === "compareA") compareA = event.target.value;
+      if (event.target.id === "compareB") compareB = event.target.value;
+      if (event.target.id === "rotationWindow") rotationWindow = Math.max(1,Number(event.target.value) || 20);
+      if (event.target.id === "testedElement") testedElement = event.target.value;
+      if (event.target.matches("[data-rotation-id]")) {
+        const character = event.target.dataset.rotationCharacter;
+        rotationUses[character] ||= {};
+        rotationUses[character][event.target.dataset.rotationId] = Math.max(0,Number(event.target.value) || 0);
+      }
+      if (event.target.id === "compareA" || event.target.id === "compareB" || event.target.id === "rotationWindow" || event.target.id === "testedElement" || event.target.matches("[data-rotation-id]")) renderComparison();
+    });
+    $("results").addEventListener("click",event=>{
+      const viewButton = event.target.closest("[data-compare-view]");
+      if (viewButton) {
+        compareView = viewButton.dataset.compareView;
+        renderComparison();
+        return;
+      }
+      const button = event.target.closest(".copy-description");
+      if (!button) return;
+      copyDescription(data.find(item => String(item.id) === button.dataset.copyId),button);
+    });
+    document.querySelectorAll("[data-query]").forEach(button => button.addEventListener("click",()=>{$("search").value=button.dataset.query;render()}));
+    $("syncButton").addEventListener("click",syncEncore);
+    $("addForm").addEventListener("submit",event=>{
+      event.preventDefault();
+      const form = new FormData(event.currentTarget);
+      const text = cleanGameText(form.get("text"));
+      const extra = String(form.get("extraTags") || "").split(",").map(x=>x.trim()).filter(Boolean);
+      const attributes = String(form.get("multipliers") || "").split("\n").map(line=>{
+        const [name,values] = line.split("=");
+        return name && values ? {name:name.trim(),values:values.split("|").map(value=>value.trim()),unit:""} : null;
+      }).filter(Boolean);
+      data.push({id:`manual-${Date.now()}`,manual:true,kind:form.get("kind"),character:form.get("character"),element:form.get("element"),rarity:5,source:form.get("source"),skillName:form.get("skillName") || form.get("source"),text,target:form.get("target")==="auto"?inferTarget(text):form.get("target"),tags:[...new Set([...inferTags(text),...extra])],attributes});
+      event.currentTarget.reset();
+      save();
+      message("Fiche ajoutée à la base locale.");
+    });
+    $("exportButton").addEventListener("click",()=>{
+      const url = URL.createObjectURL(new Blob([JSON.stringify(data,null,2)],{type:"application/json"}));
+      const link = document.createElement("a"); link.href=url; link.download="wuwa-kits.json"; link.click(); URL.revokeObjectURL(url);
+    });
+    $("importButton").addEventListener("click",()=>$("fileInput").click());
+    $("fileInput").addEventListener("change",event=>{
+      const reader = new FileReader();
+      reader.onload=()=>{try{const parsed=JSON.parse(reader.result);data=(Array.isArray(parsed)?parsed:[parsed]).map(item=>({...item,kind:item.kind||"buff",text:cleanGameText(item.text),tags:item.tags||[]}));save();message("Base JSON importée.");}catch{message("Ce fichier JSON n'est pas valide.");}};
+      if(event.target.files[0]) reader.readAsText(event.target.files[0]);
+    });
+
+    updateCharacters();
+    updateSources();
+    render();
+    hydrateData();
+    if (!data.some(item => item.kind === "attack")) {
+      message("Le mode Attaques est prêt. Clique une fois sur « Actualiser avec Encore » pour importer les multiplicateurs.");
+    }
+  </script>
+</body>
+</html>
