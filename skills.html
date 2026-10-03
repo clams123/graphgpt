@@ -50,6 +50,7 @@
     .examples button:hover{color:var(--cyan);border-color:var(--cyan)}
     .message{position:fixed;z-index:80;right:20px;bottom:20px;width:min(390px,calc(100% - 40px));padding:12px 15px;background:#102825;border:1px solid #27534f;border-radius:8px;color:#b9ded9;font-size:calc(13px * var(--font-scale));line-height:1.45;box-shadow:0 12px 35px rgba(0,0,0,.32);opacity:0;visibility:hidden;pointer-events:none;transform:translateY(12px);transition:opacity .2s ease,transform .2s ease,visibility .2s}
     .message.visible{opacity:1;visibility:visible;transform:translateY(0)}
+    .first-sync-notice{display:grid;grid-template-columns:auto minmax(0,1fr) auto;align-items:center;gap:15px;margin:0 0 18px;padding:16px 18px;border:1px solid #927b43;border-radius:11px;background:linear-gradient(105deg,rgba(199,173,113,.16),rgba(119,226,210,.08));box-shadow:0 12px 32px rgba(0,0,0,.14)}.first-sync-notice[hidden]{display:none}.first-sync-step{display:grid;place-items:center;width:38px;height:38px;border:1px solid var(--gold);border-radius:50%;color:var(--gold);font:700 calc(17px * var(--font-scale)) Georgia,serif}.first-sync-copy strong{display:block;margin-bottom:4px;font-size:calc(14px * var(--font-scale))}.first-sync-copy span{display:block;color:var(--muted);font-size:calc(10px * var(--font-scale));line-height:1.5}.first-sync-action{border:1px solid var(--cyan);border-radius:7px;background:#102a27;color:var(--cyan);padding:11px 15px;font-weight:700;white-space:nowrap}.first-sync-action:disabled{opacity:.55;cursor:wait}
     .modes{display:flex;align-items:center;justify-content:space-between;gap:14px;margin:0 0 18px;padding:0 10px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(100deg,var(--panel),var(--panel-2));box-shadow:0 8px 24px rgba(0,0,0,.12)}
     .mode-buttons{display:flex;gap:3px;flex-wrap:wrap}.mode-buttons button{position:relative;border:0;background:transparent;color:var(--muted);padding:14px 12px;font-size:calc(11px * var(--font-scale));text-transform:uppercase;letter-spacing:.045em}.mode-buttons button::after{content:"";position:absolute;left:20%;right:20%;bottom:-1px;height:2px;background:transparent}
     .mode-buttons button.active{color:var(--text)}.mode-buttons button.active::after{left:8%;right:8%;background:linear-gradient(90deg,var(--gold),var(--cyan));box-shadow:0 0 10px var(--cyan)}
@@ -60,6 +61,7 @@
     .count{display:flex;align-items:center;justify-content:flex-end;color:var(--muted);font-size:calc(13px * var(--font-scale));white-space:nowrap}
     .count strong{font-size:calc(22px * var(--font-scale));color:var(--text);margin-right:5px}
     .results{display:grid;gap:10px}
+    .load-more{justify-self:center;min-width:240px;margin:8px 0 4px;border:1px solid #4f8f88;border-radius:8px;background:linear-gradient(135deg,#102a27,#10201f);color:var(--cyan);padding:12px 18px;font-weight:700}.load-more:hover{border-color:var(--cyan);box-shadow:0 0 0 3px var(--glow)}
     .card{position:relative;display:grid;grid-template-columns:105px 1fr;background:linear-gradient(115deg,var(--panel),var(--panel-2));border:1px solid var(--line);border-radius:9px;min-height:145px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.13);transition:border-color .18s ease,transform .18s ease,box-shadow .18s ease}.card::before{content:"";position:absolute;z-index:2;left:104px;top:0;width:72px;height:1px;background:linear-gradient(90deg,var(--gold),transparent)}.card:hover{border-color:#3d555b;transform:translateY(-1px);box-shadow:0 14px 34px rgba(0,0,0,.2)}
     .portrait{position:relative;height:145px;align-self:start;background:linear-gradient(145deg,#15282c,#070b0f);display:grid;place-items:center;color:var(--cyan);font:calc(28px * var(--font-scale)) Georgia,serif}.portrait::after{content:"";position:absolute;inset:0;border-right:1px solid rgba(199,173,113,.38);background:linear-gradient(135deg,transparent 65%,rgba(119,226,210,.08));pointer-events:none}
     .portrait img{width:100%;height:100%;object-fit:cover;object-position:center top}
@@ -339,6 +341,8 @@
     html[data-theme="light"] .saved-searches button,html[data-theme="light"] .favorite-filter,html[data-theme="light"] .favorite-button{background:#fff;color:#536765}
     html[data-theme="light"] .api-change-button,html[data-theme="light"] .share-search{background:#fff;color:#536765;border-color:#b8c9c8;box-shadow:0 2px 8px rgba(35,62,59,.05)}
     html[data-theme="light"] .api-change-button:hover,html[data-theme="light"] .share-search:hover{background:#e8f4f2;color:#087b72;border-color:#79aea8}
+    html[data-theme="light"] .load-more{background:#fff;color:#087b72;border-color:#79aea8}html[data-theme="light"] .load-more:hover{background:#e8f4f2}
+    html[data-theme="light"] .first-sync-notice{background:linear-gradient(105deg,#fff8e7,#eaf6f3);border-color:#b79b5c;box-shadow:0 10px 26px rgba(55,67,61,.1)}html[data-theme="light"] .first-sync-action{background:#087b72;color:#fff;border-color:#087b72}
     html[data-theme="light"] .active-filters,html[data-theme="light"] .why-result,html[data-theme="light"] .compatibility-panel,html[data-theme="light"] .coverage-stat,html[data-theme="light"] .quick-compare-card{background:#f4f8f7}
     html[data-theme="light"] .view-toggle{background:#fff;color:#526765}html[data-theme="light"] .view-toggle:hover,html[data-theme="light"] .view-toggle.active{background:#e3f3f0;color:#087b72;border-color:#8cbab5}
     html[data-theme="light"] .result-table-wrap,html[data-theme="light"] .quality-table-wrap,html[data-theme="light"] .quality-panel{background:#fbfcfb}html[data-theme="light"] .result-table th,html[data-theme="light"] .quality-table th{background:#edf4f2;color:#526765}html[data-theme="light"] .result-table tbody tr:hover,html[data-theme="light"] .quality-table tbody tr:hover{background:#edf7f5}
@@ -357,7 +361,7 @@
       .side-rail .rail-button::after{display:none}
       .page,body.rail-expanded .page{width:min(100% - 20px,1180px);padding-bottom:92px}header{align-items:flex-start;margin-bottom:35px}.header-actions{align-items:flex-end;flex-direction:column}.api-button{font-size:calc(10px * var(--font-scale));padding:9px}
       .hero{padding:28px 20px}.hero::after{display:none}h1{font-size:calc(35px * var(--font-scale))}.search{height:54px;padding:0 14px}.search input{font-size:calc(14px * var(--font-scale))}
-      .saved-searches{align-items:stretch;flex-wrap:wrap}.saved-searches select{max-width:none;flex:1 1 100%}.character-overview{grid-template-columns:auto 1fr}.coverage-grid{grid-column:1/-1;grid-template-columns:repeat(2,1fr)}.quick-compare,.synergy-board,.squad-links,.squad-selects{grid-template-columns:1fr}
+      .saved-searches{align-items:stretch;flex-wrap:wrap}.saved-searches select{max-width:none;flex:1 1 100%}.first-sync-notice{grid-template-columns:auto 1fr}.first-sync-action{grid-column:1/-1;width:100%}.character-overview{grid-template-columns:auto 1fr}.coverage-grid{grid-column:1/-1;grid-template-columns:repeat(2,1fr)}.quick-compare,.synergy-board,.squad-links,.squad-selects{grid-template-columns:1fr}
       .modes{align-items:flex-end}.mode-buttons{max-width:calc(100% - 76px)}.mode-buttons button{padding:10px 7px;font-size:calc(10px * var(--font-scale))}.controls{grid-template-columns:1fr 1fr}.count{grid-column:1/-1;justify-content:flex-start}
       .card{grid-template-columns:75px 1fr}.card-body{padding:14px}.topline{align-items:flex-start}.source{display:none}
       .index-row{grid-template-columns:85px 1fr 48px}.damage-slice{grid-template-columns:95px 1fr 38px}
@@ -429,6 +433,12 @@
         <button class="share-search" id="shareSearchButton" type="button">↗ Partager</button>
         <button id="deleteSearchButton" type="button" hidden>Supprimer</button>
       </div>
+    </section>
+
+    <section class="first-sync-notice" id="firstSyncNotice" aria-live="polite">
+      <span class="first-sync-step">1</span>
+      <div class="first-sync-copy"><strong>Commence par charger les données du jeu</strong><span>Cette étape importe les personnages, compétences, armes, Échos et Sonatas depuis Encore. Elle n’efface pas les tags partagés.</span></div>
+      <button class="first-sync-action" id="firstSyncButton" type="button">Charger les données WuWa</button>
     </section>
 
     <div class="message" id="message" role="status" aria-live="polite"></div>
@@ -717,6 +727,8 @@
     let compareC = "";
     let compareView = "skills";
     let resultLayout = localStorage.getItem(RESULT_LAYOUT_STORE) === "table" ? "table" : "cards";
+    let resultLimit = 48;
+    let lastResultSignature = "";
     let rotationWindow = 20;
     let testedElement = "Tous";
     let weaponRank = 1;
@@ -877,6 +889,14 @@ try {
       $("apiVersion").title = apiMeta.ResVer ? `Ressources ${apiMeta.ResVer} · changelist ${apiMeta.Changelist || "?"}` : "Version inconnue — actualise avec Encore";
       const total = (apiChanges.added || []).length + (apiChanges.changed || []).length + (apiChanges.removed || []).length;
       $("apiChangesButton").textContent = total ? `Δ API · ${total}` : "Δ API";
+      updateApiOnboarding();
+    }
+
+    function updateApiOnboarding() {
+      const ready = Boolean(apiMeta.lastSync) && data.some(item=>!item.manual && String(item.id || "").startsWith("encore-"));
+      $("firstSyncNotice").hidden = ready;
+      $("apiChangesButton").hidden = !ready;
+      $("syncButton").textContent = ready ? "↻ Mettre à jour l’API" : "1 · Charger les données WuWa";
     }
 
     function apiComparable(item) {
@@ -1134,6 +1154,7 @@ try {
           data = stored.map(item=>({...item,text:cleanGameText(item.text),tags:Array.isArray(item.tags)?item.tags:[],translations:item.translations || {}}));
           updateCharacters();
           updateSources();
+          updateApiOnboarding();
           render();
         }
       } catch {
@@ -2171,12 +2192,20 @@ try {
       const source = $("sourceFilter").value;
       const target = $("targetFilter").value;
       const element = $("elementFilter").value;
+      const resultSignature = JSON.stringify(currentSearchState());
+      if (resultSignature !== lastResultSignature) {
+        lastResultSignature = resultSignature;
+        resultLimit = mode === "attack" ? 36 : 60;
+      }
       const filtered = data.filter(item => item.kind === mode && (!favoritesOnly || favoriteIds.has(String(item.id))) && matches(item,query) && matchesStructuredFilters(item) && (!character || item.character===character) && (!source || item.source===source) && (!target || effectiveTargets(item).includes(target)) && (!element || item.element===element)).sort((a,b)=>itemValue(a,"character").localeCompare(itemValue(b,"character")) || itemValue(a,"source").localeCompare(itemValue(b,"source")));
       updateRailCounts(filtered.length);
       $("count").textContent = filtered.length;
       $("countLabel").textContent = kindLabels[mode] || "fiches";
-      const resultContent = filtered.length ? (resultLayout === "table" ? compactTableHtml(filtered) : filtered.map(cardHtml).join("")) : `<div class="empty">Aucun résultat dans « ${escapeHtml(kindLabels[mode] || mode)} ». Actualise avec Encore ou retire un filtre.</div>`;
-      $("results").innerHTML = characterOverviewHtml(character) + resultContent;
+      const visible = filtered.slice(0,resultLimit);
+      const resultContent = visible.length ? (resultLayout === "table" ? compactTableHtml(visible) : visible.map(cardHtml).join("")) : `<div class="empty">Aucun résultat dans « ${escapeHtml(kindLabels[mode] || mode)} ». Actualise avec Encore ou retire un filtre.</div>`;
+      const remaining = Math.max(0,filtered.length-visible.length);
+      const moreButton = remaining ? `<button class="load-more" type="button" data-load-more>Afficher ${Math.min(mode === "attack" ? 36 : 60,remaining)} fiche${remaining>1?"s":""} de plus · ${remaining} restante${remaining>1?"s":""}</button>` : "";
+      $("results").innerHTML = characterOverviewHtml(character) + resultContent + moreButton;
     }
 
     function message(text) {
@@ -2627,7 +2656,10 @@ try {
 
     async function syncEncore() {
       const button = $("syncButton");
+      const firstButton = $("firstSyncButton");
       button.disabled = true;
+      firstButton.disabled = true;
+      firstButton.textContent = "Chargement des données…";
       try {
         const previousApi = data.filter(item=>!item.manual);
         const latest = await apiJson("en","new",false);
@@ -2660,7 +2692,9 @@ try {
         message(`Import Encore interrompu : ${error.message}. Les données déjà enregistrées restent disponibles.`);
       } finally {
         button.disabled = false;
-        button.textContent = "↻ Tout actualiser avec Encore";
+        firstButton.disabled = false;
+        firstButton.textContent = "Charger les données WuWa";
+        updateApiOnboarding();
       }
     }
 
@@ -2787,6 +2821,12 @@ try {
       if (event.target.id === "compareA" || event.target.id === "compareB" || event.target.id === "compareC" || event.target.id === "rotationWindow" || event.target.id === "testedElement" || event.target.matches("[data-damage-field]") || event.target.matches("[data-equipment-field]")) renderComparison();
     });
     $("results").addEventListener("click",async event=>{
+      const loadMoreButton=event.target.closest("[data-load-more]");
+      if(loadMoreButton){
+        resultLimit += mode === "attack" ? 36 : 60;
+        render();
+        return;
+      }
       const qualityCharacter=event.target.closest("[data-quality-character]");
       if(qualityCharacter){
         $("characterFilter").value=qualityCharacter.dataset.qualityCharacter;
@@ -3057,6 +3097,7 @@ try {
       message("Recherche enregistrée supprimée.");
     });
     $("syncButton").addEventListener("click",syncEncore);
+    $("firstSyncButton").addEventListener("click",syncEncore);
     $("undoButton").addEventListener("click",()=>{if(editorActionAllowed()) undoLastChange();});
     $("cloudStatus").addEventListener("click",()=>loadSharedTags(true));
     $("addForm").addEventListener("submit",event=>{
