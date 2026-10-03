@@ -34,6 +34,7 @@
     .font-size-control select{width:auto;min-width:70px;padding:9px 8px}
     .api-button,.main-button{border:1px solid #4f8f88;background:linear-gradient(135deg,#102a27,#10201f);color:var(--cyan);padding:11px 15px;border-radius:4px;box-shadow:inset 3px 0 0 rgba(119,226,210,.35)}
     .theme-button{border:1px solid var(--line);background:linear-gradient(145deg,var(--panel),var(--panel-2));color:var(--text);padding:10px 12px;border-radius:4px}
+    .editor-button{border:1px solid var(--line);background:linear-gradient(145deg,var(--panel),var(--panel-2));color:var(--muted);padding:10px 12px;border-radius:4px;white-space:nowrap}.editor-button:hover{color:var(--cyan);border-color:#4f8f88}.editor-button.authenticated{color:var(--cyan);border-color:#39746e;background:#10211f}
     .api-button:disabled{opacity:.55;cursor:wait}
     .hero{position:relative;text-align:center;max-width:900px;margin:0 auto 44px;padding:15px 0 0}.hero::before{content:"RESONANCE ARCHIVE  /  EFFECT DATABASE";display:block;color:var(--gold);font-size:calc(9px * var(--font-scale));font-weight:700;letter-spacing:.3em;margin-bottom:14px}
     h1{font:400 clamp(40px,6vw,70px)/1.03 Georgia,"Times New Roman",serif;letter-spacing:-.035em;margin:0 0 18px;text-shadow:0 0 28px rgba(119,226,210,.08)}
@@ -158,6 +159,8 @@
     .tag-option input:checked + span{color:var(--violet);border-color:var(--violet);background:rgba(173,145,255,.1)}
     .verified-check{display:flex;align-items:center;gap:9px;color:var(--text);font-size:calc(12px * var(--font-scale))}.verified-check input{accent-color:var(--cyan)}
     .tag-form-actions{display:flex;justify-content:flex-end;gap:8px;border-top:1px solid var(--line);padding-top:16px}
+    .auth-dialog{width:min(430px,100%);padding:22px;border:1px solid var(--line);border-radius:13px;background:linear-gradient(145deg,var(--panel),var(--panel-2));box-shadow:0 24px 70px rgba(0,0,0,.38)}.auth-dialog h2{margin:0;font-size:calc(22px * var(--font-scale))}.auth-dialog>p{margin:7px 0 18px;color:var(--muted);font-size:calc(11px * var(--font-scale));line-height:1.55}.auth-form{display:grid;gap:12px}.auth-form label span{display:block;margin-bottom:6px}.auth-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:5px}.auth-error{margin:0!important;color:#dd8f8f!important}.auth-error[hidden]{display:none}
+    html:not([data-editor="true"]) .tag-description,html:not([data-editor="true"]) [data-autofill-character],html:not([data-editor="true"]) #undoButton{display:none!important}
     .effect-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}.effect-grid .wide{grid-column:1/-1}.effect-grid input,.effect-grid select{margin-top:5px}
     details{margin-top:35px;border:1px solid var(--line);border-radius:8px;background:linear-gradient(145deg,var(--panel),var(--panel-2));overflow:hidden}
     summary{padding:16px 18px;cursor:pointer;color:var(--cyan);font-weight:600}
@@ -168,6 +171,7 @@
     .soft-button{border:1px solid var(--line);background:linear-gradient(145deg,var(--panel),var(--panel-2));color:#b7c2c6;padding:10px 13px;border-radius:4px}.soft-button:hover,.theme-button:hover{border-color:#52686c;color:var(--cyan)}
     footer{position:relative;margin-top:42px;padding-top:22px;border-top:1px solid var(--line);color:#52616a;font-size:calc(10px * var(--font-scale));display:flex;justify-content:space-between}footer::before{content:"◇";position:absolute;left:50%;top:0;transform:translate(-50%,-52%);padding:0 10px;background:var(--bg);color:var(--gold)}
     html[data-theme="light"] .api-button,html[data-theme="light"] .main-button{background:#e2f4f1}
+    html[data-theme="light"] .editor-button{background:#fff;color:#526765}html[data-theme="light"] .editor-button.authenticated{background:#e3f3f0;color:#087b72;border-color:#8cbab5}
     html[data-theme="light"] select{color-scheme:light}
     html[data-theme="light"] select option,html[data-theme="light"] select optgroup{background:#fbfcfa;color:#172321}
     html[data-theme="light"] .examples button{background:rgba(255,255,255,.55)}
@@ -385,7 +389,8 @@
 		    <option value="1.15">115 %</option>
 		    <option value="1.3">130 %</option>
 		  </select>
-		</label>
+        </label>
+		<button class="editor-button" id="editorButton" type="button">🔒 Lecture seule</button>
 		<button class="theme-button" id="themeButton" type="button">☀ Mode clair</button>
         <button class="api-button" id="syncButton">↻ Actualisation API</button>
       </div>
@@ -548,6 +553,22 @@
       </section>
     </div>
 
+    <div class="tag-modal" id="authModal" hidden>
+      <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="authDialogTitle">
+        <h2 id="authDialogTitle">Activer le mode édition</h2>
+        <p>Utilise l’identifiant éditeur transmis par la propriétaire du site. Aucun compte Supabase ni accès au tableau de bord n’est nécessaire.</p>
+        <form class="auth-form" id="authForm">
+          <label><span>Identifiant</span><input class="field" id="authEmail" type="email" autocomplete="username" required placeholder="editeur@exemple.fr"></label>
+          <label><span>Mot de passe</span><input class="field" id="authPassword" type="password" autocomplete="current-password" required></label>
+          <p class="auth-error" id="authError" role="alert" hidden></p>
+          <div class="auth-actions">
+            <button class="soft-button" id="authCancel" type="button">Annuler</button>
+            <button class="main-button" id="authSubmit" type="submit">Se connecter</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
     <footer>
       <span>Outil local non officiel pour Wuthering Waves</span>
       <span>Raccourcis : / rechercher · ↑↓ parcourir · F favori · Échap réinitialiser</span>
@@ -568,6 +589,7 @@
     const FAVORITES_STORE = "wuwa-buff-finder-favorites";
     const SAVED_SEARCHES_STORE = "wuwa-buff-finder-saved-searches";
     const RESULT_LAYOUT_STORE = "wuwa-buff-finder-result-layout";
+    const AUTH_SESSION_STORE = "wuwa-buff-finder-editor-session";
     const DB_NAME = "wuwa-buff-skill-finder";
     const DB_STORE = "records";
     const API_BASES = ["https://api-v2.encore.moe/api","https://api.encore.moe"];
@@ -668,6 +690,8 @@
     let equipmentProfiles;
     try { equipmentProfiles = JSON.parse(localStorage.getItem(EQUIPMENT_STORE)) || {}; } catch { equipmentProfiles = {}; }
     let cloudAvailable = false;
+    let authSession;
+    try { authSession = JSON.parse(localStorage.getItem(AUTH_SESSION_STORE)) || null; } catch { authSession = null; }
     let messageTimer;
     let apiMeta;
     try { apiMeta = JSON.parse(localStorage.getItem(API_META_STORE)) || {}; } catch { apiMeta = {}; }
@@ -802,17 +826,6 @@ try {
       }).filter(Boolean).slice(0,12);
     }
 
-    function matchExplanation(item) {
-      const reasons = [];
-      const query = $("search").value.trim();
-      if (query) reasons.push(`recherche « ${query} »`);
-      const mappings = [["characterFilter","personnage"],["sourceFilter","source"],["targetFilter","bénéficiaire"],["elementFilter","élément"],["natureFilter","nature"],["damageTypeFilter","catégorie de dégâts"],["triggerFilter","déclencheur"],["statFilter","statistique"],["originFilter","origine"],["reliabilityFilter","fiabilité"]];
-      mappings.forEach(([id,label])=>{ const control=$(id); if(control?.value) reasons.push(`${label} : ${control.options[control.selectedIndex]?.text || control.value}`); });
-      if (favoritesOnly) reasons.push("présent dans les favoris");
-      if (!reasons.length) reasons.push(`appartient à la section ${kindLabels[item.kind] || item.kind}`);
-      return `Ce résultat apparaît car ${reasons.join(" · ")}. Fiabilité : ${reliability(item).label}.`;
-    }
-
     function structuredSearchAliases(item) {
       const aliases = [];
       (item.structured?.damageTypes || []).forEach(type=>aliases.push(type));
@@ -855,11 +868,62 @@ try {
       indicator.textContent = text;
     }
 
+    function updateEditorUi() {
+      const active = Boolean(authSession?.access_token && authSession?.refresh_token);
+      document.documentElement.dataset.editor = String(active);
+      const button = $("editorButton");
+      button.classList.toggle("authenticated",active);
+      button.textContent = active ? "✎ Mode édition" : "🔒 Lecture seule";
+      button.title = active ? `Connecté${authSession.user?.email ? ` : ${authSession.user.email}` : ""} · cliquer pour se déconnecter` : "Se connecter pour modifier les tags partagés";
+    }
+
+    function storeAuthSession(session) {
+      if (!session?.access_token || !session?.refresh_token) {
+        authSession = null;
+        localStorage.removeItem(AUTH_SESSION_STORE);
+      } else {
+        authSession = {...session,expires_at:session.expires_at || Math.floor(Date.now()/1000) + Number(session.expires_in || 3600)};
+        localStorage.setItem(AUTH_SESSION_STORE,JSON.stringify(authSession));
+      }
+      updateEditorUi();
+    }
+
+    async function authApi(path,options={}) {
+      const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`,{
+        ...options,
+        headers:{apikey:SUPABASE_KEY,"Content-Type":"application/json",...(options.headers || {})}
+      });
+      const payload = response.status===204 ? null : await response.json().catch(()=>null);
+      if (!response.ok) throw new Error(payload?.msg || payload?.message || "Connexion refusée.");
+      return payload;
+    }
+
+    async function validEditorToken(required=false) {
+      if (!authSession?.refresh_token) {
+        if (required) throw new Error("Active d’abord le mode édition.");
+        return "";
+      }
+      if (Number(authSession.expires_at || 0) > Math.floor(Date.now()/1000) + 60) return authSession.access_token;
+      try {
+        const refreshed = await authApi("token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:authSession.refresh_token})});
+        storeAuthSession(refreshed);
+        return refreshed.access_token;
+      } catch (error) {
+        storeAuthSession(null);
+        if (required) throw new Error("Session expirée. Reconnecte le mode édition.");
+        return "";
+      }
+    }
+
     async function supabaseRequest(query="",options={}) {
+      const method = String(options.method || "GET").toUpperCase();
+      const writeRequest = !["GET","HEAD"].includes(method);
+      const accessToken = await validEditorToken(writeRequest);
       const response = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TAG_TABLE}${query}`,{
         ...options,
         headers:{
           apikey:SUPABASE_KEY,
+          ...(accessToken ? {Authorization:`Bearer ${accessToken}`} : {}),
           "Content-Type":"application/json",
           ...(options.headers || {})
         }
@@ -905,7 +969,7 @@ try {
         if (rows.length) {
           tagOverrides = Object.fromEntries(rows.map(row=>[row.key,row.value]));
           localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
-        } else if (Object.keys(tagOverrides).length) {
+        } else if (Object.keys(tagOverrides).length && authSession?.refresh_token) {
           await pushSharedTags();
         }
         cloudAvailable = true;
@@ -1419,7 +1483,6 @@ try {
               ${userTags.length || effectBadges.length || override.verified ? `<div class="tag-line manual"><span class="tag-line-label">Saisie manuelle</span><div class="tags">${userTags.map(tag=>`<button type="button" data-search-tag="${escapeHtml(tag)}">${escapeHtml(tag)}</button>`).join("")}${effectBadges.map(value=>`<span>${escapeHtml(value)}</span>`).join("")}${override.verified ? '<span class="verified-tag">✓ Vérifié</span>' : ""}</div></div>` : ""}
               ${override.autofilled ? '<div class="tag-line"><span class="tag-line-label">Statut</span><div class="tags"><span class="suggested-tag">Auto — à vérifier</span></div></div>' : ""}
             </div>
-            <details class="why-result"><summary>Pourquoi ce résultat ?</summary><p>${escapeHtml(matchExplanation(item))}</p></details>
             ${compatibilityHtml(item)}
           </div>
         </article>`;
@@ -2026,6 +2089,25 @@ try {
       editingItemId = "";
     }
 
+    function openAuthModal() {
+      $("authError").hidden = true;
+      $("authError").textContent = "";
+      $("authPassword").value = "";
+      $("authModal").hidden = false;
+      setTimeout(()=>$("authEmail").focus(),0);
+    }
+
+    function closeAuthModal() {
+      $("authModal").hidden = true;
+    }
+
+    function editorActionAllowed() {
+      if (authSession?.refresh_token) return true;
+      openAuthModal();
+      message("Connecte le mode édition pour modifier les données partagées.");
+      return false;
+    }
+
     async function apiJson(language,path,required=true) {
       let lastError;
       for (const base of API_BASES) {
@@ -2528,6 +2610,7 @@ try {
       }
       const autofillButton = event.target.closest("[data-autofill-character]");
       if (autofillButton) {
+        if (!editorActionAllowed()) return;
         const character = autofillButton.dataset.autofillCharacter;
         const candidates = classifiableItems(character).filter(item=>classificationState(item)==="untagged");
         const changedKeys = candidates.map(overrideKey);
@@ -2558,6 +2641,7 @@ try {
       }
       const tagButton = event.target.closest("[data-tag-id]");
       if (tagButton) {
+        if (!editorActionAllowed()) return;
         openTagEditor(tagButton.dataset.tagId);
         return;
       }
@@ -2567,13 +2651,47 @@ try {
     });
     $("tagClose").addEventListener("click",closeTagEditor);
     $("tagModal").addEventListener("click",event=>{if(event.target===$("tagModal")) closeTagEditor();});
+    $("authCancel").addEventListener("click",closeAuthModal);
+    $("authModal").addEventListener("click",event=>{if(event.target===$("authModal")) closeAuthModal();});
+    $("authForm").addEventListener("submit",async event=>{
+      event.preventDefault();
+      const submit=$("authSubmit");
+      submit.disabled=true;
+      submit.textContent="Connexion…";
+      $("authError").hidden=true;
+      try {
+        const session=await authApi("token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("authEmail").value.trim(),password:$("authPassword").value})});
+        storeAuthSession(session);
+        closeAuthModal();
+        await loadSharedTags();
+        render();
+        message("Mode édition activé. Les modifications seront partagées.");
+      } catch(error) {
+        $("authError").textContent=error.message;
+        $("authError").hidden=false;
+      } finally {
+        submit.disabled=false;
+        submit.textContent="Se connecter";
+      }
+    });
+    $("editorButton").addEventListener("click",async ()=>{
+      if (!authSession?.refresh_token) return openAuthModal();
+      if (!confirm("Quitter le mode édition sur cet appareil ?")) return;
+      try {
+        const token=await validEditorToken(false);
+        if(token) await authApi("logout",{method:"POST",headers:{Authorization:`Bearer ${token}`}});
+      } catch {}
+      storeAuthSession(null);
+      render();
+      message("Mode lecture seule activé.");
+    });
     document.addEventListener("keydown",event=>{
       const editable=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
       if(event.key==="Escape"){
-        if(!$("tagModal").hidden) closeTagEditor(); else $("resetFilters").click();
+        if(!$("authModal").hidden) closeAuthModal(); else if(!$("tagModal").hidden) closeTagEditor(); else $("resetFilters").click();
         return;
       }
-      if(editable || !$("tagModal").hidden) return;
+      if(editable || !$("tagModal").hidden || !$("authModal").hidden) return;
       if(event.key==="/") { event.preventDefault(); $("search").focus(); return; }
       if(event.key.toLowerCase()==="f"){
         const card=document.activeElement?.closest?.(".card") || document.querySelector(".card");
@@ -2591,6 +2709,7 @@ try {
     });
     $("tagForm").addEventListener("submit",async event=>{
       event.preventDefault();
+      if (!editorActionAllowed()) return closeTagEditor();
       const item = data.find(candidate=>String(candidate.id)===editingItemId);
       if (!item) return closeTagEditor();
       const selected = [...$("tagForm").querySelectorAll('input[name="manualTag"]:checked')].map(input=>input.value);
@@ -2624,6 +2743,7 @@ try {
       else await syncChangedTags([key],"Classification enregistrée dans la base partagée.");
     });
     $("clearTags").addEventListener("click",async ()=>{
+      if (!editorActionAllowed()) return closeTagEditor();
       const item = data.find(candidate=>String(candidate.id)===editingItemId);
       let removedKeys = [];
       if (item) {
@@ -2642,6 +2762,7 @@ try {
       else message("Cette fiche n'avait aucun tag manuel.");
     });
     $("restorePrevious").addEventListener("click",async ()=>{
+      if (!editorActionAllowed()) return closeTagEditor();
       const item = data.find(candidate=>String(candidate.id)===editingItemId);
       if (!item) return;
       const key = overrideKey(item);
@@ -2685,7 +2806,7 @@ try {
       message("Recherche enregistrée supprimée.");
     });
     $("syncButton").addEventListener("click",syncEncore);
-    $("undoButton").addEventListener("click",undoLastChange);
+    $("undoButton").addEventListener("click",()=>{if(editorActionAllowed()) undoLastChange();});
     $("cloudStatus").addEventListener("click",()=>loadSharedTags(true));
     $("addForm").addEventListener("submit",event=>{
       event.preventDefault();
@@ -2757,9 +2878,11 @@ try {
     updateSources();
     updateApiVersion();
     updateUndoButton();
+    updateEditorUi();
     render();
     hydrateData();
     loadSharedTags();
+    validEditorToken(false).then(()=>{updateEditorUi();render();});
     if (!data.some(item => item.kind === "attack")) {
       message("Le mode Attaques est prêt. Clique une fois sur « Actualiser avec Encore » pour importer les multiplicateurs.");
     }
