@@ -121,6 +121,8 @@
     .buff-metric-head{display:flex;justify-content:space-between;gap:10px}.buff-metric-head strong{color:var(--cyan);font-size:calc(12px * var(--font-scale))}.buff-metric-head span{font:600 calc(13px * var(--font-scale)) Consolas,monospace}
     .uptime{height:3px;background:#26313a;margin-top:8px}.uptime i{display:block;height:100%;background:var(--violet)}
     .buff-metric small{display:block;color:var(--muted);font-size:calc(9px * var(--font-scale));margin-top:6px}
+    .simple-buff-result{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;padding:16px;border:1px solid #36534f;border-radius:9px;background:#10211f}.simple-buff-result span{display:block;color:var(--muted);font-size:calc(10px * var(--font-scale));margin-bottom:4px}.simple-buff-result strong{display:block;color:var(--cyan);font:calc(30px * var(--font-scale)) Georgia,serif}.simple-buff-result small{max-width:190px;color:var(--muted);font-size:calc(9px * var(--font-scale));line-height:1.5;text-align:right}.team-details{margin-top:10px;border-radius:8px;background:#0a1116}.team-details summary{padding:11px 12px;font-size:calc(10px * var(--font-scale));color:var(--muted)}.team-details-body{display:grid;gap:9px;padding:11px;border-top:1px solid var(--line)}.team-calculation-note{margin:2px 0 0;color:var(--muted);font-size:calc(9px * var(--font-scale));line-height:1.5}
+    .plain-buff-list{display:grid;gap:8px}.plain-buff{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:13px 14px;border:1px solid var(--line);border-radius:8px;background:#0a1116}.plain-buff strong{display:block;color:var(--text);font-size:calc(12px * var(--font-scale))}.plain-buff small{display:block;margin-top:4px;color:var(--muted);font-size:calc(9px * var(--font-scale));line-height:1.4}.plain-buff-value{text-align:right;white-space:nowrap}.plain-buff-value>strong{color:var(--cyan);font-size:calc(18px * var(--font-scale))}
     .estimate-warning{grid-column:1/-1;border:1px solid #4f472d;background:#1a1810;color:#bdb38a;padding:11px;font-size:calc(10px * var(--font-scale));line-height:1.5}
     .damage-profile{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:14px}.damage-profile label{font-size:calc(9px * var(--font-scale))}.damage-profile input{width:100%;margin-top:4px;padding:7px;background:#0b1117;border:1px solid var(--line);border-radius:4px;color:var(--text)}
     .equipment-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px;margin-bottom:12px}.equipment-grid select{margin-top:4px;padding:7px;font-size:calc(10px * var(--font-scale))}
@@ -200,6 +202,8 @@
     html[data-theme="light"] .rotation-sequence-head,html[data-theme="light"] .rotation-index{background:#e9f5f3;border-color:#9dc9c3}
     html[data-theme="light"] .rotation-action-buttons button{background:#edf2f4}
     html[data-theme="light"] .estimate-warning{background:#fff8df;border-color:#d4c074;color:#6b5c29}
+    html[data-theme="light"] .simple-buff-result{background:#e9f5f3;border-color:#9dc9c3}html[data-theme="light"] .team-details{background:#f5f8f7}
+    html[data-theme="light"] .plain-buff{background:#f5f9f8}
     html[data-theme="light"] .soft-button{background:#edf2f4;color:#33454d}
     /* Tethys-inspired presentation layer: visual shell only, data model unchanged. */
     .side-rail{position:fixed;z-index:40;left:0;top:0;bottom:0;width:58px;display:flex;flex-direction:column;align-items:center;gap:8px;padding:17px 8px;background:rgba(5,8,11,.96);border-right:1px solid rgba(123,150,157,.18);box-shadow:10px 0 32px rgba(0,0,0,.18)}
@@ -1661,11 +1665,22 @@ try {
             const tags = manualTags(item);
             const label = tags.find(tag=>/ATQ|CRIT|DGT|DMG|Amplification/i.test(tag)) || item.skillName || "Effet manuel";
             const element = tags.find(tag=>["DGT Aero","DGT Fusion","DGT Glacio","DGT Electro","DGT Spectro","DGT Havoc"].includes(tag))?.replace("DGT ","") || "Tous";
-            return [{key:`manual-${overrideKey(item)}`,label,value:Number(effect.value),duration:Number(effect.duration ?? rotationWindow),layer:effect.layer || "bonus",element,source:item.skillName,manual:true}];
+            return [{key:`manual-${overrideKey(item)}`,label,value:Number(effect.value),duration:Number(effect.duration ?? rotationWindow),layer:effect.layer || "bonus",element,source:item.skillName,targets:effectiveTargets(item),manual:true}];
           }
-          return extractBuffMetrics(item);
+          return extractBuffMetrics(item).map(metric=>({...metric,targets:effectiveTargets(item)}));
         })
         .filter(metric=>testedElement==="Tous" || metric.element==="Tous" || clean(metric.element)===clean(testedElement));
+    }
+
+    function readableBuffLabel(label) {
+      if (uiLanguage !== "fr") return label;
+      const elementMatch = /^(Aero|Fusion|Glacio|Electro|Spectro|Havoc) DMG (?:Amplification|Bonus)$/i.exec(label);
+      if (elementMatch) return `DGT ${elementMatch[1]} amplifiés`;
+      if (/^All DMG Amplification$/i.test(label)) return "Tous les DGT amplifiés";
+      if (/^ATK$/i.test(label)) return "ATQ augmentée";
+      if (/^DMG Bonus$/i.test(label)) return "Bonus de dégâts";
+      if (/^CRIT Rate$/i.test(label)) return "Taux CRIT augmenté";
+      return label;
     }
 
     function synergyDirectionHtml(support,receiver) {
@@ -1706,18 +1721,12 @@ try {
     function teamFighterHtml(character) {
       const metrics = teamMetrics(character);
       const sample = data.find(item=>item.character===character) || {};
-      const effective = metrics.map(metric=>({...metric,uptime:Math.min(1,metric.duration/Math.max(1,rotationWindow))}));
-      const layers = {atk:0,bonus:0,amplification:0};
-      effective.forEach(metric=>{ if (layers[metric.layer] !== undefined) layers[metric.layer] += metric.value * metric.uptime; });
-      const factor = (1+layers.atk/100)*(1+layers.bonus/100)*(1+layers.amplification/100);
       return `<section class="fighter">
-        ${fighterHeadingHtml(sample,character,"Buffs externes et couverture")}
-        ${effective.length ? effective.map(metric=>`<div class="buff-metric">
-          <div class="buff-metric-head"><strong>${escapeHtml(metric.label)}</strong><span>+${percent(metric.value)}%</span></div>
-          <div class="uptime"><i style="width:${Math.round(metric.uptime*100)}%"></i></div>
-          <small>${escapeHtml(metric.source)} · ${percent(metric.duration)}s · couverture ${Math.round(metric.uptime*100)}%</small>
-        </div>`).join("") : "<p class='compare-note'>Aucun buff externe chiffré détecté pour ce filtre.</p>"}
-        <div class="total-box"><div><span>Gain d'équipe normalisé</span><strong>+${percent((factor-1)*100)}%</strong></div><div><span>Facteur estimé</span><strong>×${factor.toFixed(2)}</strong></div></div>
+        ${fighterHeadingHtml(sample,character,"Buffs donnés aux alliés")}
+        ${metrics.length ? `<div class="plain-buff-list">${metrics.map(metric=>`<article class="plain-buff">
+          <div><strong>${escapeHtml(readableBuffLabel(metric.label))}</strong><small>${escapeHtml(metric.source || "Source inconnue")}</small></div>
+          <div class="plain-buff-value"><strong>+${percent(metric.value)}%</strong><small>pendant ${percent(metric.duration)}s · pour ${(metric.targets || []).map(target=>escapeHtml(targets[target] || target)).join(" / ") || "allié"}</small></div>
+        </article>`).join("")}</div>` : "<p class='compare-note'>Aucun buff donné aux alliés n’a été détecté pour ce filtre.</p>"}
       </section>`;
     }
 
@@ -1854,7 +1863,7 @@ try {
         : compareView === "synergy"
           ? `<div class="comparison"><div class="estimate-warning">Compatibilité fondée sur les tags vérifiés ou structurés, les catégories de dégâts et les bénéficiaires. Les conditions de déclenchement restent à confirmer dans la description.</div>${synergyComparisonHtml(compareA,compareB)}</div>`
         : compareView === "team"
-          ? `<div class="comparison"><div class="estimate-warning">Estimation normalisée : les bonus ATK, DMG Bonus et Amplification sont placés dans trois couches multiplicatives. Le calcul suppose que tous les buffs détectés peuvent être actifs ensemble et ne remplace pas une simulation complète du jeu.</div>${teamFighterHtml(compareA)}${teamFighterHtml(compareB)}</div>`
+          ? `<div class="comparison">${teamFighterHtml(compareA)}${teamFighterHtml(compareB)}</div>`
           : compareView === "damage"
             ? `<div class="comparison"><div class="estimate-warning">Estimation transparente basée sur la rotation sélectionnée : statistique de scaling × multiplicateur × critique moyen × bonus × amplification × résistance. Elle n’inclut pas encore la DEF ennemie, les niveaux, les réactions ni toutes les conditions de kit.</div>${damageComparisonBoardHtml(compareA,compareB)}${damageFighterHtml(compareA)}${damageFighterHtml(compareB)}</div>`
           : `<div class="comparison">${quickComparisonHtml(compareA,compareB)}${fighterHtml(compareA)}${fighterHtml(compareB)}</div>`;
@@ -1876,7 +1885,7 @@ try {
               ? `<label class="compare-setting">Fenêtre <input id="rotationWindow" type="number" min="1" max="120" value="${rotationWindow}"> secondes</label>`
               : ""}
         </div>
-        <p class="compare-note">${compareView === "skills" ? "Multiplicateurs importés et catégories de dégâts structurées." : compareView === "rotation" ? "Ajoute les attaques dans leur ordre d’exécution. Tu peux ensuite les déplacer ou les supprimer." : compareView === "synergy" ? "Lis dans les deux sens quels buffs d’un personnage couvrent réellement les attaques de l’autre." : compareView === "team" ? "Compare les buffs externes détectés et leur couverture sur la même fenêtre que la rotation." : "Utilise exactement les sous-attaques choisies dans Rotation et les statistiques saisies ci-dessous."}</p>
+        <p class="compare-note">${compareView === "skills" ? "Multiplicateurs importés et catégories de dégâts structurées." : compareView === "rotation" ? "Ajoute les attaques dans leur ordre d’exécution. Tu peux ensuite les déplacer ou les supprimer." : compareView === "synergy" ? "Lis dans les deux sens quels buffs d’un personnage fonctionnent avec les attaques de l’autre." : compareView === "team" ? "Valeurs brutes uniquement : effet, pourcentage, durée et bénéficiaire. Aucun calcul supplémentaire." : "Utilise exactement les sous-attaques choisies dans Rotation et les statistiques saisies ci-dessous."}</p>
         ${body}`;
     }
 
