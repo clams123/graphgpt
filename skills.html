@@ -103,7 +103,7 @@
     .skill-table{border-top:1px solid var(--line);padding:13px 0}.skill-table h3{color:var(--cyan);font-size:calc(11px * var(--font-scale));text-transform:uppercase;margin:0 0 9px}
     .compare-note{color:var(--muted);font-size:calc(11px * var(--font-scale));margin:0 0 18px}
     .compare-tools{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 16px;padding:10px;border:1px solid var(--line);border-radius:8px;background:#0c1218}
-    .compare-tabs{display:flex;gap:5px}.compare-tabs button{border:1px solid transparent;background:transparent;color:var(--muted);padding:8px 11px;border-radius:5px;font-size:calc(11px * var(--font-scale))}
+    .compare-tabs{display:flex;gap:5px;flex-wrap:wrap}.compare-tabs button{border:1px solid transparent;background:transparent;color:var(--muted);padding:8px 11px;border-radius:5px;font-size:calc(11px * var(--font-scale))}
     .compare-tabs button.active{color:var(--cyan);border-color:#36534f;background:#10211f}
     .compare-setting{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:calc(10px * var(--font-scale))}.compare-setting input,.compare-setting select{width:auto;min-width:68px;padding:7px;background:var(--panel);border:1px solid var(--line);border-radius:4px;color:var(--text)}
     .skill-title-line{display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -286,6 +286,12 @@
     .result-table,.quality-table{width:100%;border-collapse:collapse;text-align:left}.result-table th,.quality-table th{position:sticky;top:0;z-index:1;padding:10px 11px;background:#0a1116;color:var(--muted);font-size:calc(8px * var(--font-scale));letter-spacing:.07em;text-transform:uppercase;white-space:nowrap}.result-table td,.quality-table td{padding:10px 11px;border-top:1px solid var(--line);color:var(--text);font-size:calc(10px * var(--font-scale));vertical-align:middle}.result-table tbody tr:hover,.quality-table tbody tr:hover{background:rgba(119,226,210,.035)}.result-table-character{font-weight:700;white-space:nowrap}.result-table-skill{min-width:180px}.result-table-summary{min-width:230px;color:var(--muted)!important;line-height:1.45}.result-table-tags{display:flex;gap:4px;flex-wrap:wrap;min-width:160px}.result-table-tags span{border:1px solid var(--line);border-radius:10px;padding:3px 6px;color:var(--muted);font-size:calc(8px * var(--font-scale))}.result-table-actions{display:flex;gap:5px;white-space:nowrap}.result-table .favorite-button,.result-table .copy-description,.result-table .tag-description{display:inline-grid;vertical-align:middle}
     .quality-panel{margin-bottom:14px;border:1px solid var(--line);border-radius:11px;background:linear-gradient(120deg,var(--panel),var(--panel-2));overflow:hidden}.quality-panel>summary{display:flex;align-items:center;justify-content:space-between;padding:13px 15px;color:var(--text);font-weight:700}.quality-panel>summary small{color:var(--muted);font-weight:400}.quality-table-wrap{border:0;border-top:1px solid var(--line);border-radius:0}.quality-character{border:0;background:transparent;color:var(--text);font-weight:700;padding:0;text-align:left}.quality-character:hover{color:var(--cyan)}.quality-progress{display:grid;grid-template-columns:minmax(80px,1fr) 38px;align-items:center;gap:8px;min-width:130px}.quality-progress .progress-track{margin:0}.quality-progress strong{color:var(--cyan);font-size:calc(10px * var(--font-scale));text-align:right}.quality-warning{color:#cfb55f}.quality-good{color:var(--cyan)}
     .synergy-board{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px}.synergy-card{padding:17px;border:1px solid var(--line);border-radius:12px;background:linear-gradient(120deg,#10181e,#0a1015)}.synergy-card h3{margin:0 0 5px;font-size:calc(17px * var(--font-scale))}.synergy-card>p{margin:0 0 14px;color:var(--muted);font-size:calc(10px * var(--font-scale));line-height:1.5}.synergy-score{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}.synergy-score div{padding:9px;border:1px solid var(--line);border-radius:7px;background:#0a1116}.synergy-score strong{display:block;color:var(--cyan);font-size:calc(16px * var(--font-scale))}.synergy-score span{color:var(--muted);font-size:calc(8px * var(--font-scale));text-transform:uppercase}.synergy-list{display:grid;gap:7px}.synergy-row{padding:10px;border:1px solid var(--line);border-radius:7px;background:#0a1116}.synergy-row-head{display:flex;justify-content:space-between;gap:10px}.synergy-row-head strong{font-size:calc(11px * var(--font-scale))}.synergy-row-head span{color:var(--cyan);font-size:calc(9px * var(--font-scale));white-space:nowrap}.synergy-row p{margin:6px 0 0;color:var(--muted);font-size:calc(9px * var(--font-scale));line-height:1.45}.synergy-none{padding:13px;border:1px dashed var(--line);border-radius:7px;color:var(--muted);font-size:calc(10px * var(--font-scale))}
+    .effect-facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(125px,1fr));gap:6px;margin-top:12px;padding:9px;border:1px solid var(--line);border-radius:8px;background:#0a1116}.effect-fact{min-width:0;padding:7px 8px;border-left:2px solid #315953}.effect-fact span{display:block;color:var(--muted);font-size:calc(8px * var(--font-scale));font-weight:700;letter-spacing:.06em;text-transform:uppercase}.effect-fact strong{display:block;margin-top:4px;color:var(--text);font-size:calc(10px * var(--font-scale));line-height:1.4;overflow-wrap:anywhere}.effect-fact.manual{border-left-color:var(--violet)}
+    .condition-options{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}.condition-option{display:flex;align-items:center;gap:8px;padding:9px 10px;border:1px solid var(--line);border-radius:7px;color:var(--muted);font-size:calc(10px * var(--font-scale))}.condition-option input{accent-color:var(--cyan)}
+    .raw-compare{grid-column:1/-1;overflow:auto;border:1px solid var(--line);border-radius:11px;background:var(--panel)}.raw-compare table{width:100%;border-collapse:collapse}.raw-compare th,.raw-compare td{padding:11px 12px;border-top:1px solid var(--line);text-align:left;vertical-align:top;font-size:calc(10px * var(--font-scale))}.raw-compare thead th{border-top:0;background:#0a1116;color:var(--muted);font-size:calc(8px * var(--font-scale));text-transform:uppercase;letter-spacing:.06em}.raw-compare td strong{display:block;margin-bottom:4px}.raw-compare td small{display:block;color:var(--muted);line-height:1.45}.raw-character{white-space:nowrap;color:var(--cyan)}
+    .squad-selects{grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:3px}.squad-selects label{color:var(--muted);font-size:calc(9px * var(--font-scale));text-transform:uppercase;letter-spacing:.06em}.squad-selects select{margin-top:5px}.squad-board{grid-column:1/-1;display:grid;gap:10px}.squad-member{border:1px solid var(--line);border-radius:11px;background:linear-gradient(120deg,#10181e,#0a1015);padding:15px}.squad-member h3{margin:0 0 4px;font-size:calc(16px * var(--font-scale))}.squad-member>p{margin:0 0 11px;color:var(--muted);font-size:calc(10px * var(--font-scale))}.squad-links{display:grid;grid-template-columns:1fr 1fr;gap:8px}.squad-link{padding:10px;border:1px solid var(--line);border-radius:8px;background:#0a1116}.squad-link>strong{display:block;margin-bottom:7px;color:var(--cyan);font-size:calc(10px * var(--font-scale))}.squad-effect{display:flex;justify-content:space-between;gap:10px;padding:6px 0;border-top:1px solid var(--line);font-size:calc(9px * var(--font-scale))}.squad-effect:first-of-type{border-top:0}.squad-effect span:last-child{color:var(--muted);text-align:right}.squad-empty{color:var(--muted);font-size:calc(9px * var(--font-scale));line-height:1.45}
+    .api-change-button,.share-search{border:1px solid var(--line);border-radius:6px;background:rgba(10,17,21,.76);color:var(--muted);padding:8px 10px;font-size:calc(10px * var(--font-scale))}.api-change-button:hover,.share-search:hover{color:var(--cyan);border-color:#39746e}.share-card{width:30px;height:28px;display:grid;place-items:center;border:1px solid var(--line);border-radius:5px;background:#0c1218;color:#9cabb1;padding:0}.share-card:hover{color:var(--cyan);border-color:var(--cyan)}
+    .change-dialog{width:min(900px,calc(100% - 30px));max-height:min(820px,calc(100vh - 40px));overflow:auto;background:var(--panel);border:1px solid var(--line);border-radius:13px;box-shadow:0 24px 80px rgba(0,0,0,.45)}.change-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;padding:15px}.change-summary div{padding:12px;border:1px solid var(--line);border-radius:8px;background:#0a1116}.change-summary strong{display:block;color:var(--cyan);font-size:calc(20px * var(--font-scale))}.change-summary span{color:var(--muted);font-size:calc(9px * var(--font-scale));text-transform:uppercase}.change-list{display:grid;gap:7px;padding:0 15px 17px}.change-row{display:grid;grid-template-columns:90px minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px;border:1px solid var(--line);border-radius:7px}.change-kind{color:var(--cyan);font-size:calc(9px * var(--font-scale));text-transform:uppercase}.change-row small{color:var(--muted)}
     html[data-theme="light"] .side-rail{background:rgba(247,250,249,.98);border-right-color:#c9d8d6;box-shadow:10px 0 28px rgba(35,62,59,.1)}
     html[data-theme="light"] .hero{background:radial-gradient(circle at 78% 25%,rgba(8,123,114,.12),transparent 24%),linear-gradient(112deg,#fff,#eef4f2)}
     html[data-theme="light"] .modes,html[data-theme="light"] .controls{background:rgba(248,251,250,.93)}
@@ -331,10 +337,13 @@
     html[data-theme="light"] .index-track,
     html[data-theme="light"] .damage-slice-track{background:#dce6e4}
     html[data-theme="light"] .saved-searches button,html[data-theme="light"] .favorite-filter,html[data-theme="light"] .favorite-button{background:#fff;color:#536765}
+    html[data-theme="light"] .api-change-button,html[data-theme="light"] .share-search{background:#fff;color:#536765;border-color:#b8c9c8;box-shadow:0 2px 8px rgba(35,62,59,.05)}
+    html[data-theme="light"] .api-change-button:hover,html[data-theme="light"] .share-search:hover{background:#e8f4f2;color:#087b72;border-color:#79aea8}
     html[data-theme="light"] .active-filters,html[data-theme="light"] .why-result,html[data-theme="light"] .compatibility-panel,html[data-theme="light"] .coverage-stat,html[data-theme="light"] .quick-compare-card{background:#f4f8f7}
     html[data-theme="light"] .view-toggle{background:#fff;color:#526765}html[data-theme="light"] .view-toggle:hover,html[data-theme="light"] .view-toggle.active{background:#e3f3f0;color:#087b72;border-color:#8cbab5}
     html[data-theme="light"] .result-table-wrap,html[data-theme="light"] .quality-table-wrap,html[data-theme="light"] .quality-panel{background:#fbfcfb}html[data-theme="light"] .result-table th,html[data-theme="light"] .quality-table th{background:#edf4f2;color:#526765}html[data-theme="light"] .result-table tbody tr:hover,html[data-theme="light"] .quality-table tbody tr:hover{background:#edf7f5}
     html[data-theme="light"] .synergy-card{background:linear-gradient(120deg,#fff,#eef5f3)}html[data-theme="light"] .synergy-score div,html[data-theme="light"] .synergy-row{background:#f5f9f8}
+    html[data-theme="light"] .effect-facts,html[data-theme="light"] .raw-compare thead th,html[data-theme="light"] .squad-link,html[data-theme="light"] .change-summary div{background:#f3f7f6}html[data-theme="light"] .raw-compare,html[data-theme="light"] .squad-member,html[data-theme="light"] .change-dialog{background:#fbfcfb}
     html[data-theme="light"] .character-overview{background:linear-gradient(120deg,#fff,#eef5f3)}
     html[data-theme="light"] .why-result p{color:#405552}
     @media(max-width:1180px){header{align-items:flex-start;flex-wrap:wrap}.header-actions{width:100%;justify-content:flex-end;flex-wrap:wrap}}
@@ -348,13 +357,13 @@
       .side-rail .rail-button::after{display:none}
       .page,body.rail-expanded .page{width:min(100% - 20px,1180px);padding-bottom:92px}header{align-items:flex-start;margin-bottom:35px}.header-actions{align-items:flex-end;flex-direction:column}.api-button{font-size:calc(10px * var(--font-scale));padding:9px}
       .hero{padding:28px 20px}.hero::after{display:none}h1{font-size:calc(35px * var(--font-scale))}.search{height:54px;padding:0 14px}.search input{font-size:calc(14px * var(--font-scale))}
-      .saved-searches{align-items:stretch;flex-wrap:wrap}.saved-searches select{max-width:none;flex:1 1 100%}.character-overview{grid-template-columns:auto 1fr}.coverage-grid{grid-column:1/-1;grid-template-columns:repeat(2,1fr)}.quick-compare,.synergy-board{grid-template-columns:1fr}
+      .saved-searches{align-items:stretch;flex-wrap:wrap}.saved-searches select{max-width:none;flex:1 1 100%}.character-overview{grid-template-columns:auto 1fr}.coverage-grid{grid-column:1/-1;grid-template-columns:repeat(2,1fr)}.quick-compare,.synergy-board,.squad-links,.squad-selects{grid-template-columns:1fr}
       .modes{align-items:flex-end}.mode-buttons{max-width:calc(100% - 76px)}.mode-buttons button{padding:10px 7px;font-size:calc(10px * var(--font-scale))}.controls{grid-template-columns:1fr 1fr}.count{grid-column:1/-1;justify-content:flex-start}
       .card{grid-template-columns:75px 1fr}.card-body{padding:14px}.topline{align-items:flex-start}.source{display:none}
       .index-row{grid-template-columns:85px 1fr 48px}.damage-slice{grid-template-columns:95px 1fr 38px}
       .classification-dashboard{grid-template-columns:1fr}.classification-dashboard select{width:100%}
       .classification-head{display:none}.classification-row{grid-template-columns:1fr}.classification-row .tag-description{justify-self:start}
-      .editor{grid-template-columns:1fr}.wide,.editor-actions{grid-column:auto}.comparison{grid-template-columns:1fr}.compare-selects{grid-template-columns:1fr}.versus{text-align:center}.compare-tools{align-items:stretch;flex-direction:column}.compare-tabs{display:grid;grid-template-columns:repeat(2,1fr)}.damage-profile{grid-template-columns:repeat(2,1fr)}.rotation-action{grid-template-columns:27px minmax(0,1fr)}.rotation-action-buttons{grid-column:2}footer{flex-direction:column;gap:7px}
+      .editor{grid-template-columns:1fr}.wide,.editor-actions{grid-column:auto}.comparison{grid-template-columns:1fr}.compare-selects{grid-template-columns:1fr}.versus{text-align:center}.compare-tools{align-items:stretch;flex-direction:column}.compare-tabs{display:grid;grid-template-columns:repeat(2,1fr)}.damage-profile,.condition-options{grid-template-columns:1fr}.rotation-action{grid-template-columns:27px minmax(0,1fr)}.rotation-action-buttons{grid-column:2}.change-row{grid-template-columns:1fr}footer{flex-direction:column;gap:7px}
     }
   </style>
 </head>
@@ -378,6 +387,7 @@
       <div class="logo">WUWA <span>BUFFS SKILLS FINDER</span></div>
       <div class="header-actions">
         <span class="api-version" id="apiVersion">API —</span>
+        <button class="api-change-button" id="apiChangesButton" type="button" title="Voir les changements de la dernière actualisation">Δ API</button>
         <button class="theme-button" id="undoButton" type="button" hidden>↶ Annuler</button>
         <button class="cloud-status" id="cloudStatus" data-state="loading" type="button" title="Cliquer pour synchroniser">Tags : connexion…</button>
         <label class="language-control">
@@ -416,6 +426,7 @@
       <div class="saved-searches">
         <select id="savedSearchSelect" aria-label="Recherches enregistrées"><option value="">Recherches enregistrées</option></select>
         <button id="saveSearchButton" type="button">☆ Enregistrer cette recherche</button>
+        <button class="share-search" id="shareSearchButton" type="button">↗ Partager</button>
         <button id="deleteSearchButton" type="button" hidden>Supprimer</button>
       </div>
     </section>
@@ -483,7 +494,7 @@
 
     <section class="results" id="results"></section>
 
-    <details>
+    <details id="manualEntryPanel" hidden>
       <summary>＋ Nourrir la base avec une fiche</summary>
       <form class="editor" id="addForm">
         <label><span>Type de fiche</span><select name="kind"><option value="buff">Buff / effet</option><option value="attack">Attaque / multiplicateur</option><option value="sequence">Séquence</option><option value="weapon">Arme</option><option value="echo">Écho</option><option value="sonata">Sonata</option></select></label>
@@ -541,7 +552,15 @@
               <label>Durée en secondes<input class="field" id="effectDuration" type="number" step="0.1" min="0" placeholder="14"></label>
               <label>Stacks maximum<input class="field" id="effectStacks" type="number" step="1" min="0" placeholder="1"></label>
               <label class="wide">Condition<input class="field" id="effectCondition" placeholder="Ex. après une Intro, tant que le personnage reste sur le terrain"></label>
-              <label class="verified-check wide"><input id="effectPersists" type="checkbox"> Persiste après un changement de personnage</label>
+              <label>Déclencheur vérifié<select id="effectTrigger"><option value="">Non précisé</option><option>Attaque normale</option><option>Attaque lourde</option><option>Compétence de résonance</option><option>Libération de résonance</option><option>Intro</option><option>Outro</option><option>Après avoir touché</option><option>Après un changement</option></select></label>
+              <label>Présence requise<select id="effectField"><option value="any">Non précisé</option><option value="on-field">Sur le terrain</option><option value="off-field">Hors terrain</option></select></label>
+              <label>Temps de recharge<input class="field" id="effectCooldown" type="number" step="0.1" min="0" placeholder="secondes"></label>
+              <div class="condition-options wide">
+                <label class="condition-option"><input id="effectPersists" type="checkbox"> Persiste après changement</label>
+                <label class="condition-option"><input id="effectEndsOnSwitch" type="checkbox"> Se termine au changement</label>
+                <label class="condition-option"><input id="effectStackable" type="checkbox"> Effet cumulable</label>
+                <label class="condition-option"><input id="effectRequiresStacks" type="checkbox"> Nécessite des stacks</label>
+              </div>
             </div>
           </section>
           <label class="tag-custom"><span>Tags personnalisés, séparés par des virgules</span>
@@ -573,6 +592,16 @@
       </section>
     </div>
 
+    <div class="tag-modal" id="apiChangesModal" hidden>
+      <section class="change-dialog" role="dialog" aria-modal="true" aria-labelledby="apiChangesTitle">
+        <header class="tag-dialog-header">
+          <div><h2 id="apiChangesTitle">Dernière actualisation API</h2><p id="apiChangesSubtitle">Comparaison avec les données Encore précédentes.</p></div>
+          <button class="tag-close" id="apiChangesClose" type="button" aria-label="Fermer">×</button>
+        </header>
+        <div id="apiChangesContent"></div>
+      </section>
+    </div>
+
     <footer>
       <span>Outil local non officiel pour Wuthering Waves</span>
       <span>Raccourcis : / rechercher · ↑↓ parcourir · F favori · Échap réinitialiser</span>
@@ -587,6 +616,7 @@
     const FONT_SCALE_STORE = "wuwa-buff-finder-font-scale";
     const TAG_STORE = "wuwa-buff-finder-manual-tags";
     const API_META_STORE = "wuwa-buff-finder-api-meta";
+    const API_CHANGE_STORE = "wuwa-buff-finder-api-changes";
     const UNDO_STORE = "wuwa-buff-finder-undo-history";
     const EQUIPMENT_STORE = "wuwa-buff-finder-equipment-profiles";
     const RAIL_STORE = "wuwa-buff-finder-rail-expanded";
@@ -684,6 +714,7 @@
     let mode = "buff";
     let compareA = "";
     let compareB = "";
+    let compareC = "";
     let compareView = "skills";
     let resultLayout = localStorage.getItem(RESULT_LAYOUT_STORE) === "table" ? "table" : "cards";
     let rotationWindow = 20;
@@ -699,6 +730,8 @@
     let messageTimer;
     let apiMeta;
     try { apiMeta = JSON.parse(localStorage.getItem(API_META_STORE)) || {}; } catch { apiMeta = {}; }
+    let apiChanges;
+    try { apiChanges = JSON.parse(localStorage.getItem(API_CHANGE_STORE)) || {added:[],changed:[],removed:[],syncedAt:""}; } catch { apiChanges = {added:[],changed:[],removed:[],syncedAt:""}; }
     let undoHistory;
     try { undoHistory = JSON.parse(localStorage.getItem(UNDO_STORE)) || []; } catch { undoHistory = []; }
     let favoriteIds;
@@ -805,7 +838,8 @@ try {
     function normalizedEffectKeys(item) {
       const aliases = {
         "Aero":"Aero","DGT Aero":"Aero","Fusion":"Fusion","DGT Fusion":"Fusion","Glacio":"Glacio","DGT Glacio":"Glacio","Electro":"Electro","DGT Electro":"Electro","Spectro":"Spectro","DGT Spectro":"Spectro","Havoc":"Havoc","DGT Havoc":"Havoc",
-        "Basic Attack":"Basic Attack","DGT Attaque normale":"Basic Attack","Heavy Attack":"Heavy Attack","DGT Attaque lourde":"Heavy Attack","Resonance Skill":"Resonance Skill","DGT Compétence de résonance":"Resonance Skill","Resonance Liberation":"Resonance Liberation","DGT Libération de résonance":"Resonance Liberation","All DMG":"All DMG","Tous les DGT":"All DMG"
+        "Basic Attack":"Basic Attack","DGT Attaque normale":"Basic Attack","Heavy Attack":"Heavy Attack","DGT Attaque lourde":"Heavy Attack","Resonance Skill":"Resonance Skill","DGT Compétence de résonance":"Resonance Skill","Resonance Liberation":"Resonance Liberation","DGT Libération de résonance":"Resonance Liberation","All DMG":"All DMG","Tous les DGT":"All DMG",
+        "ATQ":"ATK","ATK":"ATK","Scaling ATK":"ATK","DEF":"DEF","Scaling DEF":"DEF","PV":"HP","HP":"HP","Scaling HP":"HP","Taux CRIT":"CRIT Rate","CRIT Rate":"CRIT Rate","DGT CRIT":"CRIT DMG","CRIT DMG":"CRIT DMG"
       };
       const nativeElement = item.kind === "attack" ? [item.element] : [];
       return new Set([...effectiveTags(item),...structuredTags(item),...suggestedTags(item),...nativeElement].map(tag=>aliases[tag] || tag).filter(Boolean));
@@ -818,7 +852,7 @@ try {
       if (beneficiaries.every(target=>target==="self") && buff.character!==item.character) return null;
       if (!beneficiaries.some(target=>["self","next","team"].includes(target))) return null;
       const buffKeys = new Set([...normalizedEffectKeys(buff),...inferBoostedStats(buff.text),...manualBoostedStats(buff)]);
-      const shared = [...buffKeys].filter(key=>key==="All DMG" || attackKeys.has(key));
+      const shared = [...buffKeys].filter(key=>key==="All DMG" || ["CRIT Rate","CRIT DMG"].includes(key) || attackKeys.has(key));
       return shared.length ? [...new Set(shared)].slice(0,3) : null;
     }
 
@@ -841,6 +875,40 @@ try {
       const label = apiMeta.GameVer ? `API ${apiMeta.GameVer}` : "API —";
       $("apiVersion").textContent = label;
       $("apiVersion").title = apiMeta.ResVer ? `Ressources ${apiMeta.ResVer} · changelist ${apiMeta.Changelist || "?"}` : "Version inconnue — actualise avec Encore";
+      const total = (apiChanges.added || []).length + (apiChanges.changed || []).length + (apiChanges.removed || []).length;
+      $("apiChangesButton").textContent = total ? `Δ API · ${total}` : "Δ API";
+    }
+
+    function apiComparable(item) {
+      return {
+        id:String(item.id),kind:item.kind,character:item.character,element:item.element,source:item.source,skillName:item.skillName,
+        text:cleanGameText(item.text),translations:item.translations || {},attributes:item.attributes || [],subattacks:item.subattacks || [],structured:item.structured || {},target:item.target,tags:item.tags || []
+      };
+    }
+
+    function apiChangeLabel(item) {
+      return `${item.character || "—"} · ${item.skillName || item.source || item.id}`;
+    }
+
+    function calculateApiChanges(previous,next) {
+      const before = new Map(previous.filter(item=>!item.manual).map(item=>[String(item.id),item]));
+      const after = new Map(next.map(item=>[String(item.id),item]));
+      const added = [], changed = [], removed = [];
+      after.forEach((item,id)=>{
+        const old = before.get(id);
+        if (!old) added.push({id,kind:item.kind,label:apiChangeLabel(item)});
+        else if (JSON.stringify(apiComparable(old)) !== JSON.stringify(apiComparable(item))) changed.push({id,kind:item.kind,label:apiChangeLabel(item)});
+      });
+      before.forEach((item,id)=>{ if (!after.has(id)) removed.push({id,kind:item.kind,label:apiChangeLabel(item)}); });
+      return {added:added.slice(0,500),changed:changed.slice(0,500),removed:removed.slice(0,500),syncedAt:new Date().toISOString(),previousCount:before.size,currentCount:after.size};
+    }
+
+    function renderApiChanges() {
+      const groups = [["added","Ajoutées"],["changed","Modifiées"],["removed","Retirées de l’API"]];
+      const total = groups.reduce((sum,[key])=>sum+(apiChanges[key] || []).length,0);
+      $("apiChangesSubtitle").textContent = apiChanges.syncedAt ? `Comparaison du ${new Date(apiChanges.syncedAt).toLocaleString("fr-FR")}. Les saisies manuelles et leur historique n’ont pas été modifiés.` : "Aucune comparaison enregistrée pour le moment.";
+      $("apiChangesContent").innerHTML = `<div class="change-summary">${groups.map(([key,label])=>`<div><strong>${(apiChanges[key] || []).length}</strong><span>${label}</span></div>`).join("")}</div>
+        <div class="change-list">${total ? groups.flatMap(([key,label])=>(apiChanges[key] || []).map(change=>`<div class="change-row"><span class="change-kind">${escapeHtml(label)}</span><strong>${escapeHtml(change.label)}</strong><small>${escapeHtml(kindLabels[change.kind] || change.kind)}</small></div>`)).join("") : '<div class="empty">Actualise une seconde fois avec Encore pour comparer deux versions de l’API.</div>'}</div>`;
     }
 
     function updateUndoButton() {
@@ -875,6 +943,7 @@ try {
     function updateEditorUi() {
       const active = Boolean(authSession?.access_token && authSession?.refresh_token);
       document.documentElement.dataset.editor = String(active);
+      $("manualEntryPanel").hidden = !active;
       const button = $("editorButton");
       button.classList.toggle("authenticated",active);
       button.textContent = active ? "✎ Mode édition" : "🔒 Lecture seule";
@@ -1356,8 +1425,58 @@ try {
       if (effect.duration !== null && effect.duration !== undefined) badges.push(`${effect.duration}s`);
       if (effect.stacks !== null && effect.stacks !== undefined) badges.push(`${effect.stacks} stack${Number(effect.stacks)>1?"s":""}`);
       if (effect.persists) badges.push("Persiste après changement");
+      if (effect.endsOnSwitch) badges.push("Fin au changement");
+      if (effect.trigger) badges.push(`Déclencheur : ${effect.trigger}`);
+      if (effect.field === "on-field") badges.push("Sur le terrain");
+      if (effect.field === "off-field") badges.push("Hors terrain");
+      if (effect.stackable) badges.push("Cumulable");
+      if (effect.requiresStacks) badges.push("Stacks requis");
+      if (effect.cooldown !== null && effect.cooldown !== undefined) badges.push(`Recharge ${effect.cooldown}s`);
       if (effect.condition) badges.push(effect.condition);
       return badges;
+    }
+
+    function effectFacts(item) {
+      const override = itemOverride(item);
+      const effect = override.effect || {};
+      const text = cleanGameText(itemValue(item,"text"));
+      const tags = [...new Set([...manualTags(item),...structuredTags(item),...(item.tags || [])])];
+      const values = [...text.matchAll(/[+-]?\d+(?:[.,]\d+)?\s*%/g)].map(match=>match[0].replace(/\s+/g,"")).filter((value,index,array)=>array.indexOf(value)===index).slice(0,3);
+      const durations = [...text.matchAll(/\b\d+(?:[.,]\d+)?\s*s\b/gi)].map(match=>match[0].replace(/\s+/g,"")).filter((value,index,array)=>array.indexOf(value)===index).slice(0,2);
+      const manualValue = effect.value !== undefined && effect.value !== null && effect.value !== "" ? `${effect.value}${effect.unit === "flat" ? "" : effect.unit || "%"}` : "";
+      const affected = manualTags(item).find(tag=>/^(ATQ|DEF|PV|Taux CRIT|DGT CRIT|Énergie|DGT |Tous les DGT)/.test(tag))
+        || tags.find(tag=>/^(ATK|DEF|HP|CRIT|Energy|All DMG|DMG |DGT )/.test(tag))
+        || inferBoostedStats(text)[0]
+        || (item.kind === "attack" ? tags.find(tag=>/^DGT /.test(tag)) : "")
+        || "À préciser";
+      const triggers = Object.values(tagGroups)[3];
+      const trigger = effect.trigger || manualTags(item).find(tag=>triggers.includes(tag)) || (/Outro Skill/i.test(item.source) ? "Outro" : /Intro Skill/i.test(item.source) ? "Intro" : "Non précisé");
+      let ending = "Non précisée";
+      if (effect.endsOnSwitch || /until (?:the resonator|they|the character)?\s*(?:is|are)?\s*switched out|jusqu au changement|se termine.*changement/i.test(clean(text))) ending = "Au changement de personnage";
+      else if (effect.persists) ending = "Persiste après changement";
+      const conditions = [effect.condition,effect.field === "on-field" ? "Personnage sur le terrain" : effect.field === "off-field" ? "Fonctionne hors terrain" : "",effect.requiresStacks ? "Stacks requis" : "",effect.stackable ? "Cumulable" : "",effect.cooldown !== undefined && effect.cooldown !== null && effect.cooldown !== "" ? `Recharge ${effect.cooldown}s` : ""].filter(Boolean);
+      return {
+        affected,
+        value:manualValue || values.join(" + ") || "Non chiffrée",
+        duration:effect.duration !== undefined && effect.duration !== null && effect.duration !== "" ? `${effect.duration}s` : durations.join(" / ") || "Non précisée",
+        targets:effectiveTargets(item).map(target=>targets[target] || target).join(" + ") || "À vérifier",
+        trigger,
+        condition:conditions.join(" · ") || "Aucune condition structurée",
+        ending,
+        stacks:effect.stacks !== undefined && effect.stacks !== null && effect.stacks !== "" ? String(effect.stacks) : "—",
+        reliability:reliability(item).label,
+        manual:Boolean(override.effect)
+      };
+    }
+
+    function effectFactsHtml(item) {
+      if (!["buff","sequence","weapon","echo","sonata"].includes(item.kind)) return "";
+      const facts = effectFacts(item);
+      const cells = [
+        ["Effet",facts.affected],["Valeur",facts.value],["Bénéficiaire",facts.targets],["Durée",facts.duration],
+        ["Déclencheur",facts.trigger],["Condition",facts.condition],["Fin de l’effet",facts.ending],["Fiabilité",facts.reliability]
+      ];
+      return `<div class="effect-facts" aria-label="Fiche structurée de l'effet">${cells.map(([label,value])=>`<div class="effect-fact ${facts.manual?"manual":""}"><span>${escapeHtml(label)}</span><strong>${escapeHtml(value)}</strong></div>`).join("")}</div>`;
     }
 
     function parseMultiplier(value) {
@@ -1730,6 +1849,45 @@ try {
       </section>`;
     }
 
+    function rawEffectRows(character) {
+      return data.filter(item=>item.kind === "buff" && item.character === character && effectiveTargets(item).some(target=>["self","next","team"].includes(target))).map(item=>({item,facts:effectFacts(item)}));
+    }
+
+    function rawComparisonHtml(characterA,characterB) {
+      const groups = [characterA,characterB].map(character=>({character,rows:rawEffectRows(character)}));
+      return `<div class="raw-compare"><table>
+        <thead><tr><th>Personnage</th><th>Compétence</th><th>Effet</th><th>Valeur</th><th>Bénéficiaire</th><th>Durée</th><th>Déclencheur / condition</th><th>Fin</th><th>Fiabilité</th></tr></thead>
+        <tbody>${groups.flatMap(group=>group.rows.length ? group.rows.map(({item,facts})=>`<tr>
+          <td class="raw-character">${escapeHtml(group.character)}</td>
+          <td><strong>${escapeHtml(itemValue(item,"skillName") || itemValue(item,"source"))}</strong><small>${escapeHtml(itemValue(item,"source"))}</small></td>
+          <td>${escapeHtml(facts.affected)}</td><td><strong>${escapeHtml(facts.value)}</strong></td><td>${escapeHtml(facts.targets)}</td><td>${escapeHtml(facts.duration)}</td>
+          <td><strong>${escapeHtml(facts.trigger)}</strong><small>${escapeHtml(facts.condition)}</small></td><td>${escapeHtml(facts.ending)}</td><td>${escapeHtml(facts.reliability)}</td>
+        </tr>`).join("") : `<tr><td class="raw-character">${escapeHtml(group.character)}</td><td colspan="8"><small>Aucun effet personnel ou allié détecté.</small></td></tr>`).join("")}</tbody>
+      </table></div>`;
+    }
+
+    function squadLinkEffects(support,receiver) {
+      const attacks = data.filter(item=>item.kind === "attack" && item.character === receiver);
+      return data.filter(item=>item.kind === "buff" && item.character === support && effectiveTargets(item).some(target=>["next","team"].includes(target))).map(buff=>{
+        const matches = attacks.map(attack=>({attack,reasons:buffCompatibility(buff,attack)})).filter(entry=>entry.reasons);
+        return matches.length ? {buff,matches,reasons:[...new Set(matches.flatMap(entry=>entry.reasons))]} : null;
+      }).filter(Boolean);
+    }
+
+    function squadHtml(characters) {
+      return `<div class="squad-board">${characters.map(support=>{
+        const receivers = characters.filter(character=>character !== support);
+        return `<section class="squad-member"><h3>${escapeHtml(support)}</h3><p>Effets donnés aux deux autres membres, sans score ni estimation.</p><div class="squad-links">${receivers.map(receiver=>{
+          const effects = squadLinkEffects(support,receiver);
+          return `<div class="squad-link"><strong>${escapeHtml(support)} → ${escapeHtml(receiver)}</strong>${effects.length ? effects.map(({buff,reasons,matches})=>{
+            const facts=effectFacts(buff);
+            const attacks=[...new Set(matches.map(entry=>itemValue(entry.attack,"skillName")))].slice(0,3);
+            return `<div class="squad-effect"><span>${escapeHtml(itemValue(buff,"skillName") || itemValue(buff,"source"))}<br><small>${escapeHtml(facts.value)} · ${escapeHtml(facts.duration)} · ${escapeHtml(facts.targets)}</small></span><span>${escapeHtml(reasons.join(" + "))}<br><small>${escapeHtml(attacks.join(" · "))}</small></span></div>`;
+          }).join("") : '<div class="squad-empty">Aucun buff compatible détecté avec les tags actuels.</div>'}</div>`;
+        }).join("")}</div></section>`;
+      }).join("")}</div>`;
+    }
+
     function damageProfile(character) {
       damageProfiles[character] ||= {atk:2500,hp:20000,def:1500,critRate:70,critDmg:250,dmgBonus:80,amplification:0,enemyRes:10};
       return damageProfiles[character];
@@ -1851,6 +2009,7 @@ try {
       setRailCount("compare",characters.length);
       if (!compareA || !characters.includes(compareA)) compareA = characters[0] || "";
       if (!compareB || !characters.includes(compareB) || compareB === compareA) compareB = characters.find(name => name !== compareA) || compareA;
+      if (!compareC || !characters.includes(compareC) || [compareA,compareB].includes(compareC)) compareC = characters.find(name=>![compareA,compareB].includes(name)) || compareB;
       const options = selected => characters.map(name => {
         const sample = data.find(item=>item.kind==="attack" && item.character===name);
         return `<option value="${escapeHtml(name)}" ${name===selected?"selected":""}>${escapeHtml(itemValue(sample,"character") || name)}</option>`;
@@ -1863,21 +2022,28 @@ try {
         : compareView === "synergy"
           ? `<div class="comparison"><div class="estimate-warning">Compatibilité fondée sur les tags vérifiés ou structurés, les catégories de dégâts et les bénéficiaires. Les conditions de déclenchement restent à confirmer dans la description.</div>${synergyComparisonHtml(compareA,compareB)}</div>`
         : compareView === "team"
-          ? `<div class="comparison">${teamFighterHtml(compareA)}${teamFighterHtml(compareB)}</div>`
+          ? `<div class="comparison">${rawComparisonHtml(compareA,compareB)}</div>`
+        : compareView === "squad"
+          ? `<div class="comparison"><div class="squad-selects">
+              <label>Personnage 1<select id="compareA">${options(compareA)}</select></label>
+              <label>Personnage 2<select id="compareB">${options(compareB)}</select></label>
+              <label>Personnage 3<select id="compareC">${options(compareC)}</select></label>
+            </div>${squadHtml([compareA,compareB,compareC])}</div>`
           : compareView === "damage"
             ? `<div class="comparison"><div class="estimate-warning">Estimation transparente basée sur la rotation sélectionnée : statistique de scaling × multiplicateur × critique moyen × bonus × amplification × résistance. Elle n’inclut pas encore la DEF ennemie, les niveaux, les réactions ni toutes les conditions de kit.</div>${damageComparisonBoardHtml(compareA,compareB)}${damageFighterHtml(compareA)}${damageFighterHtml(compareB)}</div>`
           : `<div class="comparison">${quickComparisonHtml(compareA,compareB)}${fighterHtml(compareA)}${fighterHtml(compareB)}</div>`;
       $("results").innerHTML = `
-        <div class="compare-selects">
+        ${compareView !== "squad" ? `<div class="compare-selects">
           <select id="compareA">${options(compareA)}</select><span class="versus">VS</span><select id="compareB">${options(compareB)}</select>
-        </div>
+        </div>` : ""}
         <div class="compare-tools">
           <div class="compare-tabs">
             <button data-compare-view="skills" class="${compareView==="skills"?"active":""}">1. Compétences</button>
             <button data-compare-view="rotation" class="${compareView==="rotation"?"active":""}">2. Rotation</button>
             <button data-compare-view="synergy" class="${compareView==="synergy"?"active":""}">3. Synergie</button>
-            <button data-compare-view="team" class="${compareView==="team"?"active":""}">4. Équipe</button>
-            <button data-compare-view="damage" class="${compareView==="damage"?"active":""}">5. Dégâts</button>
+            <button data-compare-view="team" class="${compareView==="team"?"active":""}">4. Effets bruts</button>
+            <button data-compare-view="squad" class="${compareView==="squad"?"active":""}">5. Équipe à 3</button>
+            <button data-compare-view="damage" class="${compareView==="damage"?"active":""}">6. Dégâts</button>
           </div>
           ${compareView === "team"
             ? `<label class="compare-setting">Dégâts testés <select id="testedElement">${elements.map(element=>`<option ${element===testedElement?"selected":""}>${element}</option>`).join("")}</select></label>`
@@ -1885,7 +2051,7 @@ try {
               ? `<label class="compare-setting">Fenêtre <input id="rotationWindow" type="number" min="1" max="120" value="${rotationWindow}"> secondes</label>`
               : ""}
         </div>
-        <p class="compare-note">${compareView === "skills" ? "Multiplicateurs importés et catégories de dégâts structurées." : compareView === "rotation" ? "Ajoute les attaques dans leur ordre d’exécution. Tu peux ensuite les déplacer ou les supprimer." : compareView === "synergy" ? "Lis dans les deux sens quels buffs d’un personnage fonctionnent avec les attaques de l’autre." : compareView === "team" ? "Valeurs brutes uniquement : effet, pourcentage, durée et bénéficiaire. Aucun calcul supplémentaire." : "Utilise exactement les sous-attaques choisies dans Rotation et les statistiques saisies ci-dessous."}</p>
+        <p class="compare-note">${compareView === "skills" ? "Multiplicateurs importés et catégories de dégâts structurées." : compareView === "rotation" ? "Ajoute les attaques dans leur ordre d’exécution. Tu peux ensuite les déplacer ou les supprimer." : compareView === "synergy" ? "Lis dans les deux sens quels buffs d’un personnage fonctionnent avec les attaques de l’autre." : compareView === "team" ? "Comparaison factuelle : effet, valeur, durée, bénéficiaire, condition et fin. Aucun score supplémentaire." : compareView === "squad" ? "Choisis trois personnages pour voir, dans chaque sens, quels effets s’appliquent réellement aux attaques des alliés." : "Utilise exactement les sous-attaques choisies dans Rotation et les statistiques saisies ci-dessous."}</p>
         ${body}`;
     }
 
@@ -2052,6 +2218,55 @@ try {
       }
     }
 
+    async function copyPlainText(text) {
+      if (navigator.clipboard && window.isSecureContext) return navigator.clipboard.writeText(text);
+      const area=document.createElement("textarea");
+      area.value=text; area.setAttribute("readonly",""); area.style.cssText="position:fixed;left:-9999px;top:0;opacity:0";
+      document.body.appendChild(area); area.select();
+      const copied=document.execCommand("copy"); area.remove();
+      if (!copied) throw new Error("Copie refusée");
+    }
+
+    function sharedUrl(payload) {
+      const url=new URL(location.href);
+      url.hash=`elya=${encodeURIComponent(JSON.stringify(payload))}`;
+      return url.href;
+    }
+
+    async function shareSearch() {
+      const url=sharedUrl({type:"search",state:currentSearchState()});
+      const title="Recherche Ealya_ 2.1";
+      try {
+        if (navigator.share && location.protocol !== "file:") await navigator.share({title,url});
+        else { await copyPlainText(url); message("Lien de recherche copié. Sur GitHub Pages, il ouvrira directement les mêmes filtres."); }
+      } catch(error) { if (error?.name !== "AbortError") message("Le partage a été refusé par le navigateur."); }
+    }
+
+    async function shareCard(item) {
+      if (!item) return;
+      const facts=effectFacts(item);
+      const summary=`${itemValue(item,"character")} — ${itemValue(item,"skillName") || itemValue(item,"source")}\nEffet : ${facts.affected}\nValeur : ${facts.value}\nBénéficiaire : ${facts.targets}\nDurée : ${facts.duration}\nDéclencheur : ${facts.trigger}\nCondition : ${facts.condition}\nFin : ${facts.ending}\n${sharedUrl({type:"card",id:String(item.id),kind:item.kind})}`;
+      try {
+        if (navigator.share && location.protocol !== "file:") await navigator.share({title:`${itemValue(item,"character")} · ${itemValue(item,"skillName")}`,text:summary});
+        else { await copyPlainText(summary); message("Fiche structurée copiée avec son lien."); }
+      } catch(error) { if (error?.name !== "AbortError") message("Le partage a été refusé par le navigateur."); }
+    }
+
+    function applySharedUrl() {
+      if (!location.hash.startsWith("#elya=")) return;
+      try {
+        const payload=JSON.parse(decodeURIComponent(location.hash.slice(6)));
+        if (payload.type === "search" && payload.state) applySearchState(payload.state);
+        if (payload.type === "card" && payload.id) {
+          const item=data.find(candidate=>String(candidate.id)===String(payload.id));
+          if (!item) return;
+          const button=[...document.querySelectorAll("[data-mode]")].find(candidate=>candidate.dataset.mode===(payload.kind || item.kind));
+          button?.click();
+          setTimeout(()=>document.querySelector(`[data-card-id="${CSS.escape(String(payload.id))}"]`)?.scrollIntoView({behavior:"smooth",block:"center"}),150);
+        }
+      } catch { message("Ce lien partagé n’est pas valide."); }
+    }
+
     function presetTags() {
       return Object.values(tagGroups).flat();
     }
@@ -2074,7 +2289,13 @@ try {
       $("effectDuration").value = override.effect?.duration ?? "";
       $("effectStacks").value = override.effect?.stacks ?? "";
       $("effectCondition").value = override.effect?.condition || "";
+      $("effectTrigger").value = override.effect?.trigger || "";
+      $("effectField").value = override.effect?.field || "any";
+      $("effectCooldown").value = override.effect?.cooldown ?? "";
       $("effectPersists").checked = Boolean(override.effect?.persists);
+      $("effectEndsOnSwitch").checked = Boolean(override.effect?.endsOnSwitch);
+      $("effectStackable").checked = Boolean(override.effect?.stackable);
+      $("effectRequiresStacks").checked = Boolean(override.effect?.requiresStacks);
       $("restorePrevious").hidden = !(override._history || []).length;
       $("restorePrevious").textContent = (override._history || []).length ? `Restaurer la version précédente (${override._history.length})` : "Restaurer la version précédente";
       $("tagGroups").innerHTML = Object.entries(tagGroups).map(([group,tags])=>`
@@ -2408,6 +2629,7 @@ try {
       const button = $("syncButton");
       button.disabled = true;
       try {
+        const previousApi = data.filter(item=>!item.manual);
         const latest = await apiJson("en","new",false);
         if (latest) {
           const version = Array.isArray(latest) ? latest[0] || {} : latest;
@@ -2420,12 +2642,17 @@ try {
         await syncCharacters(imported,button);
         await syncWeapons(imported,button);
         await syncEchoes(imported,button);
+        apiChanges = calculateApiChanges(previousApi,imported);
+        const addedIds = new Set(apiChanges.added.map(change=>change.id));
+        imported.forEach(item=>item.isNew = addedIds.has(String(item.id)));
+        localStorage.setItem(API_CHANGE_STORE,JSON.stringify(apiChanges));
         const manual = data.filter(item => item.manual);
         data = [...manual,...imported];
         localStorage.setItem(STORE,JSON.stringify(manual));
         await persistData();
         updateCharacters();
         updateSources();
+        updateApiVersion();
         render();
         const counts = Object.fromEntries(Object.keys(kindLabels).map(kind=>[kind,imported.filter(item=>item.kind===kind).length]));
         message(`${counts.buff} buffs, ${counts.attack} attaques, ${counts.sequence} séquences, ${counts.weapon} armes, ${counts.echo} Échos et ${counts.sonata} Sonatas importés en anglais et en français.`);
@@ -2545,6 +2772,7 @@ try {
       }
       if (event.target.id === "compareA") compareA = event.target.value;
       if (event.target.id === "compareB") compareB = event.target.value;
+      if (event.target.id === "compareC") compareC = event.target.value;
       if (event.target.id === "rotationWindow") rotationWindow = Math.max(1,Number(event.target.value) || 20);
       if (event.target.id === "testedElement") testedElement = event.target.value;
       if (event.target.matches("[data-damage-field]")) {
@@ -2556,7 +2784,7 @@ try {
         equipmentProfile(character)[event.target.dataset.equipmentField] = event.target.value;
         localStorage.setItem(EQUIPMENT_STORE,JSON.stringify(equipmentProfiles));
       }
-      if (event.target.id === "compareA" || event.target.id === "compareB" || event.target.id === "rotationWindow" || event.target.id === "testedElement" || event.target.matches("[data-damage-field]") || event.target.matches("[data-equipment-field]")) renderComparison();
+      if (event.target.id === "compareA" || event.target.id === "compareB" || event.target.id === "compareC" || event.target.id === "rotationWindow" || event.target.id === "testedElement" || event.target.matches("[data-damage-field]") || event.target.matches("[data-equipment-field]")) renderComparison();
     });
     $("results").addEventListener("click",async event=>{
       const qualityCharacter=event.target.closest("[data-quality-character]");
@@ -2654,6 +2882,11 @@ try {
         openTagEditor(tagButton.dataset.tagId);
         return;
       }
+      const shareButton = event.target.closest("[data-share-id]");
+      if (shareButton) {
+        await shareCard(data.find(item=>String(item.id)===String(shareButton.dataset.shareId)));
+        return;
+      }
       const button = event.target.closest(".copy-description");
       if (!button) return;
       copyDescription(data.find(item => String(item.id) === button.dataset.copyId),button);
@@ -2662,6 +2895,9 @@ try {
     $("tagModal").addEventListener("click",event=>{if(event.target===$("tagModal")) closeTagEditor();});
     $("authCancel").addEventListener("click",closeAuthModal);
     $("authModal").addEventListener("click",event=>{if(event.target===$("authModal")) closeAuthModal();});
+    $("apiChangesButton").addEventListener("click",()=>{renderApiChanges();$("apiChangesModal").hidden=false;});
+    $("apiChangesClose").addEventListener("click",()=>$("apiChangesModal").hidden=true);
+    $("apiChangesModal").addEventListener("click",event=>{if(event.target===$("apiChangesModal")) $("apiChangesModal").hidden=true;});
     $("authForm").addEventListener("submit",async event=>{
       event.preventDefault();
       const submit=$("authSubmit");
@@ -2697,7 +2933,7 @@ try {
     document.addEventListener("keydown",event=>{
       const editable=/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement?.tagName) || document.activeElement?.isContentEditable;
       if(event.key==="Escape"){
-        if(!$("authModal").hidden) closeAuthModal(); else if(!$("tagModal").hidden) closeTagEditor(); else $("resetFilters").click();
+        if(!$("apiChangesModal").hidden) $("apiChangesModal").hidden=true; else if(!$("authModal").hidden) closeAuthModal(); else if(!$("tagModal").hidden) closeTagEditor(); else $("resetFilters").click();
         return;
       }
       if(editable || !$("tagModal").hidden || !$("authModal").hidden) return;
@@ -2728,8 +2964,13 @@ try {
       const effectDuration = $("effectDuration").value === "" ? null : Number($("effectDuration").value);
       const effectStacks = $("effectStacks").value === "" ? null : Number($("effectStacks").value);
       const effectCondition = $("effectCondition").value.trim();
-      const effect = effectValue !== null || effectDuration !== null || effectStacks !== null || effectCondition || $("effectPersists").checked ? {
-        value:effectValue,unit:$("effectUnit").value,layer:$("effectLayer").value,duration:effectDuration,stacks:effectStacks,condition:effectCondition,persists:$("effectPersists").checked
+      const effectCooldown = $("effectCooldown").value === "" ? null : Number($("effectCooldown").value);
+      const effectTrigger = $("effectTrigger").value;
+      const effectField = $("effectField").value;
+      const previousEffect = itemOverride(item).effect || {};
+      const effect = effectValue !== null || effectDuration !== null || effectStacks !== null || effectCondition || effectCooldown !== null || effectTrigger || effectField !== "any" || $("effectPersists").checked || $("effectEndsOnSwitch").checked || $("effectStackable").checked || $("effectRequiresStacks").checked ? {
+        ...previousEffect,value:effectValue,unit:$("effectUnit").value,layer:$("effectLayer").value,duration:effectDuration,stacks:effectStacks,condition:effectCondition,
+        trigger:effectTrigger,field:effectField,cooldown:effectCooldown,persists:$("effectPersists").checked,endsOnSwitch:$("effectEndsOnSwitch").checked,stackable:$("effectStackable").checked,requiresStacks:$("effectRequiresStacks").checked
       } : null;
       const override = {
         tags:[...new Set([...selected,...custom])],
@@ -2801,6 +3042,7 @@ try {
       renderSavedSearches(saved.id);
       message("Recherche enregistrée localement.");
     });
+    $("shareSearchButton").addEventListener("click",shareSearch);
     $("savedSearchSelect").addEventListener("change",event=>{
       const saved=savedSearches.find(search=>search.id===event.target.value);
       $("deleteSearchButton").hidden=!saved;
@@ -2889,7 +3131,7 @@ try {
     updateUndoButton();
     updateEditorUi();
     render();
-    hydrateData();
+    hydrateData().then(applySharedUrl);
     loadSharedTags();
     validEditorToken(false).then(()=>{updateEditorUi();render();});
     if (!data.some(item => item.kind === "attack")) {
