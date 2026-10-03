@@ -280,7 +280,7 @@
     .active-filters{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin:-9px 0 17px;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:rgba(9,15,19,.58)}.active-filters[hidden]{display:none}.active-filters-label{color:var(--muted);font-size:calc(9px * var(--font-scale));text-transform:uppercase;letter-spacing:.08em}.filter-chip{border:1px solid #35504f;border-radius:14px;background:#10211f;color:#b8d6d2;padding:5px 9px;font-size:calc(9px * var(--font-scale))}.filter-chip:hover{border-color:var(--cyan);color:var(--cyan)}
     .favorite-button{width:30px;height:28px;display:grid;place-items:center;border:1px solid var(--line);border-radius:5px;background:#0c1218;color:#728187;padding:0;font-size:calc(16px * var(--font-scale))}.favorite-button:hover,.favorite-button.active{color:#e4be5c;border-color:#9a7c36}.favorite-button.active{background:rgba(228,190,92,.09)}
     .reliability-badge{display:inline-flex;align-items:center;border:1px solid var(--line);border-radius:10px;padding:3px 6px;color:var(--muted);font-size:calc(8px * var(--font-scale));white-space:nowrap}.reliability-badge.verified{color:var(--cyan);border-color:#39746e}.reliability-badge.manual{color:var(--violet);border-color:#66528e}.reliability-badge.structured{color:#c7ad71;border-color:#6d6034}.reliability-badge.inferred{color:#a8aeb1}
-    .why-result,.compatibility-panel{margin:10px 0 0;border:1px solid var(--line);border-radius:7px;background:#0a1116;overflow:hidden}.why-result summary,.compatibility-panel summary{padding:9px 11px;color:var(--muted);font-size:calc(9px * var(--font-scale))}.why-result p{margin:0;padding:0 11px 11px;color:#aebcc0;font-size:calc(10px * var(--font-scale));line-height:1.55}.compatibility-list{display:grid;gap:6px;padding:9px;border-top:1px solid var(--line)}.compatibility-row{display:flex;justify-content:space-between;gap:12px;padding:8px;border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:calc(10px * var(--font-scale))}.compatibility-row small{color:var(--cyan);text-align:right}.compatibility-empty{padding:10px;color:var(--muted);font-size:calc(10px * var(--font-scale))}
+    .why-result,.compatibility-panel{margin:10px 0 0;border:1px solid var(--line);border-radius:7px;background:#0a1116;overflow:hidden}.why-result summary,.compatibility-panel summary{padding:9px 11px;color:var(--muted);font-size:calc(9px * var(--font-scale))}.why-result p{margin:0;padding:0 11px 11px;color:#aebcc0;font-size:calc(10px * var(--font-scale));line-height:1.55}.compatibility-load{width:100%;border:0;background:transparent;color:var(--muted);padding:10px 11px;text-align:left;font-size:calc(9px * var(--font-scale))}.compatibility-load:hover{color:var(--cyan);background:rgba(119,226,210,.04)}.compatibility-load:disabled{cursor:wait;opacity:.65}.compatibility-list{display:grid;gap:6px;padding:9px;border-top:1px solid var(--line)}.compatibility-row{display:flex;justify-content:space-between;gap:12px;padding:8px;border:1px solid var(--line);border-radius:5px;color:var(--text);font-size:calc(10px * var(--font-scale))}.compatibility-row small{color:var(--cyan);text-align:right}.compatibility-empty{padding:10px;color:var(--muted);font-size:calc(10px * var(--font-scale))}
     .character-overview{display:grid;grid-template-columns:auto minmax(180px,.8fr) minmax(280px,1.3fr);align-items:center;gap:18px;margin-bottom:13px;padding:16px;border:1px solid rgba(113,137,145,.24);border-radius:12px;background:linear-gradient(120deg,#10181e,#0a1015);box-shadow:0 14px 32px rgba(0,0,0,.14)}.character-overview img,.character-overview-avatar{width:74px;height:74px;border-radius:10px;object-fit:cover;object-position:center top;background:#080d11}.character-overview h2{margin:0 0 5px;font-size:calc(23px * var(--font-scale))}.character-overview p{margin:0;color:var(--muted);font-size:calc(10px * var(--font-scale));line-height:1.5}.coverage-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.coverage-stat{padding:9px;border:1px solid var(--line);border-radius:7px;background:#0a1116}.coverage-stat strong{display:block;color:var(--cyan);font-size:calc(16px * var(--font-scale))}.coverage-stat span{color:var(--muted);font-size:calc(8px * var(--font-scale));text-transform:uppercase;letter-spacing:.06em}
     .quick-compare{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:2px}.quick-compare-card{padding:14px;border:1px solid var(--line);border-radius:10px;background:#0a1116}.quick-compare-card h3{margin:0 0 10px;font-size:calc(14px * var(--font-scale))}.quick-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}.quick-metric{padding:8px;border:1px solid var(--line);border-radius:6px}.quick-metric strong{display:block;color:var(--cyan);font-size:calc(16px * var(--font-scale))}.quick-metric span{color:var(--muted);font-size:calc(8px * var(--font-scale));text-transform:uppercase}
     .view-toggle{border:1px solid var(--line);border-radius:7px;background:var(--panel);color:var(--muted);padding:10px 12px;white-space:nowrap}.view-toggle:hover,.view-toggle.active{color:var(--cyan);border-color:#39746e;background:#10211f}
@@ -1580,9 +1580,13 @@ try {
     }
 
     function compatibilityHtml(item) {
-      const matches=compatibleBuffs(item);
       if (item.kind!=="attack") return "";
-      return `<details class="compatibility-panel"><summary>Buffs compatibles par tags · ${matches.length}</summary>${matches.length?`<div class="compatibility-list">${matches.map(({buff,reasons})=>`<div class="compatibility-row"><span>${escapeHtml(itemValue(buff,"character"))} · ${escapeHtml(itemValue(buff,"skillName"))}</span><small>${escapeHtml(reasons.join(" + "))}</small></div>`).join("")}</div>`:'<div class="compatibility-empty">Aucun buff compatible suffisamment fiable avec les tags actuels.</div>'}</details>`;
+      return `<div class="compatibility-panel" data-compatibility-panel="${escapeHtml(item.id)}"><button class="compatibility-load" type="button" data-load-compatibility="${escapeHtml(item.id)}">＋ Afficher les buffs compatibles</button></div>`;
+    }
+
+    function compatibilityResultsHtml(item) {
+      const matches=compatibleBuffs(item);
+      return matches.length ? `<div class="compatibility-list">${matches.map(({buff,reasons})=>`<div class="compatibility-row"><span>${escapeHtml(itemValue(buff,"character"))} · ${escapeHtml(itemValue(buff,"skillName"))}</span><small>${escapeHtml(reasons.join(" + "))}</small></div>`).join("")}</div>` : '<div class="compatibility-empty">Aucun buff compatible suffisamment fiable avec les tags actuels.</div>';
     }
 
     function cardHtml(item) {
@@ -2195,7 +2199,7 @@ try {
       const resultSignature = JSON.stringify(currentSearchState());
       if (resultSignature !== lastResultSignature) {
         lastResultSignature = resultSignature;
-        resultLimit = mode === "attack" ? 36 : 60;
+        resultLimit = mode === "attack" ? 24 : 60;
       }
       const filtered = data.filter(item => item.kind === mode && (!favoritesOnly || favoriteIds.has(String(item.id))) && matches(item,query) && matchesStructuredFilters(item) && (!character || item.character===character) && (!source || item.source===source) && (!target || effectiveTargets(item).includes(target)) && (!element || item.element===element)).sort((a,b)=>itemValue(a,"character").localeCompare(itemValue(b,"character")) || itemValue(a,"source").localeCompare(itemValue(b,"source")));
       updateRailCounts(filtered.length);
@@ -2204,7 +2208,7 @@ try {
       const visible = filtered.slice(0,resultLimit);
       const resultContent = visible.length ? (resultLayout === "table" ? compactTableHtml(visible) : visible.map(cardHtml).join("")) : `<div class="empty">Aucun résultat dans « ${escapeHtml(kindLabels[mode] || mode)} ». Actualise avec Encore ou retire un filtre.</div>`;
       const remaining = Math.max(0,filtered.length-visible.length);
-      const moreButton = remaining ? `<button class="load-more" type="button" data-load-more>Afficher ${Math.min(mode === "attack" ? 36 : 60,remaining)} fiche${remaining>1?"s":""} de plus · ${remaining} restante${remaining>1?"s":""}</button>` : "";
+      const moreButton = remaining ? `<button class="load-more" type="button" data-load-more>Afficher ${Math.min(mode === "attack" ? 24 : 60,remaining)} fiche${remaining>1?"s":""} de plus · ${remaining} restante${remaining>1?"s":""}</button>` : "";
       $("results").innerHTML = characterOverviewHtml(character) + resultContent + moreButton;
     }
 
@@ -2776,6 +2780,10 @@ try {
     });
     document.querySelectorAll("[data-mode]").forEach(button => button.addEventListener("click",()=>{
       mode = button.dataset.mode;
+      if (mode === "attack" && resultLayout !== "table") {
+        resultLayout = "table";
+        localStorage.setItem(RESULT_LAYOUT_STORE,resultLayout);
+      }
       $("search").value = "";
       $("characterFilter").value = "";
       $("sourceFilter").value = "";
@@ -2823,8 +2831,20 @@ try {
     $("results").addEventListener("click",async event=>{
       const loadMoreButton=event.target.closest("[data-load-more]");
       if(loadMoreButton){
-        resultLimit += mode === "attack" ? 36 : 60;
+        resultLimit += mode === "attack" ? 24 : 60;
         render();
+        return;
+      }
+      const compatibilityButton=event.target.closest("[data-load-compatibility]");
+      if(compatibilityButton){
+        const item=data.find(candidate=>String(candidate.id)===String(compatibilityButton.dataset.loadCompatibility));
+        const panel=compatibilityButton.closest("[data-compatibility-panel]");
+        if(!item || !panel) return;
+        compatibilityButton.disabled=true;
+        compatibilityButton.textContent="Calcul des compatibilités…";
+        requestAnimationFrame(()=>{
+          panel.innerHTML=compatibilityResultsHtml(item);
+        });
         return;
       }
       const qualityCharacter=event.target.closest("[data-quality-character]");
