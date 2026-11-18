@@ -591,7 +591,7 @@
     <div class="tag-modal" id="authModal" hidden>
       <section class="auth-dialog" role="dialog" aria-modal="true" aria-labelledby="authDialogTitle">
         <h2 id="authDialogTitle">Activer le mode édition</h2>
-        <p>Utilise l’identifiant éditeur transmis par la propriétaire du site. Aucun compte Supabase ni accès au tableau de bord n’est nécessaire.</p>
+        <p>Utilise l’identifiant éditeur transmis par la propriétaire du site. Aucun compte Cloudflare ni accès au tableau de bord n’est nécessaire.</p>
         <form class="auth-form" id="authForm">
           <label><span>Identifiant</span><input class="field" id="authEmail" type="email" autocomplete="username" required placeholder="editeur@exemple.fr"></label>
           <label><span>Mot de passe</span><input class="field" id="authPassword" type="password" autocomplete="current-password" required></label>
@@ -635,13 +635,12 @@
     const FAVORITES_STORE = "wuwa-buff-finder-favorites";
     const SAVED_SEARCHES_STORE = "wuwa-buff-finder-saved-searches";
     const RESULT_LAYOUT_STORE = "wuwa-buff-finder-result-layout";
-    const AUTH_SESSION_STORE = "wuwa-buff-finder-editor-session";
+    const AUTH_SESSION_STORE = "wuwa-buff-finder-cloudflare-editor-session";
+    const LEGACY_AUTH_SESSION_STORE = "wuwa-buff-finder-editor-session";
     const DB_NAME = "wuwa-buff-skill-finder";
     const DB_STORE = "records";
     const API_BASES = ["https://api-v2.encore.moe/api","https://api.encore.moe"];
-    const SUPABASE_URL = "https://mohzashksxovvojkjgav.supabase.co";
-    const SUPABASE_KEY = "sb_publishable_5lGedqHReA6yoVghac9uLA_aqF-dKDm";
-    const SUPABASE_TAG_TABLE = "wuwa_tag_overrides";
+    const CLOUD_WORKER_URL = "https://elya-wuwa-api.heretoc.workers.dev";
     const editIconSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L8 18l-4 1 1-4Z"/><path d="m15 5 3 3"/></svg>';
     const shareIconSvg = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 16V3"/><path d="m7 8 5-5 5 5"/><path d="M5 13v6a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-6"/></svg>';
     const targets = {self:"Lui-même",next:"Entrant",team:"Équipe",enemy:"Ennemi",unknown:"À vérifier"};
@@ -741,7 +740,8 @@
     try { equipmentProfiles = JSON.parse(localStorage.getItem(EQUIPMENT_STORE)) || {}; } catch { equipmentProfiles = {}; }
     let cloudAvailable = false;
     let authSession;
-    try { authSession = JSON.parse(localStorage.getItem(AUTH_SESSION_STORE)) || null; } catch { authSession = null; }
+    try { authSession = JSON.parse(sessionStorage.getItem(AUTH_SESSION_STORE)) || null; } catch { authSession = null; }
+    localStorage.removeItem(LEGACY_AUTH_SESSION_STORE);
     let messageTimer;
     let apiMeta;
     try { apiMeta = JSON.parse(localStorage.getItem(API_META_STORE)) || {}; } catch { apiMeta = {}; }
@@ -964,70 +964,49 @@ try {
     }
 
     function updateEditorUi() {
-      const active = Boolean(authSession?.access_token && authSession?.refresh_token);
+      const active = Boolean(authSession?.identifier && authSession?.password);
       document.documentElement.dataset.editor = String(active);
       $("manualEntryPanel").hidden = !active;
       const button = $("editorButton");
       button.classList.toggle("authenticated",active);
       button.textContent = active ? "✎ Mode édition" : "🔒 Lecture seule";
-      button.title = active ? `Connecté${authSession.user?.email ? ` : ${authSession.user.email}` : ""} · cliquer pour se déconnecter` : "Se connecter pour modifier les tags partagés";
+      button.title = active ? `Connecté : ${authSession.identifier} · cliquer pour se déconnecter` : "Se connecter pour modifier les tags partagés";
     }
 
     function storeAuthSession(session) {
-      if (!session?.access_token || !session?.refresh_token) {
+      if (!session?.identifier || !session?.password) {
         authSession = null;
-        localStorage.removeItem(AUTH_SESSION_STORE);
+        sessionStorage.removeItem(AUTH_SESSION_STORE);
       } else {
-        authSession = {...session,expires_at:session.expires_at || Math.floor(Date.now()/1000) + Number(session.expires_in || 3600)};
-        localStorage.setItem(AUTH_SESSION_STORE,JSON.stringify(authSession));
+        authSession = {identifier:String(session.identifier),password:String(session.password)};
+        sessionStorage.setItem(AUTH_SESSION_STORE,JSON.stringify(authSession));
       }
       updateEditorUi();
     }
 
-    async function authApi(path,options={}) {
-      const response = await fetch(`${SUPABASE_URL}/auth/v1/${path}`,{
-        ...options,
-        headers:{apikey:SUPABASE_KEY,"Content-Type":"application/json",...(options.headers || {})}
-      });
-      const payload = response.status===204 ? null : await response.json().catch(()=>null);
-      if (!response.ok) throw new Error(payload?.msg || payload?.message || "Connexion refusée.");
-      return payload;
-    }
-
     async function validEditorToken(required=false) {
-      if (!authSession?.refresh_token) {
+      if (!authSession?.identifier || !authSession?.password) {
         if (required) throw new Error("Active d’abord le mode édition.");
         return "";
       }
-      if (Number(authSession.expires_at || 0) > Math.floor(Date.now()/1000) + 60) return authSession.access_token;
-      try {
-        const refreshed = await authApi("token?grant_type=refresh_token",{method:"POST",body:JSON.stringify({refresh_token:authSession.refresh_token})});
-        storeAuthSession(refreshed);
-        return refreshed.access_token;
-      } catch (error) {
-        storeAuthSession(null);
-        if (required) throw new Error("Session expirée. Reconnecte le mode édition.");
-        return "";
-      }
+      return authSession;
     }
 
-    async function supabaseRequest(query="",options={}) {
-      const method = String(options.method || "GET").toUpperCase();
-      const writeRequest = !["GET","HEAD"].includes(method);
-      const accessToken = await validEditorToken(writeRequest);
-      const response = await fetch(`${SUPABASE_URL}/rest/v1/${SUPABASE_TAG_TABLE}${query}`,{
-        ...options,
+    async function cloudRequest(path="/tags",options={}) {
+      const {auth=false,...fetchOptions} = options;
+      const editor = auth ? await validEditorToken(true) : null;
+      const response = await fetch(`${CLOUD_WORKER_URL}${path}`,{
+        ...fetchOptions,
         headers:{
-          apikey:SUPABASE_KEY,
-          ...(accessToken ? {Authorization:`Bearer ${accessToken}`} : {}),
           "Content-Type":"application/json",
-          ...(options.headers || {})
+          ...(editor ? {"X-Editor-Id":editor.identifier,"X-Editor-Password":editor.password} : {}),
+          ...(fetchOptions.headers || {})
         }
       });
       if (!response.ok) {
-        let detail = "";
-        try { detail = (await response.json()).message || ""; } catch {}
-        throw new Error(detail || `Supabase ${response.status}`);
+        const payload = await response.json().catch(()=>null);
+        if (response.status===401 && auth) storeAuthSession(null);
+        throw new Error(payload?.error || `Cloudflare ${response.status}`);
       }
       if (response.status === 204) return null;
       const text = await response.text();
@@ -1038,22 +1017,19 @@ try {
       const uniqueKeys = [...new Set(keys)].filter(key=>tagOverrides[key]);
       if (!uniqueKeys.length) return;
       try {
-        const remoteRows = await supabaseRequest("?select=key,value");
+        const remoteRows = await cloudRequest("/tags");
         const remoteMap = new Map((remoteRows || []).map(row=>[row.key,row.value]));
         uniqueKeys.forEach(key=>{ tagOverrides[key] = mergeRemoteHistory(tagOverrides[key],remoteMap.get(key)); });
         localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
       } catch {}
-      const rows = uniqueKeys.map(key=>({
-        key,
-        value:tagOverrides[key],
-        updated_at:new Date().toISOString()
-      }));
       setCloudStatus("loading","Tags : envoi…");
-      await supabaseRequest("?on_conflict=key",{
-        method:"POST",
-        headers:{Prefer:"resolution=merge-duplicates"},
-        body:JSON.stringify(rows)
-      });
+      for (const key of uniqueKeys) {
+        await cloudRequest(`/tags/${encodeURIComponent(key)}`,{
+          method:"PUT",
+          auth:true,
+          body:JSON.stringify({value:tagOverrides[key]})
+        });
+      }
       cloudAvailable = true;
       setCloudStatus("online","Tags partagés");
     }
@@ -1061,11 +1037,11 @@ try {
     async function loadSharedTags(showMessage=false) {
       setCloudStatus("loading","Tags : connexion…");
       try {
-        const rows = await supabaseRequest("?select=key,value&order=updated_at.asc");
+        const rows = await cloudRequest("/tags");
         if (rows.length) {
           tagOverrides = Object.fromEntries(rows.map(row=>[row.key,row.value]));
           localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
-        } else if (Object.keys(tagOverrides).length && authSession?.refresh_token) {
+        } else if (Object.keys(tagOverrides).length && authSession?.identifier) {
           await pushSharedTags();
         }
         cloudAvailable = true;
@@ -2397,7 +2373,7 @@ try {
     }
 
     function editorActionAllowed() {
-      if (authSession?.refresh_token) return true;
+      if (authSession?.identifier && authSession?.password) return true;
       openAuthModal();
       message("Connecte le mode édition pour modifier les données partagées.");
       return false;
@@ -3002,8 +2978,10 @@ try {
       submit.textContent="Connexion…";
       $("authError").hidden=true;
       try {
-        const session=await authApi("token?grant_type=password",{method:"POST",body:JSON.stringify({email:$("authEmail").value.trim(),password:$("authPassword").value})});
-        storeAuthSession(session);
+        const identifier=$("authEmail").value.trim();
+        const password=$("authPassword").value;
+        await cloudRequest("/login",{method:"POST",body:JSON.stringify({identifier,password})});
+        storeAuthSession({identifier,password});
         closeAuthModal();
         await loadSharedTags();
         render();
@@ -3017,12 +2995,8 @@ try {
       }
     });
     $("editorButton").addEventListener("click",async ()=>{
-      if (!authSession?.refresh_token) return openAuthModal();
+      if (!authSession?.identifier || !authSession?.password) return openAuthModal();
       if (!confirm("Quitter le mode édition sur cet appareil ?")) return;
-      try {
-        const token=await validEditorToken(false);
-        if(token) await authApi("logout",{method:"POST",headers:{Authorization:`Bearer ${token}`}});
-      } catch {}
       storeAuthSession(null);
       render();
       message("Mode lecture seule activé.");
@@ -3188,7 +3162,7 @@ try {
           tagOverrides={...parsed.tagOverrides,...tagOverrides};
           localStorage.setItem(TAG_STORE,JSON.stringify(tagOverrides));
           if (newKeys.length) syncChangedTags(newKeys,`${newKeys.length} classifications absentes ont été restaurées. Les lignes existantes ont été conservées.`);
-          else message("Import terminé : aucune classification Supabase existante n’a été remplacée.");
+          else message("Import terminé : aucune classification partagée existante n’a été remplacée.");
         }
         if (parsed.equipmentProfiles && typeof parsed.equipmentProfiles === "object") {
           equipmentProfiles={...parsed.equipmentProfiles,...equipmentProfiles};
@@ -3231,7 +3205,7 @@ try {
     render();
     hydrateData().then(applySharedUrl);
     loadSharedTags();
-    validEditorToken(false).then(()=>{updateEditorUi();render();});
+    updateEditorUi();
     if (!data.some(item => item.kind === "attack")) {
       message("Le mode Attaques est prêt. Clique une fois sur « Actualiser avec Encore » pour importer les multiplicateurs.");
     }
